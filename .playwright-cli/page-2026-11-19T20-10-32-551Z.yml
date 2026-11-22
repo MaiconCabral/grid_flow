@@ -1,0 +1,66 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e9]: morrow
+        - generic [ref=e10]: BETA
+      - generic [ref=e11] [cursor=pointer]:
+        - generic [ref=e12]: A
+        - generic [ref=e13]:
+          - strong [ref=e14]: Agency Alpha
+          - generic [ref=e15]: 4 workspaces
+      - navigation [ref=e18]:
+        - generic [ref=e19]: Workspace
+        - button "Dashboard" [ref=e20] [cursor=pointer]
+        - button "Workspace 24" [ref=e27] [cursor=pointer]:
+          - generic [ref=e30]: Workspace
+          - emphasis [ref=e31]: "24"
+        - button "Approval Center 3" [ref=e32] [cursor=pointer]:
+          - generic [ref=e36]: Approval Center
+          - emphasis [ref=e37]: "3"
+        - generic [ref=e38]: Manage
+        - button "Team & Clients" [ref=e39] [cursor=pointer]
+        - button "Settings" [active] [ref=e46] [cursor=pointer]
+      - generic [ref=e51]:
+        - generic [ref=e53]:
+          - generic [ref=e54]: Storage
+          - strong [ref=e55]: 68.4 GB / 100 GB
+        - generic [ref=e62]:
+          - generic [ref=e66]: Help center
+          - generic [ref=e67]: "?"
+      - generic [ref=e68]:
+        - generic [ref=e69]: JM
+        - generic [ref=e70]:
+          - strong [ref=e71]: Jordan Miller
+          - generic [ref=e72]: Agency Admin
+    - main [ref=e77]:
+      - generic [ref=e78]:
+        - generic [ref=e79]:
+          - generic [ref=e80]: Agency Alpha
+          - strong [ref=e83]: Settings
+        - generic [ref=e84]:
+          - button [ref=e86] [cursor=pointer]:
+            - generic [ref=e99]:
+              - text: "Viewing as:"
+              - strong [ref=e100]: Agency Admin
+          - button "Toggle theme" [ref=e103] [cursor=pointer]
+          - button [ref=e111] [cursor=pointer]
+          - generic [ref=e116]:
+            - button "JM" [ref=e117] [cursor=pointer]
+            - generic [ref=e453]:
+              - generic [ref=e454]:
+                - generic [ref=e455]: JM
+                - generic [ref=e456]:
+                  - strong [ref=e457]: Jordan Miller
+                  - generic [ref=e458]: Agency Admin
+              - button "Account preferences" [ref=e459] [cursor=pointer]
+              - button "Invite teammates" [ref=e460] [cursor=pointer]
+              - button "Sign out" [ref=e461] [cursor=pointer]
+      - generic [ref=e468]:
+        - heading "Settings" [level=1] [ref=e472]
+        - paragraph [ref=e473]: This view is ready for your next workflow.
+        - button "Create something" [ref=e474] [cursor=pointer]
+  - generic [ref=e444]:
+    - link "Made in Bolt" [ref=e445] [cursor=pointer]:
+      - /url: https://bolt.new
+    - button "Hide the Made in Bolt badge" [ref=e450] [cursor=pointer]

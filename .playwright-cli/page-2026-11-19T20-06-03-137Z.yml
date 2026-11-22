@@ -1,0 +1,213 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e9]: morrow
+        - generic [ref=e10]: BETA
+      - generic [ref=e11] [cursor=pointer]:
+        - generic [ref=e12]: A
+        - generic [ref=e13]:
+          - strong [ref=e14]: Agency Alpha
+          - generic [ref=e15]: 4 workspaces
+      - navigation [ref=e18]:
+        - generic [ref=e19]: Workspace
+        - button "Dashboard" [ref=e20] [cursor=pointer]
+        - button "Workspace 24" [ref=e27] [cursor=pointer]:
+          - generic [ref=e30]: Workspace
+          - emphasis [ref=e31]: "24"
+        - button "Approval Center 3" [ref=e32] [cursor=pointer]:
+          - generic [ref=e36]: Approval Center
+          - emphasis [ref=e37]: "3"
+        - generic [ref=e38]: Manage
+        - button "Team & Clients" [ref=e39] [cursor=pointer]
+        - button "Settings" [ref=e46] [cursor=pointer]
+      - generic [ref=e51]:
+        - generic [ref=e53]:
+          - generic [ref=e54]: Storage
+          - strong [ref=e55]: 68.4 GB / 100 GB
+        - generic [ref=e62]:
+          - generic [ref=e66]: Help center
+          - generic [ref=e67]: "?"
+      - generic [ref=e68]:
+        - generic [ref=e69]: JM
+        - generic [ref=e70]:
+          - strong [ref=e71]: Jordan Miller
+          - generic [ref=e72]: Agency Admin
+    - main [ref=e77]:
+      - generic [ref=e78]:
+        - generic [ref=e79]:
+          - generic [ref=e80]: Agency Alpha
+          - strong [ref=e83]: Workspace
+        - generic [ref=e84]:
+          - button [ref=e86] [cursor=pointer]:
+            - generic [ref=e99]:
+              - text: "Viewing as:"
+              - strong [ref=e100]: Agency Admin
+          - button "Toggle theme" [ref=e103] [cursor=pointer]
+          - button [ref=e111] [cursor=pointer]
+          - button "JM" [ref=e117] [cursor=pointer]
+      - generic [ref=e937]:
+        - generic [ref=e938]:
+          - generic [ref=e939]:
+            - generic [ref=e940]: LIVE WORKSPACE
+            - heading "Good morning, Jordan ✦" [level=1] [ref=e942]
+            - paragraph [ref=e943]: Keep your team moving and your clients in the loop.
+          - generic [ref=e944]:
+            - button "Export" [ref=e945] [cursor=pointer]
+            - button "New activity" [ref=e949] [cursor=pointer]
+        - generic [ref=e951]:
+          - generic [ref=e956]:
+            - generic [ref=e957]: Active activities
+            - generic [ref=e958]:
+              - strong [ref=e959]: "24"
+              - emphasis [ref=e960]: +12%
+          - generic [ref=e973]:
+            - generic [ref=e974]: Awaiting approval
+            - generic [ref=e975]:
+              - strong [ref=e976]: "03"
+              - emphasis [ref=e977]: "-8%"
+          - generic [ref=e990]:
+            - generic [ref=e991]: Due this week
+            - generic [ref=e992]:
+              - strong [ref=e993]: "09"
+              - emphasis [ref=e994]: +4%
+          - generic [ref=e1009]:
+            - generic [ref=e1010]: Client satisfaction
+            - generic [ref=e1011]:
+              - strong [ref=e1012]: 94%
+              - emphasis [ref=e1013]: +6%
+        - generic [ref=e1021]:
+          - generic [ref=e1022]:
+            - button "Board" [ref=e1023] [cursor=pointer]
+            - button "List" [active] [ref=e1026] [cursor=pointer]
+            - button "Calendar" [ref=e1028] [cursor=pointer]
+          - generic [ref=e1031]:
+            - textbox "Search activities..." [ref=e1036]
+            - generic [ref=e1037]:
+              - generic [ref=e1038]: Filter by client
+              - combobox "Filter by client" [ref=e1039]:
+                - option "All clients" [selected]
+                - option "Aster & Co."
+                - option "Northstar Labs"
+                - option "Kora House"
+            - button "Filters 2" [ref=e1040] [cursor=pointer]:
+              - text: Filters
+              - generic [ref=e1042]: "2"
+        - generic [ref=e1044]:
+          - generic [ref=e1045]:
+            - generic [ref=e1046]:
+              - generic [ref=e1047]:
+                - strong [ref=e1049]: To Do
+                - generic [ref=e1050]: "4"
+              - button [ref=e1051] [cursor=pointer]
+            - generic [ref=e1056]:
+              - button "LinkedIn Post Northstar Labs The new way to work Aug 27 AK SR 2 5 High" [ref=e1057] [cursor=pointer]:
+                - generic [ref=e1058]:
+                  - generic [ref=e1059]: LinkedIn Post
+                  - button [ref=e1060]
+                - generic [ref=e1065]:
+                  - text: Northstar Labs
+                  - strong [ref=e1066]: The new way to work
+                  - generic [ref=e1067]:
+                    - generic [ref=e1068]: Aug 27
+                    - generic [ref=e1071]:
+                      - generic [ref=e1072]: AK
+                      - generic [ref=e1073]: SR
+                - generic [ref=e1074]:
+                  - generic [ref=e1075]: "2"
+                  - generic [ref=e1078]: "5"
+                  - generic [ref=e1083]: High
+              - button "Instagram Story Aster & Co. Texture study / 04 Sep 01 ML 1 3 High" [ref=e1085] [cursor=pointer]:
+                - generic [ref=e1086]:
+                  - generic [ref=e1087]: Instagram Story
+                  - button [ref=e1088]
+                - generic [ref=e1093]:
+                  - text: Aster & Co.
+                  - strong [ref=e1094]: Texture study / 04
+                  - generic [ref=e1095]:
+                    - generic [ref=e1096]: Sep 01
+                    - generic [ref=e1099]: ML
+                - generic [ref=e1101]:
+                  - generic [ref=e1102]: "1"
+                  - generic [ref=e1105]: "3"
+                  - generic [ref=e1110]: High
+            - button "Add activity" [ref=e1112] [cursor=pointer]
+          - generic [ref=e1114]:
+            - generic [ref=e1115]:
+              - generic [ref=e1116]:
+                - strong [ref=e1118]: In Production
+                - generic [ref=e1119]: "3"
+              - button [ref=e1120] [cursor=pointer]
+            - button "Short-form Video Kora House Brand film — cut 02 Aug 29 JP 8 1 High" [ref=e1126] [cursor=pointer]:
+              - generic [ref=e1127]:
+                - generic [ref=e1128]: Short-form Video
+                - button [ref=e1129]
+              - generic [ref=e1134]:
+                - text: Kora House
+                - strong [ref=e1135]: Brand film — cut 02
+                - generic [ref=e1136]:
+                  - generic [ref=e1137]: Aug 29
+                  - generic [ref=e1140]: JP
+              - generic [ref=e1142]:
+                - generic [ref=e1143]: "8"
+                - generic [ref=e1146]: "1"
+                - generic [ref=e1151]: High
+            - button "Add activity" [ref=e1153] [cursor=pointer]
+          - generic [ref=e1155]:
+            - generic [ref=e1156]:
+              - generic [ref=e1157]:
+                - strong [ref=e1159]: Pending Approval
+                - generic [ref=e1160]: "2"
+              - button [ref=e1161] [cursor=pointer]
+            - button "Instagram Carousel Aster & Co. Summer campaign — carousel Today, 4:00 PM ML JP 4 2 High" [ref=e1167] [cursor=pointer]:
+              - generic [ref=e1168]:
+                - generic [ref=e1169]: Instagram Carousel
+                - button [ref=e1170]
+              - generic [ref=e1175]:
+                - text: Aster & Co.
+                - strong [ref=e1176]: Summer campaign — carousel
+                - generic [ref=e1177]:
+                  - generic [ref=e1178]: Today, 4:00 PM
+                  - generic [ref=e1181]:
+                    - generic [ref=e1182]: ML
+                    - generic [ref=e1183]: JP
+              - generic [ref=e1184]:
+                - generic [ref=e1185]: "4"
+                - generic [ref=e1188]: "2"
+                - generic [ref=e1193]: High
+            - button "Add activity" [ref=e1195] [cursor=pointer]
+          - generic [ref=e1197]:
+            - generic [ref=e1198]:
+              - generic [ref=e1199]:
+                - strong [ref=e1201]: Approved
+                - generic [ref=e1202]: "8"
+              - button [ref=e1203] [cursor=pointer]
+            - button "Social Collection Kora House Studio stills — selects Sep 02 SR AK 3 4 High" [ref=e1209] [cursor=pointer]:
+              - generic [ref=e1210]:
+                - generic [ref=e1211]: Social Collection
+                - button [ref=e1212]
+              - generic [ref=e1217]:
+                - text: Kora House
+                - strong [ref=e1218]: Studio stills — selects
+                - generic [ref=e1219]:
+                  - generic [ref=e1220]: Sep 02
+                  - generic [ref=e1223]:
+                    - generic [ref=e1224]: SR
+                    - generic [ref=e1225]: AK
+              - generic [ref=e1226]:
+                - generic [ref=e1227]: "3"
+                - generic [ref=e1230]: "4"
+                - generic [ref=e1235]: High
+            - button "Add activity" [ref=e1237] [cursor=pointer]
+          - generic [ref=e1239]:
+            - generic [ref=e1240]:
+              - generic [ref=e1241]:
+                - strong [ref=e1243]: Scheduled
+                - generic [ref=e1244]: "12"
+              - button [ref=e1245] [cursor=pointer]
+            - generic [ref=e1250]: Drop activity here
+            - button "Add activity" [ref=e1254] [cursor=pointer]
+  - generic [ref=e442]:
+    - link "Made in Bolt" [ref=e443] [cursor=pointer]:
+      - /url: https://bolt.new
+    - button "Hide the Made in Bolt badge" [ref=e448] [cursor=pointer]
