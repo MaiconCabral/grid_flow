@@ -1,0 +1,273 @@
+- generic [active] [ref=f7e1]:
+  - generic [ref=f7e2]:
+    - complementary [ref=f7e3]:
+      - generic [ref=f7e4]:
+        - text: morrow
+        - generic [ref=f7e9]: BETA
+      - button "A Agency Alpha 4 workspaces" [ref=f7e11] [cursor=pointer]:
+        - generic [ref=f7e12]: A
+        - generic [ref=f7e13]:
+          - generic [ref=f7e14]: Agency Alpha
+          - generic [ref=f7e15]: 4 workspaces
+      - navigation [ref=f7e18]:
+        - generic [ref=f7e19]:
+          - paragraph [ref=f7e20]: Workspace
+          - list [ref=f7e21]:
+            - listitem [ref=f7e22]:
+              - link "Dashboard" [ref=f7e23] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=f7e30]:
+              - link "Workspace 24" [ref=f7e31] [cursor=pointer]:
+                - /url: /workspace
+                - generic [ref=f7e34]: Workspace
+                - emphasis [ref=f7e35]: "24"
+            - listitem [ref=f7e36]:
+              - link "Approval Center 3" [ref=f7e37] [cursor=pointer]:
+                - /url: /approval
+                - generic [ref=f7e41]: Approval Center
+                - emphasis [ref=f7e42]: "3"
+        - generic [ref=f7e43]:
+          - paragraph [ref=f7e44]: Manage
+          - list [ref=f7e45]:
+            - listitem [ref=f7e46]:
+              - link "Team & Clients" [ref=f7e47] [cursor=pointer]:
+                - /url: /team
+            - listitem [ref=f7e54]:
+              - link "Settings" [ref=f7e55] [cursor=pointer]:
+                - /url: /settings
+      - generic [ref=f7e60]:
+        - generic [ref=f7e62]:
+          - generic [ref=f7e63]: Storage
+          - strong [ref=f7e64]:
+            - text: 68.4 GB
+            - generic [ref=f7e65]: / 100 GB
+        - button "Help center ?" [ref=f7e72] [cursor=pointer]:
+          - text: Help center
+          - generic [ref=f7e76]: "?"
+        - generic [ref=f7e77]:
+          - generic [ref=f7e78]: JM
+          - generic [ref=f7e79]:
+            - generic [ref=f7e80]: Jordan Miller
+            - generic [ref=f7e81]: Agency Admin
+    - generic [ref=f7e82]:
+      - banner [ref=f7e83]:
+        - paragraph [ref=f7e84]:
+          - generic [ref=f7e85]: Agency Alpha
+          - generic [aria-hidden] [ref=f7e86]: ›
+          - strong [ref=f7e87]: Dashboard
+        - generic [ref=f7e88]:
+          - button [ref=f7e90] [cursor=pointer]:
+            - text: "Viewing as:"
+            - strong [ref=f7e92]: Agency Admin
+          - button "Theme" [ref=f7e96] [cursor=pointer]
+          - button "Notifications" [ref=f7e100] [cursor=pointer]
+          - button "JM" [ref=f7e106] [cursor=pointer]
+      - main [ref=f7e110]:
+        - generic [ref=f7e111]:
+          - generic [ref=f7e112]:
+            - generic [ref=f7e113]:
+              - paragraph [ref=f7e114]: Agency overview
+              - heading "Welcome back, Jordan ✦" [level=1] [ref=f7e116]
+              - paragraph [ref=f7e117]: Here's what's happening across your agency today.
+            - generic [ref=f7e118]:
+              - button "Export report" [ref=f7e119] [cursor=pointer]
+              - button "New activity" [ref=f7e123] [cursor=pointer]
+          - generic [ref=f7e125]:
+            - article [ref=f7e126]:
+              - generic [ref=f7e131]:
+                - paragraph [ref=f7e132]: "03"
+                - paragraph [ref=f7e133]: Awaiting approval
+                - paragraph [ref=f7e134]: Requires client review
+            - article [ref=f7e135]:
+              - generic [ref=f7e139]:
+                - paragraph [ref=f7e140]: "12"
+                - paragraph [ref=f7e141]: Weekly deliverables
+                - paragraph [ref=f7e142]: 8 of 12 scheduled
+            - article [ref=f7e145]:
+              - generic [ref=f7e146]: +5%
+              - generic [ref=f7e155]:
+                - paragraph [ref=f7e156]: 84%
+                - paragraph [ref=f7e157]: First-pass approval rate
+                - paragraph [ref=f7e158]: +5% this month
+            - article [ref=f7e159]:
+              - generic [ref=f7e160]: healthy
+              - generic [ref=f7e165]:
+                - paragraph [ref=f7e166]: 2.4d
+                - paragraph [ref=f7e167]: Avg. time in production
+                - paragraph [ref=f7e168]: On track
+          - generic [ref=f7e169]:
+            - generic [ref=f7e170]:
+              - generic [ref=f7e171]:
+                - generic [ref=f7e172]:
+                  - generic [ref=f7e173]:
+                    - heading "Action needed" [level=2] [ref=f7e174]
+                    - paragraph [ref=f7e175]: 3 items require attention
+                  - link "View all" [ref=f7e176] [cursor=pointer]:
+                    - /url: /workspace
+                - list [ref=f7e180]:
+                  - listitem [ref=f7e181]:
+                    - generic [ref=f7e187]:
+                      - generic [ref=f7e188]: Revision requested by Aster & Co.
+                      - generic [ref=f7e189]: Instagram Carousel · Due in 6 hours
+                    - link "Review now" [ref=f7e190] [cursor=pointer]:
+                      - /url: /approval
+                  - listitem [ref=f7e191]:
+                    - generic [ref=f7e197]:
+                      - generic [ref=f7e198]: Piece pending approval for 48h
+                      - generic [ref=f7e199]: LinkedIn Post · Northstar Labs
+                    - link "Assign designer" [ref=f7e200] [cursor=pointer]:
+                      - /url: /team
+                  - listitem [ref=f7e201]:
+                    - generic [ref=f7e206]:
+                      - generic [ref=f7e207]: Brand film v2 awaiting review
+                      - generic [ref=f7e208]: Short-form Video · Kora House
+                    - link "Review now" [ref=f7e209] [cursor=pointer]:
+                      - /url: /approval
+              - generic [ref=f7e210]:
+                - generic [ref=f7e211]:
+                  - heading "Workflow pipeline" [level=2] [ref=f7e212]
+                  - paragraph [ref=f7e213]: 29 active tasks across 6 stages
+                - list [ref=f7e214]:
+                  - listitem [ref=f7e215]:
+                    - generic [ref=f7e216]:
+                      - text: To Do
+                      - emphasis [ref=f7e218]: "4"
+                  - listitem [ref=f7e221]:
+                    - generic [ref=f7e222]:
+                      - text: In Production
+                      - emphasis [ref=f7e224]: "7"
+                  - listitem [ref=f7e227]:
+                    - generic [ref=f7e228]:
+                      - text: Internal Review
+                      - emphasis [ref=f7e230]: "3"
+                  - listitem [ref=f7e233]:
+                    - generic [ref=f7e234]:
+                      - text: Client Review
+                      - emphasis [ref=f7e236]: "2"
+                  - listitem [ref=f7e239]:
+                    - generic [ref=f7e240]:
+                      - text: Approved
+                      - emphasis [ref=f7e242]: "8"
+                  - listitem [ref=f7e245]:
+                    - generic [ref=f7e246]:
+                      - text: Scheduled
+                      - emphasis [ref=f7e248]: "5"
+              - generic [ref=f7e251]:
+                - generic [ref=f7e252]:
+                  - generic [ref=f7e253]:
+                    - heading "This week's calendar" [level=2] [ref=f7e254]
+                    - paragraph [ref=f7e255]: Aug 19 — 25, 2024
+                  - generic [ref=f7e256]:
+                    - generic [ref=f7e257]: "6"
+                    - generic [ref=f7e258]: "3"
+                    - generic [ref=f7e259]: "2"
+                - generic [ref=f7e260]:
+                  - generic [ref=f7e261]:
+                    - generic [ref=f7e262]:
+                      - generic [ref=f7e263]: Mon
+                      - generic [ref=f7e264]: "19"
+                    - paragraph [ref=f7e266]: 9:00 AM
+                  - generic [ref=f7e267]:
+                    - generic [ref=f7e268]:
+                      - generic [ref=f7e269]: Tue
+                      - generic [ref=f7e270]: "20"
+                    - generic [ref=f7e271]:
+                      - paragraph [ref=f7e272]: 11:00 AM
+                      - paragraph [ref=f7e273]: 2:00 PM
+                  - generic [ref=f7e274]:
+                    - generic [ref=f7e275]:
+                      - generic [ref=f7e276]: Wed
+                      - generic [ref=f7e277]: "21"
+                    - paragraph [ref=f7e279]: 10:00 AM
+                  - generic [ref=f7e280]:
+                    - generic [ref=f7e281]:
+                      - generic [ref=f7e282]: Thu
+                      - generic [ref=f7e283]: "22"
+                    - paragraph [ref=f7e285]: 3:00 PM
+                  - generic [ref=f7e286]:
+                    - generic [ref=f7e287]:
+                      - generic [ref=f7e288]: Fri
+                      - generic [ref=f7e289]: "23"
+                    - generic [ref=f7e290]:
+                      - paragraph [ref=f7e291]: 1:00 PM
+                      - paragraph [ref=f7e292]: 5:00 PM
+                  - generic [ref=f7e294]:
+                    - generic [ref=f7e295]: Sat
+                    - generic [ref=f7e296]: "24"
+                  - generic [ref=f7e298]:
+                    - generic [ref=f7e299]: Sun
+                    - generic [ref=f7e300]: "25"
+            - generic [ref=f7e301]:
+              - generic [ref=f7e302]:
+                - generic [ref=f7e303]:
+                  - generic [ref=f7e304]:
+                    - heading "Activity feed" [level=2] [ref=f7e305]
+                    - paragraph [ref=f7e306]: Live updates
+                  - generic [ref=f7e307]: Live
+                - list [ref=f7e309]:
+                  - listitem [ref=f7e310]:
+                    - generic [ref=f7e311]: OC
+                    - generic [ref=f7e312]:
+                      - paragraph [ref=f7e313]:
+                        - strong [ref=f7e314]: Olivia Chen
+                        - text: Client approved Instagram Reel v2
+                        - emphasis [ref=f7e315]: Acme Corp
+                      - text: 10m ago
+                  - listitem [ref=f7e316]:
+                    - generic [ref=f7e317]: SR
+                    - generic [ref=f7e318]:
+                      - paragraph [ref=f7e319]:
+                        - strong [ref=f7e320]: Sarah Reyes
+                        - text: Designer uploaded new version for
+                        - emphasis [ref=f7e321]: LinkedIn Carousel
+                      - text: 1h ago
+                  - listitem [ref=f7e322]:
+                    - generic [ref=f7e323]: JP
+                    - generic [ref=f7e324]:
+                      - paragraph [ref=f7e325]:
+                        - strong [ref=f7e326]: John Park
+                        - text: Copywriter added an internal comment on
+                        - emphasis [ref=f7e327]: Summer Campaign
+                      - text: 3h ago
+                  - listitem [ref=f7e328]:
+                    - generic [ref=f7e329]: ML
+                    - generic [ref=f7e330]:
+                      - paragraph [ref=f7e331]:
+                        - strong [ref=f7e332]: Mia Lee
+                        - text: Designer scheduled
+                        - emphasis [ref=f7e333]: 3 posts for next week
+                      - text: 5h ago
+                  - listitem [ref=f7e334]:
+                    - generic [ref=f7e335]: JM
+                    - generic [ref=f7e336]:
+                      - paragraph [ref=f7e337]:
+                        - strong [ref=f7e338]: Jordan Miller
+                        - text: Admin assigned Sarah to
+                        - emphasis [ref=f7e339]: Brand Film v2
+                      - text: Yesterday
+              - generic [ref=f7e340]:
+                - generic [ref=f7e341]:
+                  - heading "Top clients" [level=2] [ref=f7e342]
+                  - paragraph [ref=f7e343]: 4 active workspaces
+                - list [ref=f7e344]:
+                  - listitem [ref=f7e345]:
+                    - generic [ref=f7e346]: A
+                    - generic [ref=f7e347]:
+                      - generic [ref=f7e348]: Aster & Co.
+                      - generic [ref=f7e349]: 3 pending tasks
+                  - listitem [ref=f7e351]:
+                    - generic [ref=f7e352]: "N"
+                    - generic [ref=f7e353]:
+                      - generic [ref=f7e354]: Northstar Labs
+                      - generic [ref=f7e355]: 5 pending tasks
+                  - listitem [ref=f7e357]:
+                    - generic [ref=f7e358]: K
+                    - generic [ref=f7e359]:
+                      - generic [ref=f7e360]: Kora House
+                      - generic [ref=f7e361]: 2 pending tasks
+                  - listitem [ref=f7e363]:
+                    - generic [ref=f7e364]: AC
+                    - generic [ref=f7e365]:
+                      - generic [ref=f7e366]: Acme Corp
+                      - generic [ref=f7e367]: 1 pending tasks
+  - button "Open Next.js Dev Tools" [ref=f7e374] [cursor=pointer]

@@ -1,0 +1,126 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e9]: morrow
+        - generic [ref=e10]: BETA
+      - button "A Agency Alpha 4 workspaces" [ref=e12]:
+        - generic [ref=e13]: A
+        - generic [ref=e14]:
+          - generic [ref=e15]: Agency Alpha
+          - generic [ref=e16]: 4 workspaces
+      - navigation [ref=e19]:
+        - generic [ref=e20]:
+          - paragraph [ref=e21]: Workspace
+          - list [ref=e22]:
+            - listitem [ref=e23]:
+              - link "Dashboard" [ref=e24] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=e31]:
+              - link "Workspace 24" [ref=e32] [cursor=pointer]:
+                - /url: /workspace
+                - generic [ref=e35]: Workspace
+                - generic [ref=e36]: "24"
+            - listitem [ref=e37]:
+              - link "Approval Center 3" [ref=e38] [cursor=pointer]:
+                - /url: /approval
+                - generic [ref=e42]: Approval Center
+                - generic [ref=e43]: "3"
+        - generic [ref=e44]:
+          - paragraph [ref=e45]: Manage
+          - list [ref=e46]:
+            - listitem [ref=e47]:
+              - link "Team & Clients" [ref=e48] [cursor=pointer]:
+                - /url: /team
+            - listitem [ref=e55]:
+              - link "Settings" [ref=e56] [cursor=pointer]:
+                - /url: /settings
+      - generic [ref=e61]:
+        - generic [ref=e63]:
+          - generic [ref=e64]: Storage
+          - generic [ref=e65]: 68.4 GB / 100 GB
+        - button "Help center ?" [ref=e69]:
+          - generic [ref=e70]: Help center
+          - generic [ref=e74]: "?"
+        - generic [ref=e75]:
+          - generic [ref=e76]: JM
+          - generic [ref=e77]:
+            - generic [ref=e78]: Jordan Miller
+            - generic [ref=e79]: Agency Admin
+    - generic [ref=e80]:
+      - banner [ref=e81]:
+        - paragraph [ref=e82]:
+          - generic [ref=e83]: Agency Alpha
+          - generic [aria-hidden] [ref=e84]: /
+          - generic [ref=e85]: Approval Center
+        - generic [ref=e86]:
+          - 'button "Viewing as: Agency Admin" [ref=e88]':
+            - generic [ref=e89]: "Viewing as:"
+            - strong [ref=e90]: Agency Admin
+          - button "Theme" [ref=e94]
+          - button "Notifications" [ref=e98]
+          - button "JM" [ref=e103]
+      - main [ref=e104]:
+        - generic [ref=e671]:
+          - generic [ref=e672]:
+            - generic [ref=e673]:
+              - generic [ref=e674]:
+                - paragraph [ref=e675]: Client review · Aster & Co.
+                - heading "Summer campaign — carousel" [level=1] [ref=e676]
+                - paragraph [ref=e677]: Review the latest version and leave contextual feedback for the team.
+              - generic [ref=e678]:
+                - generic [ref=e679]: Piece approved
+                - button "Share" [ref=e680]
+            - generic [ref=e687]:
+              - generic [ref=e688]:
+                - generic [ref=e689]:
+                  - generic [ref=e690]:
+                    - paragraph [ref=e691]: summer-campaign-carousel.fig
+                    - paragraph [ref=e692]: Uploaded Aug 24, 2024 by Mia Lee · 8.4 MB
+                  - generic [ref=e693]:
+                    - button "Download file" [ref=e694]
+                    - button "More file actions" [ref=e698]
+                - generic [ref=e703]:
+                  - img "Fabric detail" [ref=e803]
+                  - button "Pin 1" [ref=e705]: "1"
+                  - button "Pin 2" [ref=e706]: "2"
+                  - button "Previous slide" [ref=e707]
+                  - button "Next slide" [active] [ref=e710]
+                  - generic [ref=e713]: 02 / 05
+                - generic [ref=e714]:
+                  - generic [ref=e715]:
+                    - generic [ref=e716]: Version
+                    - button "v1" [ref=e717]
+                    - button "v2" [ref=e718]
+                    - button "v3Current" [ref=e719]
+                  - paragraph [ref=e720]: Click anywhere to add a pin · viewing v3
+              - complementary [ref=e721]:
+                - generic [ref=e722]:
+                  - button "Comments 4" [ref=e775]
+                  - button "Details" [ref=e724]
+                - generic [ref=e786]:
+                  - generic [ref=e787]:
+                    - paragraph [ref=e788]: Client
+                    - paragraph [ref=e789]: Aster & Co.
+                  - generic [ref=e790]:
+                    - paragraph [ref=e791]: Format
+                    - paragraph [ref=e792]: Instagram Carousel
+                  - generic [ref=e793]:
+                    - paragraph [ref=e794]: Due date
+                    - paragraph [ref=e795]: Today, 4:00 PM
+                  - generic [ref=e796]:
+                    - paragraph [ref=e797]: Views
+                    - paragraph [ref=e798]: 18 people
+                  - generic [ref=e799]:
+                    - generic [ref=e800]: Summer 2024
+                    - generic [ref=e801]: Launch campaign
+                    - generic [ref=e802]: Paid social
+          - generic [ref=e768]:
+            - generic [ref=e769]:
+              - paragraph [ref=e770]: Ready to make a decision?
+              - paragraph [ref=e771]: Your feedback helps the team move faster.
+            - generic [ref=e772]:
+              - button "Request revisions" [ref=e773]
+              - button "Approve piece" [ref=e774]
+  - button "Open Next.js Dev Tools" [ref=e316] [cursor=pointer]
+  - alert [ref=e325]: Approval Center · morrow

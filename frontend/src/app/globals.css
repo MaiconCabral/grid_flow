@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+:root,
+[data-theme="dark"] {
+  --background: #111313;
+  --sidebar: #181a1a;
+  --card: #181a1a;
+  --raised: #1e2120;
+  --soft: #252827;
+  --foreground: #f3f4ee;
+  --muted: #969b97;
+  --faint: #666d68;
+  --line: transparent;
+  --lime: #bbff52;
+  --lime-ink: #17230a;
+  --lime-dark: #17230a;
+  --purple: #9b35aa;
+  --purple-soft: #2c182f;
+  --blue-soft: #172732;
+  --orange-soft: #30251a;
+  --good: #bbff52;
+  --bad: #dd8b9a;
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --background: #f0f1ed;
+  --sidebar: #fbfcf8;
+  --card: #fbfcf8;
+  --raised: #f4f5f1;
+  --soft: #e9ebe6;
+  --foreground: #181b19;
+  --muted: #69716b;
+  --faint: #8b938c;
+  --line: transparent;
+  --lime: #bbff52;
+  --lime-ink: #17230a;
+  --lime-dark: #efffce;
+  --purple: #9b35aa;
+  --purple-soft: #f5eaf7;
+  --blue-soft: #e5f1f8;
+  --orange-soft: #faeee0;
+  --good: #5f852e;
+  --bad: #dd8b9a;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-sidebar: var(--sidebar);
+  --color-card: var(--card);
+  --color-raised: var(--raised);
+  --color-soft: var(--soft);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-lime: var(--lime);
+  --color-lime-ink: var(--lime-ink);
+  --color-lime-dark: var(--lime-dark);
+  --color-purple: var(--purple);
+  --color-purple-soft: var(--purple-soft);
+  --color-blue-soft: var(--blue-soft);
+  --color-orange-soft: var(--orange-soft);
+  --color-good: var(--good);
+  --color-bad: var(--bad);
+  --font-sans: var(--font-dm);
+  --font-display: var(--font-manrope);
+}
+
+html {
+  line-height: normal;
+  font-synthesis: none;
+  -webkit-font-smoothing: auto;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), "DM Sans", sans-serif;
+}
+
+@layer base {
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+}
+
+[data-theme="light"] .nav-active {
+  color: #3f6212;
+}

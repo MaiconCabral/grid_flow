@@ -1,0 +1,146 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e9]: morrow
+        - generic [ref=e10]: BETA
+      - button "A Agency Alpha 4 workspaces" [ref=e12]:
+        - generic [ref=e13]: A
+        - generic [ref=e14]:
+          - generic [ref=e15]: Agency Alpha
+          - generic [ref=e16]: 4 workspaces
+      - navigation [ref=e19]:
+        - generic [ref=e20]:
+          - paragraph [ref=e21]: Workspace
+          - list [ref=e22]:
+            - listitem [ref=e23]:
+              - link "Dashboard" [ref=e24] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=e31]:
+              - link "Workspace 24" [ref=e32] [cursor=pointer]:
+                - /url: /workspace
+                - generic [ref=e35]: Workspace
+                - generic [ref=e36]: "24"
+            - listitem [ref=e37]:
+              - link "Approval Center 3" [ref=e38] [cursor=pointer]:
+                - /url: /approval
+                - generic [ref=e42]: Approval Center
+                - generic [ref=e43]: "3"
+        - generic [ref=e44]:
+          - paragraph [ref=e45]: Manage
+          - list [ref=e46]:
+            - listitem [ref=e47]:
+              - link "Team & Clients" [ref=e48] [cursor=pointer]:
+                - /url: /team
+            - listitem [ref=e55]:
+              - link "Settings" [ref=e56] [cursor=pointer]:
+                - /url: /settings
+      - generic [ref=e61]:
+        - generic [ref=e63]:
+          - generic [ref=e64]: Storage
+          - generic [ref=e65]: 68.4 GB / 100 GB
+        - button "Help center ?" [ref=e69]:
+          - generic [ref=e70]: Help center
+          - generic [ref=e74]: "?"
+        - generic [ref=e75]:
+          - generic [ref=e76]: JM
+          - generic [ref=e77]:
+            - generic [ref=e78]: Jordan Miller
+            - generic [ref=e79]: Agency Admin
+    - generic [ref=e80]:
+      - banner [ref=e81]:
+        - paragraph [ref=e82]:
+          - generic [ref=e83]: Agency Alpha
+          - generic [aria-hidden] [ref=e84]: /
+          - generic [ref=e85]: Workspace
+        - generic [ref=e86]:
+          - 'button "Viewing as: Agency Admin" [ref=e88]':
+            - generic [ref=e89]: "Viewing as:"
+            - strong [ref=e90]: Agency Admin
+          - button "Theme" [ref=e94]
+          - button "Notifications" [ref=e98]
+          - button "JM" [ref=e103]
+      - main [ref=e104]:
+        - generic [ref=e339]:
+          - generic [ref=e340]:
+            - generic [ref=e341]:
+              - paragraph [ref=e342]: Live workspace
+              - heading "Good morning, Jordan" [level=1] [ref=e343]
+              - paragraph [ref=e347]: Keep your team moving and your clients in the loop.
+            - generic [ref=e348]:
+              - button "Export" [ref=e349]
+              - button "New activity" [ref=e353]
+          - generic [ref=e355]:
+            - article [ref=e356]:
+              - generic [ref=e357]:
+                - paragraph [ref=e358]: Active activities
+                - paragraph [ref=e359]:
+                  - generic [ref=e360]: "24"
+                  - generic [ref=e361]: +12%
+            - article [ref=e370]:
+              - generic [ref=e371]:
+                - paragraph [ref=e372]: Awaiting approval
+                - paragraph [ref=e373]:
+                  - generic [ref=e374]: "03"
+                  - generic [ref=e375]: "-8%"
+            - article [ref=e384]:
+              - generic [ref=e385]:
+                - paragraph [ref=e386]: Due this week
+                - paragraph [ref=e387]:
+                  - generic [ref=e388]: "09"
+                  - generic [ref=e389]: +4%
+            - article [ref=e398]:
+              - generic [ref=e399]:
+                - paragraph [ref=e400]: Client satisfaction
+                - paragraph [ref=e401]:
+                  - generic [ref=e402]: 94%
+                  - generic [ref=e403]: +6%
+          - generic [ref=e412]:
+            - generic [ref=e413]:
+              - button "Board" [ref=e414]
+              - button "List" [ref=e420]
+              - button "Calendar" [active] [ref=e422]
+            - generic [ref=e425]:
+              - textbox [ref=e430]:
+                - /placeholder: Search activities...
+              - combobox "Filter by client" [ref=e431]:
+                - option "All clients" [selected]
+                - option "Aster & Co."
+                - option "Northstar Labs"
+                - option "Kora House"
+              - button "Filters 2" [ref=e433]:
+                - text: Filters
+                - generic [ref=e434]: "2"
+          - generic [ref=e609]:
+            - generic [ref=e610]:
+              - heading "Aug 19 — Aug 25" [level=2] [ref=e611]
+              - generic [ref=e612]:
+                - button "Previous" [ref=e613]
+                - button "Next" [ref=e614]
+            - generic [ref=e615]:
+              - generic [ref=e616]:
+                - paragraph [ref=e617]: Mon
+                - paragraph [ref=e618]: "19"
+              - generic [ref=e619]:
+                - paragraph [ref=e620]: Tue
+                - paragraph [ref=e621]: "20"
+              - generic [ref=e622]:
+                - paragraph [ref=e623]: Wed
+                - paragraph [ref=e624]: "21"
+              - generic [ref=e625]:
+                - paragraph [ref=e626]: Thu
+                - paragraph [ref=e627]: "22"
+                - paragraph [ref=e629]:
+                  - generic [ref=e630]: Summer campaign — carousel
+                  - text: Aster & Co.
+              - generic [ref=e631]:
+                - paragraph [ref=e632]: Fri
+                - paragraph [ref=e633]: "23"
+              - generic [ref=e634]:
+                - paragraph [ref=e635]: Sat
+                - paragraph [ref=e636]: "24"
+              - generic [ref=e637]:
+                - paragraph [ref=e638]: Sun
+                - paragraph [ref=e639]: "25"
+  - button "Open Next.js Dev Tools" [ref=e316] [cursor=pointer]
+  - alert [ref=e325]: Good morning, Jordan
