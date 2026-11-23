@@ -14,10 +14,10 @@ class ActivityPolicy
         return $user->tenant_id !== null;
     }
 
-    /** Allows staff to see every task, and a client only their brand. */
+    /** Allows a person to open a task they are allowed to see. */
     public function view(User $user, Activity $activity): bool
     {
-        return $this->sameAgency($user, $activity) && $this->seesBrand($user, $activity);
+        return $this->sees($user, $activity);
     }
 
     /** Allows only an agency admin to create a task. */
@@ -32,10 +32,16 @@ class ActivityPolicy
         return $user->role === UserRole::AgencyAdmin && $this->sameAgency($user, $activity);
     }
 
-    /** Allows the agency team to attach a delivery. */
+    /** Allows the agency team to attach a delivery on a task they can see. */
     public function upload(User $user, Activity $activity): bool
     {
-        return $this->isStaff($user) && $this->sameAgency($user, $activity);
+        return $this->isStaff($user) && $this->sees($user, $activity);
+    }
+
+    /** Allows a person who can see the task to comment on it. */
+    public function comment(User $user, Activity $activity): bool
+    {
+        return $this->sees($user, $activity);
     }
 
     /** Allows only the client of that brand to approve or request changes. */
@@ -53,14 +59,23 @@ class ActivityPolicy
         return (int) $user->tenant_id === (int) $activity->tenant_id;
     }
 
-    /** Hides other brands from a client login. */
-    private function seesBrand(User $user, Activity $activity): bool
+    /** Limits a client to their brand and a professional to their own tasks. */
+    private function sees(User $user, Activity $activity): bool
     {
-        if ($user->role !== UserRole::Client) {
+        if (! $this->sameAgency($user, $activity)) {
+            return false;
+        }
+
+        if ($user->role === UserRole::AgencyAdmin) {
             return true;
         }
 
-        return (int) $user->workspace_id === (int) $activity->workspace_id;
+        if ($user->role === UserRole::Client) {
+            return $user->workspace_id !== null
+                && (int) $user->workspace_id === (int) $activity->workspace_id;
+        }
+
+        return (int) $user->id === (int) $activity->assignee_id;
     }
 
     /** Checks that the user works for the agency. */

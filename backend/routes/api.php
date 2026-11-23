@@ -31,6 +31,9 @@ Route::prefix('v1')->group(function () {
             Route::get('activities/{activity}', [ActivityController::class, 'show']);
             Route::patch('activities/{activity}', [ActivityController::class, 'update']);
             Route::post('activities/{activity}/assets', [ActivityController::class, 'storeAsset']);
+            Route::post('activities/{activity}/comments', [ActivityController::class, 'storeComment']);
+            Route::patch('activities/{activity}/comments/{comment}', [ActivityController::class, 'updateComment']);
+            Route::post('activities/{activity}/versions/{version}/annotations', [ActivityController::class, 'storeAnnotation']);
             Route::post('activities/{activity}/approve', [ActivityController::class, 'approve']);
             Route::post('activities/{activity}/request-changes', [ActivityController::class, 'requestChanges']);
         });

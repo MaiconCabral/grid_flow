@@ -14,6 +14,7 @@ src/
 │   │       ├── workspace/page.tsx
 │   │       ├── workspace/[activityId]/page.tsx
 │   │       ├── approval/page.tsx
+│   │       ├── approval/[activityId]/page.tsx
 │   │       ├── team/page.tsx
 │   │       └── settings/page.tsx
 │   ├── layout.tsx
@@ -35,7 +36,8 @@ As cores de fundo e o destaque vêm da agência, gravados em `tenants`. A chave 
 
 O quadro e a ficha da tarefa ficam em `src/components/workspace/`. O detalhe está em [etapas/04-workspace.md](etapas/04-workspace.md).
 
+A lista e a peça ficam em `src/components/approval/`. O detalhe está em [etapas/05-aprovacao.md](etapas/05-aprovacao.md).
+
 ## Etapas futuras na interface
 
-- **Aprovação com pinos.** Pinos em porcentagem da área da peça. Os botões de aprovar ou pedir ajuste já estão na ficha.
 - **Upload em nuvem e tempo real.** URL pré-assinada e escuta do canal do workspace. O anexo atual vai para o disco local da API.

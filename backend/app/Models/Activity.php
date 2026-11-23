@@ -61,6 +61,18 @@ class Activity extends Model
         return $this->hasMany(ActivityAsset::class);
     }
 
+    /** Lists the versions of the piece. */
+    public function versions(): HasMany
+    {
+        return $this->hasMany(ActivityVersion::class);
+    }
+
+    /** Lists comments written on the task. */
+    public function comments(): HasMany
+    {
+        return $this->hasMany(ActivityComment::class);
+    }
+
     /** Lists the history entries of the task. */
     public function events(): HasMany
     {

@@ -14,7 +14,7 @@ O cliente só vê a própria marca no filtro. A equipe vê as marcas da agência
 
 O card, a linha da lista e o item do calendário abrem `/{slug}/workspace/{id}`. A página mostra briefing, tipo, responsável, status, arquivos e a linha do tempo. Cada evento traz quem fez e quando.
 
-Em In Production, a equipe anexa imagem, PDF, DOC ou link do YouTube. Em Pending Approval, o cliente da marca aprova ou pede ajuste com uma nota. Pinos na peça e upload em nuvem ficam para as próximas etapas.
+Em In Production, a equipe anexa imagem, PDF, DOC ou link do YouTube. Em Pending Approval, o cliente da marca aprova ou pede ajuste com uma nota. Versões e pinos ficam na Approval Center, em [05-aprovacao.md](05-aprovacao.md). O upload em nuvem fica para a etapa seguinte.
 
 ## Arquivos
 

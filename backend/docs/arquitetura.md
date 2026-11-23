@@ -23,8 +23,8 @@ O middleware `ResolveTenant` lê o header `X-Tenant-ID`. O valor tem de ser o id
 | `designer` | Designer | Lê o próprio perfil |
 | `client` | Cliente Final | Lê o próprio perfil e fica ligado a um workspace |
 
-Um usuário pertence a uma agência. O seletor visual “Viewing as” da interface não troca o papel real. O CRUD de usuários e marcas fica nas policies: só o admin da mesma agência segue. Nome, tema, cores e plano também ficam nessa linha de `tenants`. O admin cria e move tarefas; a equipe anexa a entrega em produção; só o cliente da marca aprova. O detalhe está em [etapas/02-equipe.md](etapas/02-equipe.md), [etapas/03-configuracoes.md](etapas/03-configuracoes.md) e [etapas/04-workspace.md](etapas/04-workspace.md).
+Um usuário pertence a uma agência. O seletor visual “Viewing as” da interface não troca o papel real. O CRUD de usuários e marcas fica nas policies: só o admin da mesma agência segue. Nome, tema, cores e plano também ficam nessa linha de `tenants`. O admin cria e move tarefas e vê todas elas. Designer e redator veem e entregam só as tarefas em que são o responsável. O cliente vê a própria marca, comenta com pinos e aprova. O detalhe está em [etapas/02-equipe.md](etapas/02-equipe.md), [etapas/03-configuracoes.md](etapas/03-configuracoes.md), [etapas/04-workspace.md](etapas/04-workspace.md) e [etapas/05-aprovacao.md](etapas/05-aprovacao.md).
 
 ## Fora desta etapa
 
-Pinos sobre a peça, versões de mídia, upload em nuvem, filas, Reverb e cache dos indicadores. O anexo atual fica no disco `public`.
+Upload em nuvem, filas, Reverb e cache dos indicadores. O anexo atual fica no disco `public`.

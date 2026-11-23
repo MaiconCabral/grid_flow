@@ -1,6 +1,6 @@
 # Etapa 4 — Workspace
 
-O quadro deixa o mock e passa a ler as tarefas da agência. A interface continua em inglês. Aprovação com pinos e o envio de arquivo para a nuvem ficam para as etapas seguintes: o arquivo desta etapa vai para o disco `public` local, e o link só guarda a URL do YouTube.
+O quadro deixa o mock e passa a ler as tarefas da agência. A interface continua em inglês. O arquivo vai para o disco `public` local, e o link só guarda a URL do YouTube. A peça com versões e pinos está em [05-aprovacao.md](05-aprovacao.md). O envio para a nuvem fica para a etapa seguinte.
 
 ## Tarefa
 

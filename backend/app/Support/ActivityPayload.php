@@ -3,16 +3,22 @@
 namespace App\Support;
 
 use App\Enums\AssetKind;
+use App\Enums\UserRole;
 use App\Models\Activity;
-use App\Models\ActivityAsset;
+use App\Models\ActivityAnnotation;
+use App\Models\ActivityComment;
 use App\Models\ActivityEvent;
+use App\Models\ActivityVersion;
+use App\Models\User;
 
 class ActivityPayload
 {
     /** Builds the card fields returned by the board. */
     public function summary(Activity $activity): array
     {
-        $cover = $activity->assets->first(fn (ActivityAsset $asset) => $asset->kind === AssetKind::Image);
+        $activity->loadMissing('versions');
+        $current = $activity->versions->firstWhere('is_current', true);
+        $cover = $current?->kind === AssetKind::Image ? $current : null;
 
         return [
             'id' => $activity->id,
@@ -30,29 +36,38 @@ class ActivityPayload
                 'id' => $activity->assignee->id,
                 'name' => $activity->assignee->name,
             ],
-            'assets_count' => $activity->assets->count(),
+            'assets_count' => $activity->versions->count(),
             'events_count' => $activity->events_count ?? $activity->events->count(),
-            'cover_url' => $this->publicUrl($cover),
+            'cover_url' => $this->fileUrl($cover),
         ];
     }
 
-    /** Builds the task page, including files and history. */
-    public function detail(Activity $activity): array
+    /** Builds the task page, including versions, pins, comments, and history. */
+    public function detail(Activity $activity, User $viewer): array
     {
-        $activity->loadMissing(['workspace', 'assignee', 'assets.uploader', 'events.actor']);
+        $activity->loadMissing([
+            'workspace',
+            'assignee',
+            'versions.uploader',
+            'versions.annotations.author',
+            'versions.annotations.comments',
+            'comments.author',
+            'comments.annotation',
+            'events.actor',
+        ]);
+
+        $comments = $this->visibleComments($activity, $viewer);
 
         return $this->summary($activity) + [
-            'assets' => $activity->assets
-                ->sortBy('id')
+            'assets' => $activity->versions
+                ->sortBy('number')
                 ->values()
-                ->map(fn (ActivityAsset $asset) => [
-                    'id' => $asset->id,
-                    'kind' => $asset->kind->value,
-                    'name' => $asset->name,
-                    'url' => $this->publicUrl($asset),
-                    'author' => $asset->uploader?->name,
-                    'created_at' => $asset->created_at?->toIso8601String(),
-                ]),
+                ->map(fn (ActivityVersion $version) => $this->assetRow($version)),
+            'versions' => $activity->versions
+                ->sortBy('number')
+                ->values()
+                ->map(fn (ActivityVersion $version) => $this->versionRow($version, $viewer)),
+            'comments' => $comments->map(fn (ActivityComment $comment) => $this->commentRow($comment))->values(),
             'events' => $activity->events
                 ->sortBy('id')
                 ->values()
@@ -68,17 +83,87 @@ class ActivityPayload
         ];
     }
 
-    /** Turns a stored file into a path the browser can open. */
-    private function publicUrl(?ActivityAsset $asset): ?string
+    /** Hides internal notes from a client. */
+    private function visibleComments(Activity $activity, User $viewer)
     {
-        if ($asset === null) {
+        return $activity->comments
+            ->sortBy('id')
+            ->filter(function (ActivityComment $comment) use ($viewer) {
+                if ($viewer->role === UserRole::Client && $comment->is_internal) {
+                    return false;
+                }
+
+                return true;
+            })
+            ->values();
+    }
+
+    /** Builds the delivery row still used by the task page. */
+    private function assetRow(ActivityVersion $version): array
+    {
+        return [
+            'id' => $version->id,
+            'kind' => $version->kind->value,
+            'name' => $version->name,
+            'url' => $this->fileUrl($version),
+            'author' => $version->uploader?->name,
+            'created_at' => $version->created_at?->toIso8601String(),
+        ];
+    }
+
+    /** Builds one version, including the pins the viewer may see. */
+    private function versionRow(ActivityVersion $version, User $viewer): array
+    {
+        $annotations = $version->annotations->sortBy('number')->filter(function (ActivityAnnotation $annotation) use ($viewer) {
+            if ($viewer->role !== UserRole::Client) {
+                return true;
+            }
+
+            return $annotation->comments->contains(fn (ActivityComment $comment) => ! $comment->is_internal);
+        });
+
+        return $this->assetRow($version) + [
+            'number' => $version->number,
+            'is_current' => $version->is_current,
+            'annotations' => $annotations->values()->map(fn (ActivityAnnotation $annotation) => [
+                'id' => $annotation->id,
+                'number' => $annotation->number,
+                'x' => $annotation->x,
+                'y' => $annotation->y,
+                'author' => $annotation->author?->name,
+            ]),
+        ];
+    }
+
+    /** Builds one comment for the thread. */
+    private function commentRow(ActivityComment $comment): array
+    {
+        return [
+            'id' => $comment->id,
+            'body' => $comment->body,
+            'parent_id' => $comment->parent_id,
+            'version_id' => $comment->activity_version_id,
+            'annotation_id' => $comment->annotation_id,
+            'pin' => $comment->annotation?->number,
+            'is_internal' => $comment->is_internal,
+            'resolved_at' => $comment->resolved_at?->toIso8601String(),
+            'author' => $comment->author?->name,
+            'role' => $comment->author?->role?->value,
+            'created_at' => $comment->created_at?->toIso8601String(),
+        ];
+    }
+
+    /** Turns a stored file into a path the browser can open. */
+    private function fileUrl(?ActivityVersion $version): ?string
+    {
+        if ($version === null) {
             return null;
         }
 
-        if ($asset->kind === AssetKind::Link) {
-            return $asset->url;
+        if ($version->kind === AssetKind::Link) {
+            return $version->url;
         }
 
-        return $asset->path ? '/storage/'.$asset->path : null;
+        return $version->path ? '/storage/'.$version->path : null;
     }
 }

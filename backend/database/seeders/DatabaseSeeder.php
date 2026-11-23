@@ -127,12 +127,14 @@ class DatabaseSeeder extends Seeder
 
         $this->task($jordan, $aster, $sarah, 'Summer launch carousel', 'Five frames for the summer drop, lime type on dark.', ActivityChannel::Instagram, ActivityFormat::Carousel, ActivityStatus::Todo, now()->toDateString());
         $film = $this->task($jordan, $aster, $john, 'Founder note', 'Short LinkedIn post in Jordan’s voice.', ActivityChannel::Linkedin, ActivityFormat::Post, ActivityStatus::Production, now()->addDay()->toDateString());
-        $film->assets()->create([
+        $film->versions()->create([
             'tenant_id' => $alpha->id,
             'uploaded_by' => $john->id,
+            'number' => 1,
             'kind' => AssetKind::Link,
             'name' => 'YouTube',
             'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            'is_current' => true,
         ]);
         $film->events()->create([
             'tenant_id' => $alpha->id,

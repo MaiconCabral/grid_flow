@@ -24,6 +24,34 @@ export type ActivityAsset = {
   created_at: string | null;
 };
 
+export type ActivityPin = {
+  id: number;
+  number: number;
+  x: number;
+  y: number;
+  author: string | null;
+};
+
+export type ActivityVersion = ActivityAsset & {
+  number: number;
+  is_current: boolean;
+  annotations: ActivityPin[];
+};
+
+export type ActivityComment = {
+  id: number;
+  body: string;
+  parent_id: number | null;
+  version_id: number | null;
+  annotation_id: number | null;
+  pin: number | null;
+  is_internal: boolean;
+  resolved_at: string | null;
+  author: string | null;
+  role: string | null;
+  created_at: string | null;
+};
+
 export type ActivityEvent = {
   id: number;
   type: string;
@@ -36,7 +64,16 @@ export type ActivityEvent = {
 
 export type ActivityDetail = BoardActivity & {
   assets: ActivityAsset[];
+  versions: ActivityVersion[];
+  comments: ActivityComment[];
   events: ActivityEvent[];
+};
+
+export const roleLabels: Record<string, string> = {
+  agency_admin: "Agency Admin",
+  designer: "Designer",
+  copywriter: "Copywriter",
+  client: "Client",
 };
 
 export type ActivityBoard = {

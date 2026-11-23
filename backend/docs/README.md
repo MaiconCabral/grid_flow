@@ -12,12 +12,11 @@ A stack deste repositório é Laravel 12 e PHP 8.2, com SQLite no ambiente local
 | 2. Equipe e clientes | [etapas/02-equipe.md](etapas/02-equipe.md) | Implementada |
 | 3. Configurações da agência | [etapas/03-configuracoes.md](etapas/03-configuracoes.md) | Implementada |
 | 4. Workspace | [etapas/04-workspace.md](etapas/04-workspace.md) | Implementada |
-| 5. Aprovação com pinos | — | Não iniciada |
+| 5. Approval Center | [etapas/05-aprovacao.md](etapas/05-aprovacao.md) | Implementada |
 | 6. Upload em nuvem e tempo real | — | Não iniciada |
 
 A visão geral do isolamento e dos papéis está em [arquitetura.md](arquitetura.md).
 
 ## O que cada etapa futura entrega
 
-- **Aprovação com pinos.** Versões de mídia, pinos em porcentagem e o desenho sobre a peça. A decisão de aprovar ou pedir ajuste já existe na ficha da tarefa.
-- **Upload em nuvem e tempo real.** URL pré-assinada, miniatura em fila, e-mail transacional e canal privado por workspace. O anexo desta etapa fica no disco local. Cache dos indicadores fica para essa etapa. Redis, Reverb, Horizon e OpenAPI não entram antes dela.
+- **Upload em nuvem e tempo real.** URL pré-assinada, miniatura em fila, e-mail transacional e canal privado por workspace. O anexo atual fica no disco local. Cache dos indicadores fica para essa etapa. Redis, Reverb, Horizon e OpenAPI não entram antes dela.
