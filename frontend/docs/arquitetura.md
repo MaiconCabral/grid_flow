@@ -24,7 +24,7 @@ src/
 └── proxy.ts
 ```
 
-O convite por token (`invite/[token]`) fica para a etapa em que o admin convidar membros. Não há tela nesta etapa.
+A gestão de membros e marcas fica em `/{slug}/team`. O convite por token (`invite/[token]`) continua para a etapa de e-mail transacional.
 
 `features/` e os clientes de TanStack Query, Zustand, Echo e upload direto também ficam para as próximas etapas. O login desta etapa chama a API com `fetch`.
 

@@ -25,3 +25,5 @@ A base da API é `NEXT_PUBLIC_API_URL`, com padrão `http://localhost:8000`.
 O painel mock continua em `/{slug}/dashboard`, `/{slug}/workspace` e `/{slug}/approval`. Os dados dessas telas ainda são locais. A sessão é que passa a ser real.
 
 Contas de demonstração e o formato dos JSON estão em `backend/docs/etapas/01-autenticacao.md`.
+
+Falha de login ou de cadastro abre o mesmo SweetAlert do restante da aplicação, no tema claro ou escuro ativo.

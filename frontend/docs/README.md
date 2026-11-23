@@ -9,8 +9,9 @@ O texto de escopo cita `middleware.ts`. Nesta versão do Next a proteção de ro
 | Etapa | Guia | Estado |
 | --- | --- | --- |
 | 1. Login, cadastro e sessão | [etapas/01-autenticacao.md](etapas/01-autenticacao.md) | Implementada |
-| 2. Kanban com dados da API | — | Não iniciada |
-| 3. Central de aprovação | — | Não iniciada |
-| 4. Upload e tempo real | — | Não iniciada |
+| 2. Team & Clients | [etapas/02-equipe.md](etapas/02-equipe.md) | Implementada |
+| 3. Kanban com dados da API | — | Não iniciada |
+| 4. Central de aprovação | — | Não iniciada |
+| 5. Upload e tempo real | — | Não iniciada |
 
 A árvore de pastas e o que cada etapa futura muda estão em [arquitetura.md](arquitetura.md).

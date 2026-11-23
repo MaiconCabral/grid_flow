@@ -18,7 +18,7 @@ O middleware `ResolveTenant` lê o header `X-Tenant-ID`. O valor tem de ser o id
 
 | Valor | Quem é | Nesta etapa |
 | --- | --- | --- |
-| `agency_admin` | Admin da Agência | Cadastra a agência, lista e cria usuários dela |
+| `agency_admin` | Admin da Agência | Cadastra a agência e faz o CRUD de usuários e marcas dela |
 | `copywriter` | Redator | Lê o próprio perfil |
 | `designer` | Designer | Lê o próprio perfil |
 | `client` | Cliente Final | Lê o próprio perfil e fica ligado a um workspace |

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AuthFrame } from "@/components/auth/auth-frame";
+import { notifyError } from "@/lib/alerts";
 import { ApiError, api } from "@/lib/api-client";
 import { writeSession, type AuthSession } from "@/lib/session";
 
@@ -23,14 +24,12 @@ export function RegisterForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const router = useRouter();
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     setPending(true);
-    setError(null);
     try {
       const session = await api<AuthSession>("/auth/register", {
         method: "POST",
@@ -47,7 +46,7 @@ export function RegisterForm() {
       writeSession(session);
       router.push(`/${session.tenant.slug}/dashboard`);
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : "Could not create the agency.");
+      void notifyError(caught instanceof ApiError ? caught.message : "Could not create the agency.");
       setPending(false);
     }
   }
@@ -86,7 +85,6 @@ export function RegisterForm() {
         <Field label="Email" type="email" value={email} onChange={setEmail} />
         <Field label="Password" type="password" value={password} onChange={setPassword} />
         <Field label="Confirm password" type="password" value={passwordConfirmation} onChange={setPasswordConfirmation} />
-        {error ? <p className="text-[12px] text-[#dd8b9a]">{error}</p> : null}
         <button
           type="submit"
           disabled={pending}
