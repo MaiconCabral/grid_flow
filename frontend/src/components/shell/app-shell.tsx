@@ -41,6 +41,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     ? {
         name: account.user.name,
         role: roleLabels[account.user.role] ?? account.user.role,
+        roleKey: account.user.role,
         initials: account.user.name
           .split(" ")
           .map((part) => part[0])

@@ -23,7 +23,7 @@ O middleware `ResolveTenant` lê o header `X-Tenant-ID`. O valor tem de ser o id
 | `designer` | Designer | Lê o próprio perfil |
 | `client` | Cliente Final | Lê o próprio perfil e fica ligado a um workspace |
 
-Um usuário pertence a uma agência. O seletor visual “Viewing as” da interface não troca o papel real. O CRUD de usuários e marcas fica nas policies: só o admin da mesma agência segue. Nome, tema, cores e plano também ficam nessa linha de `tenants`. O admin cria e move tarefas e vê todas elas. Designer e redator veem e entregam só as tarefas em que são o responsável. O cliente vê a própria marca, comenta com pinos e aprova. O detalhe está em [etapas/02-equipe.md](etapas/02-equipe.md), [etapas/03-configuracoes.md](etapas/03-configuracoes.md), [etapas/04-workspace.md](etapas/04-workspace.md) e [etapas/05-aprovacao.md](etapas/05-aprovacao.md).
+Um usuário pertence a uma agência. O seletor visual “Viewing as” da interface não troca o papel real. O CRUD de usuários e marcas fica nas policies: só o admin da mesma agência segue. Nome, tema, cores e plano também ficam nessa linha de `tenants`. O admin cria e move tarefas e vê todas elas. Designer e redator veem e entregam só as tarefas em que são o responsável. O cliente vê a própria marca, comenta com pinos e aprova. O detalhe está em [etapas/02-equipe.md](etapas/02-equipe.md), [etapas/03-configuracoes.md](etapas/03-configuracoes.md), [etapas/04-workspace.md](etapas/04-workspace.md), [etapas/05-aprovacao.md](etapas/05-aprovacao.md) e [etapas/06-dashboard.md](etapas/06-dashboard.md). Leitura e edição de settings ficam só com o admin.
 
 ## Fora desta etapa
 

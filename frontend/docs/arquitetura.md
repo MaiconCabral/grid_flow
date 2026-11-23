@@ -38,6 +38,8 @@ O quadro e a ficha da tarefa ficam em `src/components/workspace/`. O detalhe est
 
 A lista e a peça ficam em `src/components/approval/`. O detalhe está em [etapas/05-aprovacao.md](etapas/05-aprovacao.md).
 
+O painel fica em `src/components/dashboard/`. O detalhe está em [etapas/06-dashboard.md](etapas/06-dashboard.md).
+
 ## Etapas futuras na interface
 
 - **Upload em nuvem e tempo real.** URL pré-assinada e escuta do canal do workspace. O anexo atual vai para o disco local da API.

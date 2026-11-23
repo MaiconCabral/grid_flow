@@ -4,7 +4,7 @@ A tela `/{slug}/settings` tem três abas. A interface continua em inglês.
 
 ## Agency
 
-Mostra o nome e o slug. O admin edita o nome e salva. O slug fica só leitura. Os outros papéis veem os dados e a mensagem de que só o Agency Admin altera.
+Mostra o nome e o slug. O admin edita o nome e salva. O slug fica só leitura. Os outros papéis não abrem a tela: a página diz que não está disponível.
 
 ## Appearance
 

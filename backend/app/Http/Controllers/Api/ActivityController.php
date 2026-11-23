@@ -25,12 +25,13 @@ use App\Models\ActivityVersion;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Support\ActivityPayload;
+use App\Support\VisibleActivities;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
 
 class ActivityController extends Controller
 {
-    public function __construct(private ActivityPayload $payload) {}
+    public function __construct(private ActivityPayload $payload, private VisibleActivities $visible) {}
 
     /** Lists the tasks, brands, and counts the signed-in user may see. */
     public function index(): JsonResponse
@@ -38,7 +39,7 @@ class ActivityController extends Controller
         Gate::authorize('viewAny', Activity::class);
 
         $user = request()->user();
-        $activities = $this->visible($user)
+        $activities = $this->visible->for($user)
             ->with(['workspace', 'assignee', 'versions'])
             ->withCount('events')
             ->orderBy('due_on')
@@ -132,20 +133,6 @@ class ActivityController extends Controller
         return response()->json($this->payload->detail($activity, $request->user()));
     }
 
-    /** Limits the query to the tasks this person is allowed to see. */
-    private function visible(User $user)
-    {
-        $query = Activity::query();
-
-        if ($user->role === UserRole::Client) {
-            $query->where('workspace_id', $user->workspace_id ?? 0);
-        } elseif ($user->role !== UserRole::AgencyAdmin) {
-            $query->where('assignee_id', $user->id);
-        }
-
-        return $query;
-    }
-
     /** Lists the brands that may appear in the board filter. */
     private function brands(User $user): array
     {
@@ -154,7 +141,7 @@ class ActivityController extends Controller
         if ($user->role === UserRole::Client) {
             $query->whereKey($user->workspace_id ?? 0);
         } elseif ($user->role !== UserRole::AgencyAdmin) {
-            $query->whereIn('id', $this->visible($user)->pluck('workspace_id'));
+            $query->whereIn('id', $this->visible->for($user)->pluck('workspace_id'));
         }
 
         return $query->get(['id', 'name'])->map(fn (Workspace $workspace) => [

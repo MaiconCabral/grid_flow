@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\WorkspaceController;
@@ -26,6 +27,7 @@ Route::prefix('v1')->group(function () {
             Route::post('workspaces', [WorkspaceController::class, 'store']);
             Route::patch('workspaces/{workspace}', [WorkspaceController::class, 'update']);
             Route::delete('workspaces/{workspace}', [WorkspaceController::class, 'destroy']);
+            Route::get('dashboard', [DashboardController::class, 'show']);
             Route::get('activities', [ActivityController::class, 'index']);
             Route::post('activities', [ActivityController::class, 'store']);
             Route::get('activities/{activity}', [ActivityController::class, 'show']);

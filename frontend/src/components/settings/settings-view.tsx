@@ -36,13 +36,19 @@ export function SettingsView() {
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
-    Promise.all([api<Settings>("/settings"), api<{ user: AuthUser }>("/auth/me")])
-      .then(([agency, session]) => {
-        setSettings(agency);
-        setName(agency.name);
+    api<{ user: AuthUser }>("/auth/me")
+      .then((session) => {
         setRole(session.user.role);
-        publishAgency(agency);
-        setReady(true);
+        if (session.user.role !== "agency_admin") {
+          setReady(true);
+          return;
+        }
+        return api<Settings>("/settings").then((agency) => {
+          setSettings(agency);
+          setName(agency.name);
+          publishAgency(agency);
+          setReady(true);
+        });
       })
       .catch((caught) => {
         void notifyError(caught instanceof ApiError ? caught.message : "Could not load settings.");
@@ -68,8 +74,20 @@ export function SettingsView() {
     }
   }
 
-  if (!ready || !settings) {
+  if (!ready) {
     return <p className="px-[38px] pt-10 text-[13px] text-muted">Loading settings...</p>;
+  }
+
+  if (role !== "agency_admin") {
+    return (
+      <div className="mx-auto max-w-[860px] px-[38px] pt-10">
+        <p className="text-[13px] text-muted">This page is not available.</p>
+      </div>
+    );
+  }
+
+  if (!settings) {
+    return <p className="px-[38px] pt-10 text-[13px] text-muted">Could not load settings.</p>;
   }
 
   return (

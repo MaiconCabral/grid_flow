@@ -12,9 +12,11 @@ import {
   SquareKanban,
   Users,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { agency, currentUser } from "@/data/mock";
 import { useAgency } from "@/lib/agency-theme";
+import { api } from "@/lib/api-client";
+import type { Dashboard } from "@/lib/dashboard";
 
 function isActive(pathname: string, href: string) {
   return pathname === href;
@@ -29,18 +31,34 @@ export function Sidebar({
   pathname: string;
   tenantSlug: string;
   tenantName?: string;
-  user?: { name: string; role: string; initials: string } | null;
+  user?: { name: string; role: string; roleKey?: string; initials: string } | null;
 }) {
   const base = `/${tenantSlug}`;
+  const [counts, setCounts] = useState<{ total: number; pending: number } | null>(null);
+  useEffect(() => {
+    let active = true;
+    api<Dashboard>("/dashboard")
+      .then((board) => {
+        if (active) setCounts({ total: board.counts.total, pending: board.counts.pending });
+      })
+      .catch(() => {
+        if (active) setCounts(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
   const workspaceNav = [
     { href: `${base}/dashboard`, label: "Dashboard", icon: LayoutDashboard },
-    { href: `${base}/workspace`, label: "Workspace", icon: SquareKanban, badge: "24" },
-    { href: `${base}/approval`, label: "Approval Center", icon: CalendarCheck, badge: "3" },
+    { href: `${base}/workspace`, label: "Workspace", icon: SquareKanban, badge: counts ? String(counts.total) : undefined },
+    { href: `${base}/approval`, label: "Approval Center", icon: CalendarCheck, badge: counts ? String(counts.pending) : undefined },
   ];
-  const manageNav = [
-    { href: `${base}/team`, label: "Team & Clients", icon: Users },
-    { href: `${base}/settings`, label: "Settings", icon: Settings },
-  ];
+  const manageNav = user?.roleKey === "agency_admin"
+    ? [
+        { href: `${base}/team`, label: "Team & Clients", icon: Users },
+        { href: `${base}/settings`, label: "Settings", icon: Settings },
+      ]
+    : [];
   const profile = user ?? { name: currentUser.name, role: currentUser.role, initials: currentUser.initials };
   const storedAgency = useAgency();
   const agencyLabel = storedAgency?.name || tenantName || agency.name;
@@ -81,7 +99,7 @@ export function Sidebar({
 
       <nav className="space-y-7">
         <NavGroup label="Workspace" items={workspaceNav} pathname={pathname} />
-        <NavGroup label="Manage" items={manageNav} pathname={pathname} />
+        {manageNav.length > 0 ? <NavGroup label="Manage" items={manageNav} pathname={pathname} /> : null}
       </nav>
 
       <div className="mt-auto px-[11px] pt-3.5 pb-3.5">

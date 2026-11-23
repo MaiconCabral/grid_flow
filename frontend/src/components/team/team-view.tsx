@@ -184,7 +184,7 @@ export function TeamView() {
       <div className="mx-auto max-w-[1640px] px-[38px] pt-10 pb-12">
         <Header />
         <section className="mt-8 max-w-xl rounded-[14px] bg-card p-[18px]">
-          <p className="text-[13px] text-muted">Only the Agency Admin can manage teammates and client brands.</p>
+          <p className="text-[13px] text-muted">This page is not available.</p>
         </section>
       </div>
     );

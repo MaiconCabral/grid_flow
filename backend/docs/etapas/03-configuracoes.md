@@ -18,7 +18,7 @@ Nome, tema, cores e plano ficam na linha da agência em `tenants`. Cada agência
 
 As duas exigem `Authorization: Bearer` e `X-Tenant-ID`.
 
-`GET /api/v1/settings` devolve nome, slug, tema, as três cores, `plan` e a lista `plans`. Qualquer papel da agência pode ler.
+`GET /api/v1/settings` devolve nome, slug, tema, as três cores, `plan` e a lista `plans`. Só o `agency_admin` lê. Outro papel recebe `403`. O tema para o shell continua em `/auth/me`.
 
 `PATCH /api/v1/settings` aceita só o que vier: `name`, `theme`, `light_background`, `dark_background`, `accent`. Só o `agency_admin` grava. Outro papel recebe `403`. Cor fora da lista recebe `422`.
 
@@ -30,7 +30,7 @@ As duas exigem `Authorization: Bearer` e `X-Tenant-ID`.
 | --- | --- |
 | `SettingsController` | Lê e grava a agência da requisição |
 | `UpdateTenantSettings` | Preenche a linha do tenant |
-| `TenantPolicy` | Leitura para o membro da agência; escrita só para o admin dela |
+| `TenantPolicy` | Leitura e escrita só para o admin da agência |
 | `AgencyPalette` | Lista fechada de cores |
 | `AgencyPlans` | Textos dos planos Starter, Studio e Agency |
 | `tests/Feature/SettingsTest.php` | Gravação, papel sem permissão, cor inválida e isolamento |

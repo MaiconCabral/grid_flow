@@ -43,18 +43,15 @@ class SettingsTest extends TestCase
         ]);
     }
 
-    /** Lets other roles read settings and blocks their updates. */
-    public function test_other_roles_can_read_but_not_update(): void
+    /** Blocks other roles from reading or changing agency settings. */
+    public function test_other_roles_cannot_read_or_update(): void
     {
         $admin = $this->member(UserRole::AgencyAdmin);
         $designer = $this->member(UserRole::Designer, $admin->tenant);
 
         $this->as($admin)->patchJson('/api/v1/settings', ['name' => 'Shared Name'])->assertOk();
 
-        $this->as($designer)->getJson('/api/v1/settings')
-            ->assertOk()
-            ->assertJsonPath('name', 'Shared Name');
-
+        $this->as($designer)->getJson('/api/v1/settings')->assertForbidden();
         $this->as($designer)->patchJson('/api/v1/settings', ['name' => 'Taken'])->assertForbidden();
         $this->assertDatabaseHas('tenants', ['id' => $admin->tenant_id, 'name' => 'Shared Name']);
     }

@@ -28,7 +28,7 @@ export function Topbar({
   title: string;
   tenantSlug: string;
   tenantName?: string;
-  user?: { name: string; role: string; initials: string } | null;
+  user?: { name: string; role: string; roleKey?: string; initials: string } | null;
   canEditTheme?: boolean;
 }) {
   const { theme } = useTheme();
@@ -127,7 +127,6 @@ export function Topbar({
                   </button>
                 );
               })}
-              <p className="px-[9px] pt-2 pb-0.5 text-[9px] leading-[1.4] text-faint">Switching roles adapts the dashboard layout</p>
             </div>
           ) : null}
         </div>
@@ -187,12 +186,16 @@ export function Topbar({
                 <p className="text-xs font-semibold">{profile.name}</p>
                 <p className="text-[10px] text-muted">{profile.role}</p>
               </div>
-              <Link href={`/${tenantSlug}/settings`} onClick={() => setMenu(null)} className="block rounded-lg px-2 py-2.5 text-[11px] text-muted hover:bg-soft hover:text-foreground">
-                Account preferences
-              </Link>
-              <Link href={`/${tenantSlug}/team`} onClick={() => setMenu(null)} className="block rounded-lg px-2 py-2.5 text-[11px] text-muted hover:bg-soft hover:text-foreground">
-                Invite teammates
-              </Link>
+              {user?.roleKey === "agency_admin" ? (
+                <>
+                  <Link href={`/${tenantSlug}/settings`} onClick={() => setMenu(null)} className="block rounded-lg px-2 py-2.5 text-[11px] text-muted hover:bg-soft hover:text-foreground">
+                    Account preferences
+                  </Link>
+                  <Link href={`/${tenantSlug}/team`} onClick={() => setMenu(null)} className="block rounded-lg px-2 py-2.5 text-[11px] text-muted hover:bg-soft hover:text-foreground">
+                    Invite teammates
+                  </Link>
+                </>
+              ) : null}
               <button type="button" onClick={signOut} className="block w-full rounded-lg px-2 py-2.5 text-left text-[11px] text-muted hover:bg-soft hover:text-foreground">
                 Sign out
               </button>
