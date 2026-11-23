@@ -30,7 +30,7 @@ A gestão de membros e marcas fica em `/{slug}/team`, no componente `src/compone
 
 ## Tema
 
-Tokens já aplicados: fundo `#111313`, lima `#bbff52`, roxo `#9b35aa`. O tema claro e o escuro continuam no `localStorage`, chave `morrow-theme`. O lightbox de Team & Clients e o SweetAlert usam as variáveis desse tema.
+As cores de fundo e o destaque vêm da agência, gravados em `tenants`. A chave `postgrid-theme` no `localStorage` só reaplica a última resposta antes da API responder. O lightbox, o SweetAlert e o restante da interface leem essas variáveis.
 
 ## Etapas futuras na interface
 

@@ -10,9 +10,10 @@ A stack deste repositório é Laravel 12 e PHP 8.2, com SQLite no ambiente local
 | --- | --- | --- |
 | 1. Autenticação, tenant e papéis | [etapas/01-autenticacao.md](etapas/01-autenticacao.md) | Implementada |
 | 2. Equipe e clientes | [etapas/02-equipe.md](etapas/02-equipe.md) | Implementada |
-| 3. Kanban | — | Não iniciada |
-| 4. Aprovação e anotações | — | Não iniciada |
-| 5. Upload, filas e tempo real | — | Não iniciada |
+| 3. Configurações da agência | [etapas/03-configuracoes.md](etapas/03-configuracoes.md) | Implementada |
+| 4. Kanban | — | Não iniciada |
+| 5. Aprovação e anotações | — | Não iniciada |
+| 6. Upload, filas e tempo real | — | Não iniciada |
 
 A visão geral do isolamento e dos papéis está em [arquitetura.md](arquitetura.md).
 

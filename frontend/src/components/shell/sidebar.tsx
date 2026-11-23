@@ -7,13 +7,14 @@ import {
   CircleHelp,
   HardDrive,
   LayoutDashboard,
+  LayoutGrid,
   Settings,
-  Sparkles,
   SquareKanban,
   Users,
 } from "lucide-react";
 import { useState } from "react";
 import { agency, currentUser } from "@/data/mock";
+import { useAgency } from "@/lib/agency-theme";
 
 function isActive(pathname: string, href: string) {
   return pathname === href;
@@ -41,17 +42,19 @@ export function Sidebar({
     { href: `${base}/settings`, label: "Settings", icon: Settings },
   ];
   const profile = user ?? { name: currentUser.name, role: currentUser.role, initials: currentUser.initials };
+  const storedAgency = useAgency();
+  const agencyLabel = storedAgency?.name || tenantName || agency.name;
+  const agencyInitial = agencyLabel.trim().charAt(0).toUpperCase() || "A";
   const [agencyOpen, setAgencyOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
 
   return (
     <aside className="flex h-full w-[244px] shrink-0 flex-col bg-sidebar px-3.5 pt-[26px] pb-4">
-      <div className="flex items-center gap-[9px] px-[13px] pb-[26px] font-display text-[20px] leading-none font-extrabold tracking-[-0.7px]">
-        <span className="grid size-[26px] place-items-center rounded-lg bg-lime text-lime-ink">
-          <Sparkles className="size-3.5" />
+      <div className="flex min-w-0 items-center gap-[9px] px-[13px] pb-[26px] font-display text-[20px] leading-none font-extrabold tracking-[-0.7px]">
+        <span className="grid size-[26px] shrink-0 place-items-center rounded-lg bg-lime text-lime-ink">
+          <LayoutGrid className="size-3.5" />
         </span>
-        morrow
-        <span className="self-center text-[8px] tracking-[1px] text-faint">BETA</span>
+        <span className="truncate">{agencyLabel}</span>
       </div>
 
       <div className="relative mx-1 mb-7">
@@ -61,17 +64,17 @@ export function Sidebar({
           className="flex w-full items-center gap-2.5 rounded-xl bg-raised p-2.5 text-left"
         >
           <span className="grid size-[30px] place-items-center rounded-lg bg-[#d2ff89] font-display text-[15px] leading-none font-extrabold text-[#233312]">
-            A
+            {agencyInitial}
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-[12px] font-bold">{tenantName ?? agency.name}</span>
+            <span className="block truncate text-[12px] font-bold">{agencyLabel}</span>
             <span className="block text-[10px] text-muted">{agency.workspaces} workspaces</span>
           </span>
           <ChevronDown className={`size-4 text-muted ${agencyOpen ? "rotate-180" : ""}`} />
         </button>
         {agencyOpen ? (
           <div className="absolute top-12 left-0 z-30 w-[215px] rounded-[13px] bg-raised p-2.5 shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
-            <p className="rounded-lg bg-soft px-2.5 py-2 text-[11px] font-semibold">{agency.name}</p>
+            <p className="rounded-lg bg-soft px-2.5 py-2 text-[11px] font-semibold">{agencyLabel}</p>
           </div>
         ) : null}
       </div>

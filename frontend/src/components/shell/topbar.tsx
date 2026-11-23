@@ -6,7 +6,9 @@ import { Bell, Check, ChevronDown, Moon, Sun, UserCog } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { activityFeed, agency, currentUser } from "@/data/mock";
 import { useTheme } from "@/components/theme-provider";
-import { api } from "@/lib/api-client";
+import { notifyError, notifySuccess } from "@/lib/alerts";
+import { publishAgency, useAgency, type AgencyAppearance } from "@/lib/agency-theme";
+import { ApiError, api } from "@/lib/api-client";
 import { clearSession } from "@/lib/session";
 
 type Menu = "view" | "bell" | "user";
@@ -21,13 +23,17 @@ export function Topbar({
   tenantSlug,
   tenantName,
   user,
+  canEditTheme = false,
 }: {
   title: string;
   tenantSlug: string;
   tenantName?: string;
   user?: { name: string; role: string; initials: string } | null;
+  canEditTheme?: boolean;
 }) {
-  const { theme, setTheme } = useTheme();
+  const { theme } = useTheme();
+  const storedAgency = useAgency();
+  const [savingTheme, setSavingTheme] = useState(false);
   const router = useRouter();
   const [menu, setMenu] = useState<Menu | null>(null);
   const [roleId, setRoleId] = useState<(typeof roles)[number]["id"]>("admin");
@@ -46,6 +52,24 @@ export function Topbar({
     setMenu((current) => (current === next ? null : next));
   }
 
+  /** Saves the agency light or dark mode. */
+  async function changeTheme() {
+    if (!canEditTheme || savingTheme) return;
+    setSavingTheme(true);
+    try {
+      const saved = await api<AgencyAppearance>("/settings", {
+        method: "PATCH",
+        body: JSON.stringify({ theme: theme === "dark" ? "light" : "dark" }),
+      });
+      publishAgency(saved);
+      void notifySuccess("Theme updated.");
+    } catch (caught) {
+      void notifyError(caught instanceof ApiError ? caught.message : "Could not update the theme.");
+    } finally {
+      setSavingTheme(false);
+    }
+  }
+
   async function signOut() {
     try {
       await api("/auth/logout", { method: "POST" });
@@ -61,7 +85,7 @@ export function Topbar({
   return (
     <header ref={barRef} className="flex h-[72px] shrink-0 items-center justify-between bg-sidebar px-[38px]">
       <p className="flex items-center gap-[10px] text-[12px] text-faint">
-        <span>{tenantName ?? agency.name}</span>
+        <span>{storedAgency?.name ?? tenantName ?? agency.name}</span>
         <span aria-hidden>›</span>
         <strong className="font-bold text-foreground">{title}</strong>
       </p>
@@ -112,8 +136,9 @@ export function Topbar({
           <button
             type="button"
             aria-label="Toggle theme"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="grid size-[35px] place-items-center rounded-[9px] bg-raised text-lime hover:bg-soft"
+            disabled={!canEditTheme || savingTheme}
+            onClick={() => void changeTheme()}
+            className="grid size-[35px] place-items-center rounded-[9px] bg-raised text-lime hover:bg-soft disabled:opacity-50"
           >
             {theme === "dark" ? <Sun className="size-[18px]" /> : <Moon className="size-[18px]" />}
           </button>

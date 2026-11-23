@@ -33,7 +33,7 @@ Sucesso e erro usam o SweetAlert (`src/lib/alerts.ts`).
 - Erro permanece até o OK. A mensagem é a da API, como e-mail já usado ou marca com cliente.
 - Login e cadastro usam o mesmo alerta de erro.
 
-O fundo, o texto e o botão acompanham o tema ativo (`morrow-theme`). As cores vêm das variáveis do layout.
+O fundo, o texto e o botão acompanham o tema da agência. As cores vêm das variáveis do layout.
 
 ## Tema do lightbox
 

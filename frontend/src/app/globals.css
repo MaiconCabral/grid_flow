@@ -95,7 +95,7 @@ body {
 }
 
 [data-theme="light"] .nav-active {
-  color: #3f6212;
+  color: var(--good);
 }
 
 .swal2-popup.morrow-alert {

@@ -23,7 +23,7 @@ O middleware `ResolveTenant` lê o header `X-Tenant-ID`. O valor tem de ser o id
 | `designer` | Designer | Lê o próprio perfil |
 | `client` | Cliente Final | Lê o próprio perfil e fica ligado a um workspace |
 
-Um usuário pertence a uma agência. O seletor visual “Viewing as” da interface não troca o papel real. O CRUD de usuários e marcas fica nas policies: só o admin da mesma agência segue. O detalhe das rotas está em [etapas/02-equipe.md](etapas/02-equipe.md).
+Um usuário pertence a uma agência. O seletor visual “Viewing as” da interface não troca o papel real. O CRUD de usuários e marcas fica nas policies: só o admin da mesma agência segue. Nome, tema, cores e plano também ficam nessa linha de `tenants`. O detalhe está em [etapas/02-equipe.md](etapas/02-equipe.md) e [etapas/03-configuracoes.md](etapas/03-configuracoes.md).
 
 ## Fora desta etapa
 

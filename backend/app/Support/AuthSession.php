@@ -15,6 +15,11 @@ class AuthSession
                 'id' => $user->tenant->id,
                 'name' => $user->tenant->name,
                 'slug' => $user->tenant->slug,
+                'theme' => $user->tenant->theme,
+                'light_background' => $user->tenant->light_background,
+                'dark_background' => $user->tenant->dark_background,
+                'accent' => $user->tenant->accent,
+                'plan' => $user->tenant->plan,
             ],
             'user' => [
                 'id' => $user->id,

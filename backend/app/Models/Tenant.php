@@ -15,6 +15,11 @@ class Tenant extends Model
     protected $fillable = [
         'name',
         'slug',
+        'theme',
+        'light_background',
+        'dark_background',
+        'accent',
+        'plan',
     ];
 
     public function users(): HasMany

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\WorkspaceController;
 use Illuminate\Support\Facades\Route;
@@ -14,6 +15,8 @@ Route::prefix('v1')->group(function () {
 
         Route::middleware('tenant')->group(function () {
             Route::get('auth/me', [AuthController::class, 'me']);
+            Route::get('settings', [SettingsController::class, 'show']);
+            Route::patch('settings', [SettingsController::class, 'update']);
             Route::get('users', [UserController::class, 'index']);
             Route::post('users', [UserController::class, 'store']);
             Route::patch('users/{user}', [UserController::class, 'update']);

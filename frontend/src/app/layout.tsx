@@ -17,8 +17,8 @@ const manrope = Manrope({
 
 export const metadata: Metadata = {
   title: {
-    default: "morrow",
-    template: "%s · morrow",
+    default: "Post Grid",
+    template: "%s · Post Grid",
   },
   description: "Social media workspace for approving and producing creative pieces.",
 };
@@ -35,7 +35,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script
           dangerouslySetInnerHTML={{
             __html:
-              'try{var t=localStorage.getItem("morrow-theme");document.documentElement.dataset.theme=t==="light"?"light":"dark"}catch(e){document.documentElement.dataset.theme="dark"}',
+              'try{var raw=localStorage.getItem("postgrid-theme");var saved=raw?JSON.parse(raw):null;document.documentElement.dataset.theme=saved&&saved.theme==="light"?"light":"dark";if(saved&&saved.vars){for(var key in saved.vars)document.documentElement.style.setProperty(key,saved.vars[key])}}catch(e){document.documentElement.dataset.theme="dark"}',
           }}
         />
         {children}

@@ -14,6 +14,11 @@ export type AuthTenant = {
   id: number;
   name: string;
   slug: string;
+  theme: "dark" | "light";
+  light_background: string;
+  dark_background: string;
+  accent: string;
+  plan: string;
 };
 
 export type AuthSession = {

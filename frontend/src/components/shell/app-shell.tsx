@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/shell/sidebar";
 import { Topbar } from "@/components/shell/topbar";
+import { publishAgency } from "@/lib/agency-theme";
 import { api } from "@/lib/api-client";
 import type { AuthTenant, AuthUser } from "@/lib/session";
 
@@ -29,7 +30,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     api<{ user: AuthUser; tenant: AuthTenant }>("/auth/me")
-      .then(setAccount)
+      .then((session) => {
+        setAccount(session);
+        publishAgency(session.tenant);
+      })
       .catch(() => setAccount(null));
   }, []);
 
@@ -50,7 +54,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="flex h-screen overflow-hidden bg-background text-foreground">
       <Sidebar pathname={pathname} tenantSlug={tenantSlug} tenantName={account?.tenant.name} user={user} />
       <div className="flex min-w-0 flex-1 flex-col">
-        <Topbar title={titles[section] ?? "morrow"} tenantSlug={tenantSlug} tenantName={account?.tenant.name} user={user} />
+        <Topbar
+          title={titles[section] ?? "Post Grid"}
+          tenantSlug={tenantSlug}
+          tenantName={account?.tenant.name}
+          user={user}
+          canEditTheme={account?.user.role === "agency_admin"}
+        />
         <main className="min-h-0 flex-1 overflow-auto">{children}</main>
       </div>
     </div>

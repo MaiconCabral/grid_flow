@@ -21,9 +21,9 @@ function readTheme(): Theme {
   return document.documentElement.dataset.theme === "light" ? "light" : "dark";
 }
 
+/** Updates the theme flag already applied by the agency settings. */
 function applyTheme(theme: Theme) {
   document.documentElement.dataset.theme = theme;
-  localStorage.setItem("morrow-theme", theme);
   window.dispatchEvent(new Event(themeEvent));
 }
 
