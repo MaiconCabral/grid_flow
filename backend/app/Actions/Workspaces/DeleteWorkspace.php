@@ -8,6 +8,7 @@ use Illuminate\Validation\ValidationException;
 
 class DeleteWorkspace
 {
+    /** Deletes a brand that has no client users. */
     public function handle(Workspace $workspace): void
     {
         $hasClients = User::query()->where('workspace_id', $workspace->id)->exists();

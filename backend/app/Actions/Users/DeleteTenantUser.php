@@ -10,6 +10,7 @@ class DeleteTenantUser
 {
     public function __construct(private EnsureAgencyKeepsAdmin $guard) {}
 
+    /** Removes another user and blocks deleting the last agency admin. */
     public function handle(User $actor, User $user): void
     {
         if ($actor->is($user)) {

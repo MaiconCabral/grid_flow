@@ -8,11 +8,13 @@ use Illuminate\Validation\Rule;
 
 class UpdateUserRequest extends FormRequest
 {
+    /** Allows the update when the user may edit that person. */
     public function authorize(): bool
     {
         return $this->user()?->can('update', $this->route('user')) ?? false;
     }
 
+    /** Validates the profile and treats the password as optional. */
     public function rules(): array
     {
         return [

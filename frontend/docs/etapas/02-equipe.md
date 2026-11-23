@@ -1,11 +1,47 @@
 # Etapa 2 — Team & Clients
 
-A tela `/{slug}/team` deixa de ser um aviso e passa a gerir a equipe e as marcas da agência logada.
+A tela `/{slug}/team` gerencia a equipe interna e as marcas da agência logada. Os dados vêm de `GET /users` e `GET /workspaces`. A interface continua em inglês. O seletor “Viewing as” não muda o papel real.
 
-Só o papel `agency_admin` vê as listas e os formulários. Designer, redator e cliente veem a mensagem de que apenas o Agency Admin gerencia a equipe. A página não chama `GET /users` nem `GET /workspaces` nesse caso.
+O convite em `invite/[token]` e o e-mail transacional ficam para uma etapa futura. O admin define a senha no cadastro.
 
-A interface continua em inglês. O seletor “Viewing as” não muda o papel real.
+## Quem acessa
 
-Sucesso e erro aparecem no SweetAlert, com fundo, texto e botão nas cores do tema claro ou escuro. O lightbox de Clients usa as mesmas variáveis do layout, então acompanha essa escolha, inclusive os campos nativos.
+Só `agency_admin` vê as listas e os formulários. Designer, redator e cliente veem a mensagem de que apenas o Agency Admin gerencia a equipe. Nesse caso a página não chama a API de usuários nem de marcas.
 
-O admin cria o colega ou o cliente já com senha. Na seção Clients, o botão Add clients abre um lightbox com as abas Brands e Users. Editar uma marca ou um cliente reabre esse mesmo lightbox com a aba e os campos preenchidos. O aceite de convite em `invite/[token]` continua para uma etapa futura, junto com o e-mail transacional.
+## Equipe
+
+O botão Add teammate abre um lightbox com nome, e-mail, senha e papel (`agency_admin`, `designer`, `copywriter`). Editar reabre o mesmo lightbox preenchido. Na edição a senha é opcional e o rótulo passa a ser New password.
+
+## Clientes
+
+A seção tem um único botão, Add clients. O lightbox traz as abas Brands e Users.
+
+- Brands grava o nome da marca (`POST` ou `PATCH /workspaces`).
+- Users grava o cliente: nome, e-mail, senha e a marca (`POST` ou `PATCH /users` com `role: client`).
+
+Trocar de aba não apaga o que já foi digitado na outra. Editar uma marca abre a aba Brands preenchida. Editar um cliente abre a aba Users com nome, e-mail e marca preenchidos. A senha só é obrigatória na criação.
+
+## Remoção
+
+Edit e Remove ficam no cartão. Remove pede Confirm na própria linha. A exclusão de uma marca que ainda tem cliente, ou do último admin, volta como erro da API.
+
+## Alertas
+
+Sucesso e erro usam o SweetAlert (`src/lib/alerts.ts`).
+
+- Sucesso fecha sozinho. Exemplos: Brand created, Client updated, Teammate created, Brand removed, User removed.
+- Erro permanece até o OK. A mensagem é a da API, como e-mail já usado ou marca com cliente.
+- Login e cadastro usam o mesmo alerta de erro.
+
+O fundo, o texto e o botão acompanham o tema ativo (`morrow-theme`). As cores vêm das variáveis do layout.
+
+## Tema do lightbox
+
+O formulário usa as mesmas variáveis do layout (`card`, `raised`, `foreground`). O `color-scheme` do diálogo segue a escolha do usuário, então campos e o seletor nativo acompanham o claro e o escuro, inclusive se o tema mudar com o lightbox aberto.
+
+## Arquivos
+
+- `src/app/(platform)/[tenantSlug]/team/page.tsx` — rota da tela
+- `src/components/team/team-view.tsx` — listas, lightbox e abas
+- `src/lib/alerts.ts` — sucesso e erro
+- `src/app/globals.css` — aparência do SweetAlert

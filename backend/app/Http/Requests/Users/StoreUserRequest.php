@@ -9,11 +9,13 @@ use Illuminate\Validation\Rule;
 
 class StoreUserRequest extends FormRequest
 {
+    /** Allows creation when the user may add people to the agency. */
     public function authorize(): bool
     {
         return $this->user()?->can('create', User::class) ?? false;
     }
 
+    /** Requires name, email, password, role, and a brand for clients. */
     public function rules(): array
     {
         return [

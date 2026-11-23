@@ -33,3 +33,18 @@ No `PATCH`, `password` é opcional. `role: "client"` exige `workspace_id` de uma
 `POST /api/v1/workspaces` e `PATCH /api/v1/workspaces/{id}` recebem `{ "name": "Lumen Atelier" }`.
 
 `DELETE /api/v1/workspaces/{id}` responde `204`. Se ainda houver um cliente ligado à marca, a resposta é `422`.
+
+## Código
+
+| Peça | Função |
+| --- | --- |
+| `UserController` | Lista, cria, atualiza e remove usuários |
+| `WorkspaceController` | Lista, cria, renomeia e remove marcas, com os clientes de cada uma |
+| `Actions/Users` | Cria e atualiza o usuário, exige marca para o cliente, impede apagar a si mesmo e o último admin |
+| `Actions/Workspaces` | Cria e renomeia a marca e bloqueia a exclusão se ainda houver cliente |
+| `UserPolicy` e `WorkspacePolicy` | Só o `agency_admin` da mesma agência |
+| `tests/Feature/TeamTest.php` | Permissão, isolamento, cliente sem marca e último admin |
+
+`ResolveTenant` roda antes do route-model binding. Sem isso, o escopo da agência ainda está vazio e um `PATCH` ou `DELETE` válido responde `404`.
+
+As mensagens de validação saem em inglês. A tela mostra essas frases no SweetAlert.

@@ -8,12 +8,14 @@ import { notifyError } from "@/lib/alerts";
 import { ApiError, api } from "@/lib/api-client";
 import { writeSession, type AuthSession } from "@/lib/session";
 
+/** Signs an agency user in and opens the workspace. */
 export function LoginForm() {
   const [email, setEmail] = useState("jordan@agency-alpha.test");
   const [password, setPassword] = useState("password");
   const [pending, setPending] = useState(false);
   const router = useRouter();
 
+  /** Sends the credentials and stores the session. */
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     setPending(true);
@@ -60,6 +62,7 @@ export function LoginForm() {
   );
 }
 
+/** Renders a labeled input. */
 function Field({
   label,
   type,

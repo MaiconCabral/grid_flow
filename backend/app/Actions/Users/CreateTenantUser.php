@@ -10,6 +10,7 @@ use Illuminate\Validation\ValidationException;
 
 class CreateTenantUser
 {
+    /** Creates a user in the current agency, requiring a brand for clients. */
     public function handle(array $data): User
     {
         $role = UserRole::from($data['role']);

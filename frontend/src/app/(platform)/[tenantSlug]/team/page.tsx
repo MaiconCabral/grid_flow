@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "Team & Clients",
 };
 
+/** Renders the team and client management screen. */
 export default function TeamPage() {
   return <TeamView />;
 }

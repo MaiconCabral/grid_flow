@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Gate;
 
 class WorkspaceController extends Controller
 {
+    /** Lists the agency brands and their client logins. */
     public function index(): JsonResponse
     {
         Gate::authorize('viewAny', Workspace::class);
@@ -29,6 +30,7 @@ class WorkspaceController extends Controller
         return response()->json(['data' => $workspaces]);
     }
 
+    /** Creates a brand for the signed-in agency. */
     public function store(StoreWorkspaceRequest $request, CreateWorkspace $action): JsonResponse
     {
         $workspace = $action->handle($request->validated());
@@ -37,11 +39,13 @@ class WorkspaceController extends Controller
         return response()->json($this->payload($workspace), 201);
     }
 
+    /** Renames a brand of the signed-in agency. */
     public function update(UpdateWorkspaceRequest $request, Workspace $workspace, UpdateWorkspace $action): JsonResponse
     {
         return response()->json($this->payload($action->handle($workspace, $request->validated())));
     }
 
+    /** Removes a brand that has no client logins. */
     public function destroy(Workspace $workspace, DeleteWorkspace $action): Response
     {
         Gate::authorize('delete', $workspace);
@@ -50,6 +54,7 @@ class WorkspaceController extends Controller
         return response()->noContent();
     }
 
+    /** Shapes a brand and its clients for the API response. */
     private function payload(Workspace $workspace): array
     {
         return [

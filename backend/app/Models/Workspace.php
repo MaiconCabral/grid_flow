@@ -20,11 +20,13 @@ class Workspace extends Model
         'name',
     ];
 
+    /** Links the brand to its agency. */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
     }
 
+    /** Lists the client logins of this brand. */
     public function clients(): HasMany
     {
         return $this->hasMany(User::class)->where('role', UserRole::Client);

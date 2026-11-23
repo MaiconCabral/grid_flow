@@ -11,6 +11,7 @@ class UpdateTenantUser
 {
     public function __construct(private EnsureAgencyKeepsAdmin $guard) {}
 
+    /** Updates a user and keeps the agency from losing its last admin. */
     public function handle(User $user, array $data): User
     {
         $role = UserRole::from($data['role']);
@@ -32,6 +33,7 @@ class UpdateTenantUser
         return $user->load('workspace');
     }
 
+    /** Resolves the brand for a client and clears it for other roles. */
     private function workspaceId(UserRole $role, mixed $workspaceId): ?int
     {
         if ($role !== UserRole::Client) {

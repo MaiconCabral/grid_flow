@@ -8,6 +8,7 @@ import { notifyError } from "@/lib/alerts";
 import { ApiError, api } from "@/lib/api-client";
 import { writeSession, type AuthSession } from "@/lib/session";
 
+/** Builds a URL slug from the agency name. */
 function slugify(value: string) {
   return value
     .toLowerCase()
@@ -16,6 +17,7 @@ function slugify(value: string) {
     .replace(/^-+|-+$/g, "");
 }
 
+/** Creates an agency and its admin, then opens the workspace. */
 export function RegisterForm() {
   const [agencyName, setAgencyName] = useState("");
   const [agencySlug, setAgencySlug] = useState("");
@@ -27,6 +29,7 @@ export function RegisterForm() {
   const [pending, setPending] = useState(false);
   const router = useRouter();
 
+  /** Sends the agency signup and stores the session. */
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     setPending(true);
@@ -97,6 +100,7 @@ export function RegisterForm() {
   );
 }
 
+/** Renders a labeled input. */
 function Field({
   label,
   type = "text",

@@ -24,13 +24,13 @@ src/
 └── proxy.ts
 ```
 
-A gestão de membros e marcas fica em `/{slug}/team`. O convite por token (`invite/[token]`) continua para a etapa de e-mail transacional.
+A gestão de membros e marcas fica em `/{slug}/team`, no componente `src/components/team/team-view.tsx`. Sucesso e erro dessa tela, do login e do cadastro passam por `src/lib/alerts.ts`. O convite por token (`invite/[token]`) continua para a etapa de e-mail transacional.
 
 `features/` e os clientes de TanStack Query, Zustand, Echo e upload direto também ficam para as próximas etapas. O login desta etapa chama a API com `fetch`.
 
 ## Tema
 
-Tokens já aplicados: fundo `#111313`, lima `#bbff52`, roxo `#9b35aa`. O tema claro e o escuro continuam no `localStorage`, chave `morrow-theme`.
+Tokens já aplicados: fundo `#111313`, lima `#bbff52`, roxo `#9b35aa`. O tema claro e o escuro continuam no `localStorage`, chave `morrow-theme`. O lightbox de Team & Clients e o SweetAlert usam as variáveis desse tema.
 
 ## Etapas futuras na interface
 

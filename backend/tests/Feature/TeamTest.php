@@ -13,6 +13,7 @@ class TeamTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** Covers admin create, update, and delete of brands and users. */
     public function test_admin_manages_team_and_brands(): void
     {
         $admin = $this->admin();
@@ -67,6 +68,7 @@ class TeamTest extends TestCase
         $this->assertDatabaseMissing('workspaces', ['id' => $workspaceId]);
     }
 
+    /** Rejects a client without a brand from this agency. */
     public function test_client_requires_a_brand_from_the_agency(): void
     {
         $admin = $this->admin();
@@ -89,6 +91,7 @@ class TeamTest extends TestCase
         ])->assertUnprocessable()->assertJsonValidationErrors('workspace_id');
     }
 
+    /** Rejects team changes from non-admin roles. */
     public function test_other_roles_cannot_manage_the_agency(): void
     {
         $tenant = Tenant::factory()->create();
@@ -111,6 +114,7 @@ class TeamTest extends TestCase
         $this->as($copywriter)->deleteJson("/api/v1/users/{$admin->id}")->assertForbidden();
     }
 
+    /** Hides users and brands that belong to another agency. */
     public function test_records_from_another_agency_stay_hidden(): void
     {
         $admin = $this->admin();
@@ -132,6 +136,7 @@ class TeamTest extends TestCase
         $this->assertNotContains('Other Brand', collect($listed)->pluck('name'));
     }
 
+    /** Keeps the agency from losing its last admin. */
     public function test_the_last_admin_cannot_be_removed_or_demoted(): void
     {
         $admin = $this->admin();
@@ -154,6 +159,7 @@ class TeamTest extends TestCase
         ])->assertUnprocessable()->assertJsonValidationErrors('role');
     }
 
+    /** Creates an agency admin for the test. */
     private function admin(): User
     {
         $tenant = Tenant::factory()->create();
@@ -164,6 +170,7 @@ class TeamTest extends TestCase
         ]);
     }
 
+    /** Sends the following request as that user and agency. */
     private function as(User $user): static
     {
         return $this->withHeader('Authorization', 'Bearer '.$user->createToken('api')->plainTextToken)

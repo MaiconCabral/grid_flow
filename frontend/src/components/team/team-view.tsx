@@ -43,6 +43,7 @@ type Draft =
       workspaceId: string;
     };
 
+/** Returns an empty client form opened on the given tab. */
 function blankClientRecord(tab: "brand" | "user" = "user"): Extract<Draft, { kind: "client-record" }> {
   return {
     kind: "client-record",
@@ -72,6 +73,7 @@ const teamRoles = [
 
 const buttonStyle = { fontSize: 11, fontWeight: 700, lineHeight: "16.5px" } as const;
 
+/** Renders team and client management for the agency admin. */
 export function TeamView() {
   const [role, setRole] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
@@ -81,6 +83,7 @@ export function TeamView() {
   const [pending, setPending] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<{ kind: "user" | "brand"; id: number } | null>(null);
 
+  /** Loads teammates and brands for the signed-in agency. */
   async function loadLists() {
     const [users, workspaces] = await Promise.all([
       api<{ data: Member[] }>("/users"),
@@ -106,11 +109,13 @@ export function TeamView() {
       });
   }, []);
 
+  /** Opens the lightbox for a teammate, brand, or client. */
   function openDraft(next: Draft) {
     setRemoveTarget(null);
     setDraft(next);
   }
 
+  /** Creates or updates the record of the open tab. */
   async function saveDraft(event: FormEvent) {
     event.preventDefault();
     if (!draft) return;
@@ -151,6 +156,7 @@ export function TeamView() {
     }
   }
 
+  /** Deletes the brand or user waiting for confirmation. */
   async function remove() {
     if (!removeTarget) return;
     setPending(true);
@@ -306,6 +312,7 @@ export function TeamView() {
   );
 }
 
+/** Shows the create or edit form in a theme-aware lightbox. */
 function DraftDialog({
   draft,
   brands,
@@ -324,6 +331,7 @@ function DraftDialog({
   const { theme } = useTheme();
 
   useEffect(() => {
+    /** Closes the lightbox when Escape is pressed. */
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") onClose();
     }
@@ -442,6 +450,7 @@ function DraftDialog({
   );
 }
 
+/** Renders the Team & Clients title. */
 function Header() {
   return (
     <header>
@@ -452,6 +461,7 @@ function Header() {
   );
 }
 
+/** Builds the success message for the saved record. */
 function savedLabel(draft: Draft) {
   if (draft.kind === "client-record" && draft.tab === "brand") {
     return draft.brandId === null ? "Brand created." : "Brand updated.";
@@ -462,12 +472,14 @@ function savedLabel(draft: Draft) {
   return draft.id === null ? "Teammate created." : "Teammate updated.";
 }
 
+/** Builds the lightbox title for the open form. */
 function draftTitle(draft: Draft) {
   if (draft.kind === "member") return draft.id === null ? "New teammate" : "Edit teammate";
   if (draft.tab === "brand") return draft.brandId === null ? "New brand" : "Edit brand";
   return draft.userId === null ? "New client" : "Edit client";
 }
 
+/** Renders a labeled text input. */
 function Field({
   label,
   value,
@@ -495,6 +507,7 @@ function Field({
   );
 }
 
+/** Renders edit and remove, or the remove confirmation. */
 function RowActions({
   pending,
   confirming,
@@ -524,6 +537,7 @@ function RowActions({
   );
 }
 
+/** Asks the admin to confirm a removal. */
 function Confirm({ pending, onCancel, onConfirm }: { pending: boolean; onCancel: () => void; onConfirm: () => void }) {
   return (
     <div className="flex gap-2">

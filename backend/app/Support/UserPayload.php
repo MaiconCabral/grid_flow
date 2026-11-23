@@ -6,6 +6,7 @@ use App\Models\User;
 
 class UserPayload
 {
+    /** Shapes a user for the API response. */
     public static function from(User $user): array
     {
         return [
