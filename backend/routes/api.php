@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\UserController;
@@ -25,6 +26,13 @@ Route::prefix('v1')->group(function () {
             Route::post('workspaces', [WorkspaceController::class, 'store']);
             Route::patch('workspaces/{workspace}', [WorkspaceController::class, 'update']);
             Route::delete('workspaces/{workspace}', [WorkspaceController::class, 'destroy']);
+            Route::get('activities', [ActivityController::class, 'index']);
+            Route::post('activities', [ActivityController::class, 'store']);
+            Route::get('activities/{activity}', [ActivityController::class, 'show']);
+            Route::patch('activities/{activity}', [ActivityController::class, 'update']);
+            Route::post('activities/{activity}/assets', [ActivityController::class, 'storeAsset']);
+            Route::post('activities/{activity}/approve', [ActivityController::class, 'approve']);
+            Route::post('activities/{activity}/request-changes', [ActivityController::class, 'requestChanges']);
         });
     });
 });

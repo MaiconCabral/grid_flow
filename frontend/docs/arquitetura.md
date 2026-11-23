@@ -12,6 +12,7 @@ src/
 │   │   └── [tenantSlug]/
 │   │       ├── dashboard/page.tsx
 │   │       ├── workspace/page.tsx
+│   │       ├── workspace/[activityId]/page.tsx
 │   │       ├── approval/page.tsx
 │   │       ├── team/page.tsx
 │   │       └── settings/page.tsx
@@ -32,8 +33,9 @@ A gestão de membros e marcas fica em `/{slug}/team`, no componente `src/compone
 
 As cores de fundo e o destaque vêm da agência, gravados em `tenants`. A chave `postgrid-theme` no `localStorage` só reaplica a última resposta antes da API responder. O lightbox, o SweetAlert e o restante da interface leem essas variáveis.
 
+O quadro e a ficha da tarefa ficam em `src/components/workspace/`. O detalhe está em [etapas/04-workspace.md](etapas/04-workspace.md).
+
 ## Etapas futuras na interface
 
-- **Kanban.** Trocar o quadro mock por `GET /api/v1/workspaces/{workspaceId}/board`, com atualização otimista quando a API existir.
-- **Aprovação.** Pinos em porcentagem da área da peça e os botões de aprovar ou pedir ajuste.
-- **Upload e tempo real.** URL pré-assinada e escuta do canal do workspace.
+- **Aprovação com pinos.** Pinos em porcentagem da área da peça. Os botões de aprovar ou pedir ajuste já estão na ficha.
+- **Upload em nuvem e tempo real.** URL pré-assinada e escuta do canal do workspace. O anexo atual vai para o disco local da API.

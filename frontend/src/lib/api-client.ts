@@ -19,7 +19,9 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
   const { auth = true, headers, body, ...rest } = options;
   const requestHeaders = new Headers(headers);
   requestHeaders.set("Accept", "application/json");
-  if (body !== undefined) requestHeaders.set("Content-Type", "application/json");
+  if (body !== undefined && !(body instanceof FormData)) {
+    requestHeaders.set("Content-Type", "application/json");
+  }
 
   if (auth) {
     const token = readCookie(tokenCookie);
