@@ -129,6 +129,13 @@ export function statusLabel(value: string) {
   return stages.find((item) => item.id === value)?.label ?? value;
 }
 
+/** Picks the status chip colors on a client card. */
+export function statusBadgeClass(status: string) {
+  if (status === "approved") return "bg-lime-dark text-good";
+  if (status === "pending") return "bg-[#e9a15b] text-[#2a1c0c]";
+  return "bg-orange-soft text-[#ebb77a]";
+}
+
 /** Builds the badge text shown on a card. */
 export function typeLabel(channel: string, format: string) {
   return `${channelLabel(channel)} ${formatLabel(format)}`;

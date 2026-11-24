@@ -9,6 +9,7 @@ use App\Enums\ActivityStatus;
 use App\Enums\AssetKind;
 use App\Enums\UserRole;
 use App\Models\Activity;
+use App\Models\Membership;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Workspace;
@@ -124,6 +125,18 @@ class DatabaseSeeder extends Seeder
         $jordan = User::query()->where('email', 'jordan@agency-alpha.test')->firstOrFail();
         $sarah = User::query()->where('email', 'sarah@agency-alpha.test')->firstOrFail();
         $john = User::query()->where('email', 'john@agency-alpha.test')->firstOrFail();
+        $horizonId = Tenant::query()->where('slug', 'horizon-studio')->value('id');
+        $maya = User::query()->create([
+            'name' => 'Maya Costa',
+            'email' => 'maya@studios.test',
+            'password' => 'password',
+            'role' => UserRole::Designer,
+        ]);
+        Membership::query()->create([
+            'user_id' => $maya->id,
+            'tenant_id' => $horizonId,
+            'role' => UserRole::Designer,
+        ]);
 
         $this->task($jordan, $aster, $sarah, 'Summer launch carousel', 'Five frames for the summer drop, lime type on dark.', ActivityChannel::Instagram, ActivityFormat::Carousel, ActivityStatus::Todo, now()->toDateString());
         $film = $this->task($jordan, $aster, $john, 'Founder note', 'Short LinkedIn post in Jordan’s voice.', ActivityChannel::Linkedin, ActivityFormat::Post, ActivityStatus::Production, now()->addDay()->toDateString());
@@ -145,6 +158,7 @@ class DatabaseSeeder extends Seeder
         $this->task($jordan, $northstar, $sarah, 'Product film', 'Cutdown of the lab walkthrough for review.', ActivityChannel::Youtube, ActivityFormat::Video, ActivityStatus::Pending, now()->addDays(2)->toDateString());
         $this->task($jordan, $kora, $john, 'Weekend caption', 'One paragraph for the Saturday story.', ActivityChannel::Facebook, ActivityFormat::Text, ActivityStatus::Approved, now()->addDays(4)->toDateString());
         $this->task($jordan, $northstar, $sarah, 'Launch reminder', 'Story frame the day before launch.', ActivityChannel::Tiktok, ActivityFormat::Story, ActivityStatus::Scheduled, now()->addDays(5)->toDateString());
+        $this->task($jordan, $aster, $maya, 'Shared cutdown', 'A fifteen second cut Maya finishes for Aster.', ActivityChannel::Instagram, ActivityFormat::Video, ActivityStatus::Production, now()->toDateString());
 
         $horizon = Tenant::query()->where('slug', 'horizon-studio')->firstOrFail();
         $context->set($horizon->id);
@@ -158,6 +172,7 @@ class DatabaseSeeder extends Seeder
         $this->task($helena, $lumen, $rafael, 'Atelier lookbook', 'Carousel of the new linen set.', ActivityChannel::Instagram, ActivityFormat::Carousel, ActivityStatus::Production, now()->toDateString());
         $this->task($helena, $vela, $clara, 'Market reel', 'Fifteen seconds from the Saturday stall.', ActivityChannel::Tiktok, ActivityFormat::Video, ActivityStatus::Pending, now()->addDays(1)->toDateString());
         $this->task($helena, $porto, $rafael, 'Pine story', 'A quiet frame for the weekend menu.', ActivityChannel::Facebook, ActivityFormat::Story, ActivityStatus::Todo, now()->addDays(3)->toDateString());
+        $this->task($helena, $lumen, $maya, 'Studio still', 'One frame Maya retouches for the atelier.', ActivityChannel::Instagram, ActivityFormat::Post, ActivityStatus::Todo, now()->toDateString());
     }
 
     /** Creates one task and its opening history entry. */

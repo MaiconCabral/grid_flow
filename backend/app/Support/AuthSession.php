@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Membership;
 use App\Models\User;
 
 class AuthSession
@@ -28,6 +29,7 @@ class AuthSession
                 'role' => $user->role->value,
                 'workspace_id' => $user->workspace_id,
             ],
+            'agencies' => self::agencies($user),
         ];
 
         if ($token !== null) {
@@ -35,5 +37,22 @@ class AuthSession
         }
 
         return $payload;
+    }
+
+    /** Lists the agencies the person can open. */
+    private static function agencies(User $user): array
+    {
+        return Membership::query()
+            ->where('user_id', $user->id)
+            ->with('tenant')
+            ->orderBy('tenant_id')
+            ->get()
+            ->map(fn (Membership $membership) => [
+                'id' => $membership->tenant->id,
+                'name' => $membership->tenant->name,
+                'slug' => $membership->tenant->slug,
+            ])
+            ->values()
+            ->all();
     }
 }

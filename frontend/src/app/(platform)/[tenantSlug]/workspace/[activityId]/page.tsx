@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { StaffGate } from "@/components/client/staff-gate";
 import { ActivityView } from "@/components/workspace/activity-view";
 
 export const metadata: Metadata = {
@@ -6,5 +7,9 @@ export const metadata: Metadata = {
 };
 
 export default function ActivityPage() {
-  return <ActivityView />;
+  return (
+    <StaffGate>
+      <ActivityView />
+    </StaffGate>
+  );
 }

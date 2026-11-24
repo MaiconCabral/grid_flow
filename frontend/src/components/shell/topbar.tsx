@@ -91,6 +91,7 @@ export function Topbar({
       </p>
 
       <div className="flex items-center gap-2.5">
+        {user && user.roleKey !== "client" ? (
         <div className="relative">
           <button
             type="button"
@@ -130,6 +131,7 @@ export function Topbar({
             </div>
           ) : null}
         </div>
+        ) : null}
 
         <div className="relative">
           <button

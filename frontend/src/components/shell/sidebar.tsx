@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
   CalendarCheck,
+  Check,
   ChevronDown,
   CircleHelp,
   HardDrive,
@@ -15,8 +16,10 @@ import {
 import { useEffect, useState } from "react";
 import { agency, currentUser } from "@/data/mock";
 import { useAgency } from "@/lib/agency-theme";
-import { api } from "@/lib/api-client";
+import { notifyError } from "@/lib/alerts";
+import { ApiError, api } from "@/lib/api-client";
 import type { Dashboard } from "@/lib/dashboard";
+import { writeTenant, type AuthAgency, type AuthTenant } from "@/lib/session";
 
 function isActive(pathname: string, href: string) {
   return pathname === href;
@@ -27,11 +30,13 @@ export function Sidebar({
   tenantSlug,
   tenantName,
   user,
+  agencies = [],
 }: {
   pathname: string;
   tenantSlug: string;
   tenantName?: string;
   user?: { name: string; role: string; roleKey?: string; initials: string } | null;
+  agencies?: AuthAgency[];
 }) {
   const base = `/${tenantSlug}`;
   const [counts, setCounts] = useState<{ total: number; pending: number } | null>(null);
@@ -48,12 +53,17 @@ export function Sidebar({
       active = false;
     };
   }, []);
-  const workspaceNav = [
-    { href: `${base}/dashboard`, label: "Dashboard", icon: LayoutDashboard },
-    { href: `${base}/workspace`, label: "Workspace", icon: SquareKanban, badge: counts ? String(counts.total) : undefined },
-    { href: `${base}/approval`, label: "Approval Center", icon: CalendarCheck, badge: counts ? String(counts.pending) : undefined },
-  ];
-  const manageNav = user?.roleKey === "agency_admin"
+  const known = Boolean(user?.roleKey);
+  const client = user?.roleKey === "client";
+  const workspaceNav = client
+    ? [{ href: `${base}/dashboard`, label: "Pieces", icon: LayoutGrid }]
+    : [
+        { href: `${base}/dashboard`, label: "Dashboard", icon: LayoutDashboard },
+        { href: `${base}/workspace`, label: "Workspace", icon: SquareKanban, badge: counts ? String(counts.total) : undefined },
+        { href: `${base}/approval`, label: "Approval Center", icon: CalendarCheck, badge: counts ? String(counts.pending) : undefined },
+      ];
+  const admin = user?.roleKey === "agency_admin";
+  const manageNav = admin
     ? [
         { href: `${base}/team`, label: "Team & Clients", icon: Users },
         { href: `${base}/settings`, label: "Settings", icon: Settings },
@@ -63,8 +73,30 @@ export function Sidebar({
   const storedAgency = useAgency();
   const agencyLabel = storedAgency?.name || tenantName || agency.name;
   const agencyInitial = agencyLabel.trim().charAt(0).toUpperCase() || "A";
+  const canSwitch = agencies.length > 1;
   const [agencyOpen, setAgencyOpen] = useState(false);
+  const [switching, setSwitching] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+
+  /** Opens another agency and reloads the dashboard there. */
+  async function chooseAgency(target: AuthAgency) {
+    if (target.slug === tenantSlug || switching) {
+      setAgencyOpen(false);
+      return;
+    }
+    setSwitching(true);
+    try {
+      const session = await api<{ tenant: AuthTenant }>("/auth/switch-agency", {
+        method: "POST",
+        body: JSON.stringify({ tenant_id: target.id }),
+      });
+      writeTenant(session.tenant);
+      window.location.assign(`/${session.tenant.slug}/dashboard`);
+    } catch (caught) {
+      void notifyError(caught instanceof ApiError ? caught.message : "Could not switch agency.");
+      setSwitching(false);
+    }
+  }
 
   return (
     <aside className="flex h-full w-[244px] shrink-0 flex-col bg-sidebar px-3.5 pt-[26px] pb-4">
@@ -76,47 +108,74 @@ export function Sidebar({
       </div>
 
       <div className="relative mx-1 mb-7">
-        <button
-          type="button"
-          onClick={() => setAgencyOpen((open) => !open)}
-          className="flex w-full items-center gap-2.5 rounded-xl bg-raised p-2.5 text-left"
-        >
-          <span className="grid size-[30px] place-items-center rounded-lg bg-[#d2ff89] font-display text-[15px] leading-none font-extrabold text-[#233312]">
-            {agencyInitial}
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-[12px] font-bold">{agencyLabel}</span>
-            <span className="block text-[10px] text-muted">{agency.workspaces} workspaces</span>
-          </span>
-          <ChevronDown className={`size-4 text-muted ${agencyOpen ? "rotate-180" : ""}`} />
-        </button>
-        {agencyOpen ? (
+        {canSwitch ? (
+          <button
+            type="button"
+            onClick={() => setAgencyOpen((open) => !open)}
+            className="flex w-full items-center gap-2.5 rounded-xl bg-raised p-2.5 text-left"
+          >
+            <AgencyMark initial={agencyInitial} />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[12px] font-bold">{agencyLabel}</span>
+              <span className="block text-[10px] text-muted">{agencies.length} agencies</span>
+            </span>
+            <ChevronDown className={`size-4 text-muted ${agencyOpen ? "rotate-180" : ""}`} />
+          </button>
+        ) : (
+          <div className="flex w-full items-center gap-2.5 rounded-xl bg-raised p-2.5 text-left">
+            <AgencyMark initial={agencyInitial} />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[12px] font-bold">{agencyLabel}</span>
+            </span>
+          </div>
+        )}
+        {canSwitch && agencyOpen ? (
           <div className="absolute top-12 left-0 z-30 w-[215px] rounded-[13px] bg-raised p-2.5 shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
-            <p className="rounded-lg bg-soft px-2.5 py-2 text-[11px] font-semibold">{agencyLabel}</p>
+            {agencies.map((item) => {
+              const active = item.slug === tenantSlug;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  disabled={switching}
+                  onClick={() => void chooseAgency(item)}
+                  className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[11px] font-semibold ${
+                    active ? "bg-soft text-foreground" : "text-muted hover:bg-soft hover:text-foreground"
+                  }`}
+                >
+                  <span className="min-w-0 flex-1 truncate">{item.name}</span>
+                  {active ? <Check className="size-[13px] shrink-0 text-lime" /> : null}
+                </button>
+              );
+            })}
           </div>
         ) : null}
       </div>
 
       <nav className="space-y-7">
-        <NavGroup label="Workspace" items={workspaceNav} pathname={pathname} />
+        {known ? <NavGroup label={client ? "Review" : "Workspace"} items={workspaceNav} pathname={pathname} /> : null}
         {manageNav.length > 0 ? <NavGroup label="Manage" items={manageNav} pathname={pathname} /> : null}
       </nav>
 
       <div className="mt-auto px-[11px] pt-3.5 pb-3.5">
-        <div className="mb-2.5 flex items-center justify-between">
-          <span>
-            <span className="block text-[10px] text-muted">Storage</span>
-            <strong className="mt-[3px] block text-[11px] font-bold">
-              {agency.storageUsed} <small className="font-normal text-faint">/ {agency.storageTotal}</small>
-            </strong>
-          </span>
-          <span className="grid size-[25px] place-items-center rounded-md bg-lime-dark text-lime">
-            <HardDrive className="size-3.5" />
-          </span>
-        </div>
-        <div className="mb-6 h-1 overflow-hidden rounded-lg bg-soft">
-          <div className="h-full rounded-lg bg-lime" style={{ width: `${agency.storagePercent}%` }} />
-        </div>
+        {admin ? (
+          <div className="mb-6">
+            <div className="mb-2.5 flex items-center justify-between">
+              <span>
+                <span className="block text-[10px] text-muted">Storage</span>
+                <strong className="mt-[3px] block text-[11px] font-bold">
+                  {agency.storageUsed} <small className="font-normal text-faint">/ {agency.storageTotal}</small>
+                </strong>
+              </span>
+              <span className="grid size-[25px] place-items-center rounded-md bg-lime-dark text-lime">
+                <HardDrive className="size-3.5" />
+              </span>
+            </div>
+            <div className="h-1 overflow-hidden rounded-lg bg-soft">
+              <div className="h-full rounded-lg bg-lime" style={{ width: `${agency.storagePercent}%` }} />
+            </div>
+          </div>
+        ) : null}
 
         <div className="relative">
           <button
@@ -146,6 +205,15 @@ export function Sidebar({
         </div>
       </div>
     </aside>
+  );
+}
+
+/** Renders the agency initial beside its name. */
+function AgencyMark({ initial }: { initial: string }) {
+  return (
+    <span className="grid size-[30px] place-items-center rounded-lg bg-[#d2ff89] font-display text-[15px] leading-none font-extrabold text-[#233312]">
+      {initial}
+    </span>
   );
 }
 

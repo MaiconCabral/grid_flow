@@ -73,8 +73,8 @@ export function ApprovalView() {
     return (
       <div className="mx-auto max-w-[860px] px-[38px] py-16">
         <p className="text-sm text-muted">This piece is not available.</p>
-        <Link href={`/${params.tenantSlug}/approval`} className="mt-4 inline-block text-sm font-semibold text-lime">
-          Back to the list
+        <Link href={user?.role === "client" ? `/${params.tenantSlug}/dashboard` : `/${params.tenantSlug}/approval`} className="mt-4 inline-block text-sm font-semibold text-lime">
+          {user?.role === "client" ? "Your pieces" : "Back to the list"}
         </Link>
       </div>
     );
@@ -228,8 +228,8 @@ export function ApprovalView() {
 
   return (
     <div className="mx-auto max-w-[1640px] px-[38px] pt-10 pb-12">
-      <Link href={`/${params.tenantSlug}/approval`} className="text-[11px] font-bold tracking-wide text-muted uppercase">
-        All pieces
+      <Link href={user.role === "client" ? `/${params.tenantSlug}/dashboard` : `/${params.tenantSlug}/approval`} className="text-[11px] font-bold tracking-wide text-muted uppercase">
+        {user.role === "client" ? "Your pieces" : "All pieces"}
       </Link>
       <header className="mt-4 flex flex-wrap items-end justify-between gap-5">
         <div>

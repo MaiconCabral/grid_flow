@@ -21,10 +21,20 @@ export type AuthTenant = {
   plan: string;
 };
 
-export type AuthSession = {
-  token: string;
+export type AuthAgency = {
+  id: number;
+  name: string;
+  slug: string;
+};
+
+export type AuthAccount = {
   tenant: AuthTenant;
   user: AuthUser;
+  agencies: AuthAgency[];
+};
+
+export type AuthSession = AuthAccount & {
+  token: string;
 };
 
 const maxAge = 60 * 60 * 24 * 14;
@@ -46,8 +56,13 @@ export function readCookie(name: string) {
 
 export function writeSession(session: AuthSession) {
   writeCookie(tokenCookie, session.token);
-  writeCookie(tenantCookie, session.tenant.slug);
-  writeCookie(tenantIdCookie, String(session.tenant.id));
+  writeTenant(session.tenant);
+}
+
+/** Stores the agency the signed-in person is opening. */
+export function writeTenant(tenant: AuthTenant) {
+  writeCookie(tenantCookie, tenant.slug);
+  writeCookie(tenantIdCookie, String(tenant.id));
 }
 
 export function clearSession() {

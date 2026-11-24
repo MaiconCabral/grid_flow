@@ -17,6 +17,7 @@ Route::prefix('v1')->group(function () {
 
         Route::middleware('tenant')->group(function () {
             Route::get('auth/me', [AuthController::class, 'me']);
+            Route::post('auth/switch-agency', [AuthController::class, 'switchAgency']);
             Route::get('settings', [SettingsController::class, 'show']);
             Route::patch('settings', [SettingsController::class, 'update']);
             Route::get('users', [UserController::class, 'index']);

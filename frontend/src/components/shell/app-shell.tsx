@@ -6,7 +6,7 @@ import { Sidebar } from "@/components/shell/sidebar";
 import { Topbar } from "@/components/shell/topbar";
 import { publishAgency } from "@/lib/agency-theme";
 import { api } from "@/lib/api-client";
-import type { AuthTenant, AuthUser } from "@/lib/session";
+import type { AuthAccount } from "@/lib/session";
 
 const titles: Record<string, string> = {
   dashboard: "Dashboard",
@@ -26,10 +26,10 @@ const roleLabels: Record<string, string> = {
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [, tenantSlug = "", section = "dashboard"] = pathname.split("/");
-  const [account, setAccount] = useState<{ user: AuthUser; tenant: AuthTenant } | null>(null);
+  const [account, setAccount] = useState<AuthAccount | null>(null);
 
   useEffect(() => {
-    api<{ user: AuthUser; tenant: AuthTenant }>("/auth/me")
+    api<AuthAccount>("/auth/me")
       .then((session) => {
         setAccount(session);
         publishAgency(session.tenant);
@@ -53,10 +53,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground">
-      <Sidebar pathname={pathname} tenantSlug={tenantSlug} tenantName={account?.tenant.name} user={user} />
+      <Sidebar
+        pathname={pathname}
+        tenantSlug={tenantSlug}
+        tenantName={account?.tenant.name}
+        user={user}
+        agencies={account?.agencies ?? []}
+      />
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar
-          title={titles[section] ?? "Post Grid"}
+          title={account?.user.role === "client" && section === "dashboard" ? "Pieces" : (titles[section] ?? "Post Grid")}
           tenantSlug={tenantSlug}
           tenantName={account?.tenant.name}
           user={user}

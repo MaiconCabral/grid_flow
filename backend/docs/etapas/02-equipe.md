@@ -24,7 +24,15 @@ Todas as rotas exigem `Authorization: Bearer` e `X-Tenant-ID`.
 
 No `PATCH`, `password` é opcional. `role: "client"` exige `workspace_id` de uma marca dessa agência. Os outros papéis gravam `workspace_id` nulo.
 
-`DELETE /api/v1/users/{id}` responde `204`. O admin não remove a própria conta nem o último `agency_admin`. Trocar o papel do último admin responde `422`.
+`DELETE /api/v1/users/{id}` responde `204`. O admin não remove a própria conta nem o último `agency_admin`. Trocar o papel do último admin responde `422`. Se a pessoa ainda pertence a outra agência, a exclusão apaga só o vínculo desta. O último vínculo remove a conta.
+
+## Várias agências
+
+`memberships` liga a pessoa à agência e guarda o papel e a marca desse vínculo. `users.tenant_id` é a agência em que o login entra.
+
+`POST /api/v1/auth/login` e `GET /api/v1/auth/me` incluem `agencies`, com `id`, `name` e `slug`.
+
+`POST /api/v1/auth/switch-agency` recebe `{ "tenant_id": 2 }`. Sem vínculo, a resposta é `422`. O token não muda. A resposta traz a agência e o papel daquele vínculo.
 
 ## Marcas
 
@@ -40,10 +48,11 @@ No `PATCH`, `password` é opcional. `role: "client"` exige `workspace_id` de uma
 | --- | --- |
 | `UserController` | Lista, cria, atualiza e remove usuários |
 | `WorkspaceController` | Lista, cria, renomeia e remove marcas, com os clientes de cada uma |
-| `Actions/Users` | Cria e atualiza o usuário, exige marca para o cliente, impede apagar a si mesmo e o último admin |
+| `Actions/Users` | Cria e atualiza o usuário, grava o vínculo da agência, exige marca para o cliente, impede apagar a si mesmo e o último admin |
 | `Actions/Workspaces` | Cria e renomeia a marca e bloqueia a exclusão se ainda houver cliente |
 | `UserPolicy` e `WorkspacePolicy` | Só o `agency_admin` da mesma agência |
 | `tests/Feature/TeamTest.php` | Permissão, isolamento, cliente sem marca e último admin |
+| `tests/Feature/AgencySwitchTest.php` | Troca de agência e remoção de um vínculo |
 
 `ResolveTenant` roda antes do route-model binding. Sem isso, o escopo da agência ainda está vazio e um `PATCH` ou `DELETE` válido responde `404`.
 

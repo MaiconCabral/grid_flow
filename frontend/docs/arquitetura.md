@@ -40,6 +40,8 @@ A lista e a peça ficam em `src/components/approval/`. O detalhe está em [etapa
 
 O painel fica em `src/components/dashboard/`. O detalhe está em [etapas/06-dashboard.md](etapas/06-dashboard.md).
 
+A home do cliente fica em `src/components/client/`. O detalhe está em [etapas/07-visao-cliente.md](etapas/07-visao-cliente.md).
+
 ## Etapas futuras na interface
 
 - **Upload em nuvem e tempo real.** URL pré-assinada e escuta do canal do workspace. O anexo atual vai para o disco local da API.

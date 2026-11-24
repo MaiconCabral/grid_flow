@@ -53,7 +53,9 @@ Header `Authorization: Bearer {token}`. Revoga o token atual e responde `204`.
 
 ### `GET /api/v1/auth/me`
 
-Headers `Authorization` e `X-Tenant-ID` (id numérico da agência). Resposta `200` com `user` e `tenant`. Sem token, `401`. Header de outra agência, `403`.
+Headers `Authorization` e `X-Tenant-ID` (id numérico da agência). Resposta `200` com `user`, `tenant` e `agencies`. Sem token, `401`. Header de uma agência sem vínculo, `403`.
+
+`POST /api/v1/auth/switch-agency` recebe `{ "tenant_id": 2 }` com os mesmos headers da agência atual. Sem vínculo, `422`. O token não muda.
 
 ### `GET /api/v1/users` e `POST /api/v1/users`
 
@@ -92,5 +94,7 @@ Agência **Horizon Studio**, slug `horizon-studio`. As marcas abaixo existem só
 | Beatriz Almeida | beatriz@lumen.test | client | Lumen Atelier |
 | Diego Santos | diego@vela.test | client | Vela Market |
 | Inês Carvalho | ines@porto.test | client | Porto & Pine |
+
+Maya Costa (`maya@studios.test`, designer) pertence às duas agências. O login abre Agency Alpha. No menu ela troca para Horizon Studio.
 
 Workspaces semeados em Agency Alpha: Aster & Co., Northstar Labs, Kora House. Em Horizon Studio: Lumen Atelier, Vela Market, Porto & Pine.

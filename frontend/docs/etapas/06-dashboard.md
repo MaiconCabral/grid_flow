@@ -8,11 +8,11 @@ O admin vê em produção, pendentes, aprovadas e agendadas da agência, o funil
 
 Designer e redator veem as próprias tarefas: em produção, aguardando o cliente, com entrega nesta semana e atrasadas. As marcas são só as das tarefas deles.
 
-O cliente vê o que aguarda a revisão dele, o que está em produção, o aprovado e o agendado. A ação abre a peça em `/{slug}/approval/{id}`.
+O cliente não usa este painel. A home dele é a grade de peças em [07-visao-cliente.md](07-visao-cliente.md).
 
 ## Menu
 
-Team & Clients e Settings, no menu e no usuário, só aparecem para o admin. Os outros papéis que abrem a URL veem que a página não está disponível. Os selos de Workspace e Approval Center contam as tarefas visíveis e as pendentes.
+Team & Clients, Settings e o Storage, com o uso e o total, só aparecem para o admin. No menu do usuário, as mesmas entradas de equipe e configuração também. Os outros papéis que abrem a URL veem que a página não está disponível. O cliente vê só Pieces e não vê o seletor Viewing as. Os selos de Workspace e Approval Center contam as tarefas visíveis e as pendentes para a equipe. O cartão da agência abre a lista de agências só quando a pessoa pertence a duas ou mais. A troca grava o cookie e recarrega o painel da agência escolhida. Quem tem uma agência vê só o nome.
 
 ## Arquivos
 
