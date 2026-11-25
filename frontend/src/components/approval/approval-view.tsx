@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ChevronLeft, ChevronRight, Download, Send, Share2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Send, Share2, Upload } from "lucide-react";
 import { useEffect, useState, type FormEvent, type MouseEvent } from "react";
+import { DocumentFrame } from "@/components/document-frame";
 import { notifyError, notifySuccess } from "@/lib/alerts";
 import { ApiError, api } from "@/lib/api-client";
 import {
@@ -271,7 +272,7 @@ export function ApprovalView() {
             </button>
           </div>
           <div className="bg-raised p-5">
-            <Preview version={selected} preview={preview} embed={youtubeEmbed(selected?.kind === "link" ? preview : null)} slide={slide} pendingPin={pendingPin} gradient={coverGradient(activity)} onPlace={placePin} onShift={shift} onSlide={(index) => { setSlide(index); setPendingPin(null); }} />
+            <Preview activityId={activity.id} version={selected} preview={preview} embed={youtubeEmbed(selected?.kind === "link" ? preview : null)} slide={slide} pendingPin={pendingPin} gradient={coverGradient(activity)} onPlace={placePin} onShift={shift} onSlide={(index) => { setSlide(index); setPendingPin(null); }} />
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3 px-1">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted">Version</span>
@@ -289,7 +290,7 @@ export function ApprovalView() {
                 {mode === "link" ? (
                   <input key="link" required type="url" value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://www.youtube.com/watch?v=" aria-label="YouTube URL" className="rounded-[9px] bg-card px-3 py-2 text-[13px] outline-none" />
                 ) : (
-                  <input key={mode} required type="file" multiple={mode === "slides"} accept={mode === "document" ? ".doc,.docx" : "image/*"} aria-label={mode === "document" ? "Word document" : "Images"} onChange={(event) => setFiles(Array.from(event.target.files ?? []))} className="text-[13px]" />
+                  <FileButton mode={mode} files={files} onPick={(picked) => setFiles(picked)} />
                 )}
                 <button type="submit" disabled={busy} className="rounded-[9px] bg-lime px-3 py-2 text-[11px] font-bold text-lime-ink disabled:opacity-60">
                   {busy ? "Saving..." : "Upload version"}
@@ -407,8 +408,35 @@ export function ApprovalView() {
   );
 }
 
+/** Opens the file picker as a button in a lighter accent. */
+function FileButton({ mode, files, onPick }: { mode: string; files: File[]; onPick: (files: File[]) => void }) {
+  const idle = mode === "document" ? "Upload PDF or Word" : mode === "slides" ? "Upload images" : "Upload image";
+  const label = files.length === 0 ? idle : files.length === 1 ? files[0].name : `${files.length} files`;
+
+  return (
+    <label
+      className="inline-flex w-fit max-w-full cursor-pointer items-center gap-2 rounded-[9px] px-3.5 py-2.5 text-[11px] font-bold text-lime-ink"
+      style={{ background: "color-mix(in srgb, var(--lime) 34%, white)" }}
+    >
+      <Upload className="size-3.5 shrink-0" />
+      <span className="truncate">{label}</span>
+      <input
+        key={mode}
+        required
+        type="file"
+        multiple={mode === "slides"}
+        accept={mode === "document" ? ".pdf,.doc,.docx" : "image/*"}
+        aria-label={idle}
+        onChange={(event) => onPick(Array.from(event.target.files ?? []))}
+        className="sr-only"
+      />
+    </label>
+  );
+}
+
 /** Renders the open version and the pins that belong to it. */
 function Preview({
+  activityId,
   version,
   preview,
   embed,
@@ -419,6 +447,7 @@ function Preview({
   onShift,
   onSlide,
 }: {
+  activityId: number;
   version: ActivityVersion | null;
   preview: string | null;
   embed: string | null;
@@ -429,6 +458,19 @@ function Preview({
   onShift: (direction: number) => void;
   onSlide: (index: number) => void;
 }) {
+  if (version?.kind === "document") {
+    return (
+      <DocumentFrame
+        activityId={activityId}
+        versionId={version.id}
+        name={version.name}
+        url={version.url}
+        title={version.name}
+        gradient={gradient}
+      />
+    );
+  }
+
   const current = version?.files[slide] ?? version?.files[0] ?? null;
   const pins = (version?.annotations ?? []).filter((pin) => (pin.file_id == null ? slide === 0 : pin.file_id === current?.id));
   return (

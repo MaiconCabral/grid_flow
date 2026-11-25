@@ -14,6 +14,7 @@ export type BoardActivity = {
   events_count: number;
   cover_url: string | null;
   video_url: string | null;
+  document: { name: string; url: string | null } | null;
   cover_from: string | null;
   cover_to: string | null;
   slides: string[];
@@ -172,6 +173,13 @@ export function deliveryMode(format: string): "image" | "slides" | "document" | 
   if (format === "text") return "document";
   if (format === "carousel") return "slides";
   return "image";
+}
+
+/** Reads the extension that decides how a text file is shown. */
+export function documentKind(name: string | null): "pdf" | "docx" | "doc" | null {
+  const extension = name?.split(".").pop()?.toLowerCase() ?? "";
+  if (extension === "pdf" || extension === "docx" || extension === "doc") return extension;
+  return null;
 }
 
 /** Turns a YouTube address into an embed the preview can play. */

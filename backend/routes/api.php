@@ -32,6 +32,7 @@ Route::prefix('v1')->group(function () {
             Route::get('activities', [ActivityController::class, 'index']);
             Route::post('activities', [ActivityController::class, 'store']);
             Route::get('activities/{activity}', [ActivityController::class, 'show']);
+            Route::get('activities/{activity}/document', [ActivityController::class, 'document']);
             Route::patch('activities/{activity}', [ActivityController::class, 'update']);
             Route::delete('activities/{activity}', [ActivityController::class, 'destroy']);
             Route::post('activities/{activity}/assets', [ActivityController::class, 'storeAsset']);

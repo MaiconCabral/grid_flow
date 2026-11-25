@@ -12,6 +12,7 @@ use App\Actions\Activities\RequestActivityChanges;
 use App\Actions\Activities\ResolveActivityComment;
 use App\Actions\Activities\StoreActivityAsset;
 use App\Actions\Activities\StoreActivityBriefing;
+use App\Enums\AssetKind;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Activities\RequestChangesRequest;
@@ -30,9 +31,12 @@ use App\Models\Workspace;
 use App\Support\ActivityPayload;
 use App\Support\VisibleActivities;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ActivityController extends Controller
 {
@@ -63,6 +67,18 @@ class ActivityController extends Controller
                 'scheduled' => $counts->get('scheduled', 0),
             ],
         ]);
+    }
+
+    /** Streams one document version so the page can read a Word file. */
+    public function document(Request $request, Activity $activity): StreamedResponse
+    {
+        Gate::authorize('view', $activity);
+
+        $version = $this->documentVersion($activity, $request->query('version'));
+
+        abort_if($version === null || $version->path === null || ! Storage::disk('public')->exists($version->path), 404);
+
+        return Storage::disk('public')->response($version->path, $version->name);
     }
 
     /** Returns one task with its files and history. */
@@ -154,6 +170,22 @@ class ActivityController extends Controller
         $activity = $action->handle($activity, $request->user(), $request->validated('note'));
 
         return response()->json($this->payload->detail($activity, $request->user()));
+    }
+
+    /** Finds the requested document version, or the current one. */
+    private function documentVersion(Activity $activity, mixed $versionId): ?ActivityVersion
+    {
+        $versions = $activity->versions()->where('kind', AssetKind::Document);
+
+        if ($versionId === null || $versionId === '') {
+            return $versions->where('is_current', true)->first();
+        }
+
+        if (! is_numeric($versionId)) {
+            return null;
+        }
+
+        return $versions->whereKey((int) $versionId)->first();
     }
 
     /** Lists the brands that may appear in the board filter. */

@@ -47,6 +47,7 @@ class ActivityPayload
             'events_count' => $activity->events_count ?? $activity->events->count(),
             'cover_url' => $slides[0] ?? null,
             'video_url' => $this->videoUrl($current),
+            'document' => $this->document($current),
             'slides' => $slides,
         ];
     }
@@ -167,6 +168,19 @@ class ActivityPayload
             'author' => $comment->author?->name,
             'role' => $comment->author?->role?->value,
             'created_at' => $comment->created_at?->toIso8601String(),
+        ];
+    }
+
+    /** Returns the file name and address when the current version is a document. */
+    private function document(?ActivityVersion $version): ?array
+    {
+        if ($version === null || $version->kind !== AssetKind::Document) {
+            return null;
+        }
+
+        return [
+            'name' => $version->name,
+            'url' => $this->address($version->path, $version->url),
         ];
     }
 

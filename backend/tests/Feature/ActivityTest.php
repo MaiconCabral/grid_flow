@@ -227,9 +227,28 @@ class ActivityTest extends TestCase
             'format' => 'text',
         ])->json('id');
         $this->as($admin)->patchJson("/api/v1/activities/{$text}", ['status' => 'production'])->assertOk();
-        $this->as($designer)->post("/api/v1/activities/{$text}/assets", [
+        $docx = $this->as($designer)->post("/api/v1/activities/{$text}/assets", [
             'files' => [UploadedFile::fake()->create('caption.docx', 20, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')],
-        ])->assertCreated()->assertJsonPath('assets.0.kind', 'document')->assertJsonPath('cover_url', null);
+        ]);
+        $docx->assertCreated()
+            ->assertJsonPath('assets.0.kind', 'document')
+            ->assertJsonPath('cover_url', null)
+            ->assertJsonPath('document.name', 'caption.docx');
+        $this->as($designer)->get("/api/v1/activities/{$text}/document")->assertOk();
+
+        $this->as($designer)->post("/api/v1/activities/{$text}/assets", [
+            'files' => [UploadedFile::fake()->create('caption.pdf', 20, 'application/pdf')],
+        ])->assertCreated()
+            ->assertJsonPath('document.name', 'caption.pdf')
+            ->assertJsonPath('cover_url', null);
+        $this->assertStringContainsString('/storage/', (string) $this->as($designer)->getJson("/api/v1/activities/{$text}")->json('document.url'));
+        $this->as($designer)->get('/api/v1/activities/'.$text.'/document?version='.$docx->json('assets.0.id'))->assertOk();
+
+        $intruder = User::factory()->create(['role' => UserRole::AgencyAdmin]);
+        $this->withHeader('Authorization', 'Bearer '.$intruder->createToken('api')->plainTextToken)
+            ->withHeader('X-Tenant-ID', (string) $admin->tenant_id)
+            ->get("/api/v1/activities/{$text}/document")
+            ->assertForbidden();
     }
 
     /** Lets an admin delete a task and its stored files. */

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Play, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { DocumentFrame } from "@/components/document-frame";
 import { useTheme } from "@/components/theme-provider";
 import { notifyError, notifySuccess } from "@/lib/alerts";
 import { ApiError, api } from "@/lib/api-client";
@@ -172,6 +173,19 @@ function SocialFrame({ activity, slide, onSlide }: { activity: BoardActivity; sl
   const kind = frameKind(activity.channel, activity.format);
   const gradient = coverGradient(activity);
   const embed = activity.format === "video" ? youtubeEmbed(assetUrl(activity.video_url)) : null;
+
+  if (activity.format === "text") {
+    return (
+      <DocumentFrame
+        activityId={activity.id}
+        name={activity.document?.name ?? null}
+        url={activity.document?.url ?? null}
+        title={activity.title}
+        gradient={gradient}
+        className="w-full max-w-[640px] shadow-[0_24px_70px_rgba(0,0,0,0.35)]"
+      />
+    );
+  }
 
   if (activity.format === "video") {
     return (

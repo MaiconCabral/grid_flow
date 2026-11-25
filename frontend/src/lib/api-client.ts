@@ -50,3 +50,19 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
 
   return payload as T;
 }
+
+/** Fetches a binary response, such as a Word file. */
+export async function apiBuffer(path: string): Promise<ArrayBuffer> {
+  const headers = new Headers();
+  const token = readCookie(tokenCookie);
+  const tenantId = readCookie(tenantIdCookie);
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  if (tenantId) headers.set("X-Tenant-ID", tenantId);
+
+  const response = await fetch(`${apiUrl}/api/v1${path}`, { headers });
+  if (!response.ok) {
+    throw new ApiError(response.status, "Could not read the document.");
+  }
+
+  return response.arrayBuffer();
+}

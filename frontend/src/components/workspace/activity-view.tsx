@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
+import { DocumentFrame } from "@/components/document-frame";
 import { notifyError, notifySuccess } from "@/lib/alerts";
 import { ApiError, api } from "@/lib/api-client";
 import {
@@ -189,6 +190,9 @@ export function ActivityView() {
         {video ? (
           <iframe src={video} title={current?.name ?? "Video"} className="mt-3 aspect-video w-full rounded-[10px]" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
         ) : null}
+        {current?.kind === "document" ? (
+          <DocumentFrame activityId={activity.id} versionId={current.id} name={current.name} url={current.url} title={current.name} className="mt-3" />
+        ) : null}
         {activity.assets.length === 0 ? <p className="mt-3 text-sm text-muted">Nothing attached yet.</p> : null}
         <ul className="mt-3 space-y-2">
           {activity.assets.map((asset) => {
@@ -234,12 +238,12 @@ export function ActivityView() {
               </label>
             ) : (
               <label className="flex flex-col gap-1 text-[11px] font-bold text-muted">
-                {mode === "document" ? "Word document" : mode === "slides" ? "Images" : "Image"}
+                {mode === "document" ? "PDF or Word document" : mode === "slides" ? "Images" : "Image"}
                 <input
                   required
                   type="file"
                   multiple={mode === "slides"}
-                  accept={mode === "document" ? ".doc,.docx" : "image/*"}
+                  accept={mode === "document" ? ".pdf,.doc,.docx" : "image/*"}
                   onChange={(event) => setFiles(Array.from(event.target.files ?? []))}
                   className="text-[13px] font-normal"
                 />

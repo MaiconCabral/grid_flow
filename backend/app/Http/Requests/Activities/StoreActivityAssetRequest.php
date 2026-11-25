@@ -29,7 +29,7 @@ class StoreActivityAssetRequest extends FormRequest
         }
 
         $limit = $format === ActivityFormat::Carousel ? 10 : 1;
-        $extensions = $format === ActivityFormat::Text ? 'doc,docx' : 'jpg,jpeg,png,webp,gif';
+        $extensions = $format === ActivityFormat::Text ? 'pdf,doc,docx' : 'jpg,jpeg,png,webp,gif';
 
         return [
             'files' => ['required', 'array', 'min:1', 'max:'.$limit],

@@ -12,7 +12,7 @@ O admin arrasta o card entre To Do, In Production, Pending Approval e Scheduled.
 
 ## Entrega e decisão
 
-Em In Production, designer, redator ou admin anexa o que o formato pede: uma imagem no post e no story, várias imagens no carrossel, um DOC no texto e uma URL do YouTube no vídeo. Fora dessa coluna a API recusa a entrega. O arquivo de briefing pode ser trocado em qualquer status. Sem imagem, o card usa o degradê.
+Em In Production, designer, redator ou admin anexa o que o formato pede: uma imagem no post e no story, várias imagens no carrossel, um PDF ou DOC no texto e uma URL do YouTube no vídeo. O PDF aparece na ficha, na central de aprovação e no lightbox do cliente; o DOCX vira texto na tela e o .doc abre em outra aba. Fora dessa coluna a API recusa a entrega. O arquivo de briefing pode ser trocado em qualquer status. Sem imagem, o card usa o degradê.
 
 Na ficha `/{slug}/workspace/{id}`, com a tarefa em Pending Approval, o cliente daquela marca vê Approve e Request changes. Approve grava Approved. Request changes volta para In Production e guarda a nota no histórico. Cliente de outra marca recebe 403. O admin não aprova.
 
@@ -31,6 +31,7 @@ Rotas sob `auth:sanctum` e `tenant`:
 
 - `GET` e `POST /api/v1/activities`
 - `GET` e `PATCH /api/v1/activities/{activity}`
+- `GET /api/v1/activities/{activity}/document`
 - `POST /api/v1/activities/{activity}/assets`
 - `POST /api/v1/activities/{activity}/briefing`
 - `POST /api/v1/activities/{activity}/approve`
