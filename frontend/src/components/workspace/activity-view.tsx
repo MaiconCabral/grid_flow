@@ -8,23 +8,23 @@ import { ApiError, api } from "@/lib/api-client";
 import {
   assetUrl,
   dateLabel,
+  deliveryMode,
   eventSentence,
   eventWhen,
   statusLabel,
   typeLabel,
+  youtubeEmbed,
   type ActivityDetail,
 } from "@/lib/activities";
 import type { AuthUser } from "@/lib/session";
-
-type Kind = "image" | "pdf" | "document" | "link";
 
 /** Shows one task, its files, and the history of what happened. */
 export function ActivityView() {
   const params = useParams<{ tenantSlug: string; activityId: string }>();
   const [activity, setActivity] = useState<ActivityDetail | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [kind, setKind] = useState<Kind>("image");
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [briefingUpload, setBriefingUpload] = useState<File | null>(null);
   const [url, setUrl] = useState("");
   const [note, setNote] = useState("");
   const [asking, setAsking] = useState(false);
@@ -73,25 +73,46 @@ export function ActivityView() {
   const staff = user.role === "agency_admin" || user.role === "designer" || user.role === "copywriter";
   const canAttach = staff && activity.status === "production";
   const canDecide = user.role === "client" && user.workspace_id === activity.workspace.id && activity.status === "pending";
+  const mode = deliveryMode(activity.format);
+  const current = activity.versions.find((item) => item.is_current) ?? activity.versions.at(-1) ?? null;
+  const video = current?.kind === "link" ? youtubeEmbed(assetUrl(current.url)) : null;
 
-  /** Stores a file or a YouTube link on the task. */
+  /** Stores the delivery the format accepts. */
   async function attach(event: FormEvent) {
     event.preventDefault();
     if (!activity) return;
     const body = new FormData();
-    body.set("kind", kind);
-    if (kind === "link") body.set("url", url);
-    else if (file) body.set("file", file);
+    if (mode === "link") body.set("url", url);
+    else if (files.length > 0) files.forEach((item) => body.append("files[]", item));
     else return;
     setBusy(true);
     try {
       const detail = await api<ActivityDetail>(`/activities/${activity.id}/assets`, { method: "POST", body });
       setActivity(detail);
-      setFile(null);
+      setFiles([]);
       setUrl("");
       notifySuccess("Delivery added.");
     } catch (error) {
       notifyError(error instanceof ApiError ? error.message : "Could not add the delivery.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** Stores or replaces the optional briefing document. */
+  async function saveBriefing(event: FormEvent) {
+    event.preventDefault();
+    if (!activity || !briefingUpload) return;
+    const body = new FormData();
+    body.set("file", briefingUpload);
+    setBusy(true);
+    try {
+      const detail = await api<ActivityDetail>(`/activities/${activity.id}/briefing`, { method: "POST", body });
+      setActivity(detail);
+      setBriefingUpload(null);
+      notifySuccess("Briefing file saved.");
+    } catch (error) {
+      notifyError(error instanceof ApiError ? error.message : "Could not save the briefing file.");
     } finally {
       setBusy(false);
     }
@@ -148,10 +169,26 @@ export function ActivityView() {
       <section className="mt-8 rounded-[14px] bg-card p-5">
         <h2 className="text-[11px] font-bold tracking-wide text-muted uppercase">Briefing</h2>
         <p className="mt-3 text-sm leading-relaxed whitespace-pre-wrap">{activity.briefing}</p>
+        {activity.briefing_file ? (
+          <a href={assetUrl(activity.briefing_file.url) ?? undefined} target="_blank" rel="noreferrer" className="mt-3 inline-block text-sm font-semibold text-lime">
+            {activity.briefing_file.name}
+          </a>
+        ) : null}
+        {staff ? (
+          <form onSubmit={saveBriefing} className="mt-4 flex flex-wrap items-center gap-3 border-t border-raised pt-4">
+            <input type="file" accept=".pdf,.doc,.docx,application/pdf" onChange={(event) => setBriefingUpload(event.target.files?.[0] ?? null)} className="text-[13px]" />
+            <button type="submit" disabled={busy || !briefingUpload} className="rounded-[9px] bg-raised px-3 py-2 text-[11px] font-bold disabled:opacity-60">
+              {activity.briefing_file ? "Replace briefing" : "Add briefing"}
+            </button>
+          </form>
+        ) : null}
       </section>
 
       <section className="mt-4 rounded-[14px] bg-card p-5">
         <h2 className="text-[11px] font-bold tracking-wide text-muted uppercase">Delivery</h2>
+        {video ? (
+          <iframe src={video} title={current?.name ?? "Video"} className="mt-3 aspect-video w-full rounded-[10px]" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+        ) : null}
         {activity.assets.length === 0 ? <p className="mt-3 text-sm text-muted">Nothing attached yet.</p> : null}
         <ul className="mt-3 space-y-2">
           {activity.assets.map((asset) => {
@@ -170,7 +207,17 @@ export function ActivityView() {
                     {asset.kind} {asset.author ? `· ${asset.author}` : ""}
                   </span>
                 </span>
-                {asset.kind === "image" && href ? (
+                {asset.kind === "image" && asset.files.length > 0 ? (
+                  <span className="flex shrink-0 gap-1">
+                    {asset.files.map((item) => {
+                      const thumb = assetUrl(item.url);
+                      return thumb ? (
+                        // eslint-disable-next-line @next/next/no-img-element -- file is served by the API
+                        <img key={item.id} src={thumb} alt="" className="h-12 w-12 rounded-md object-cover" />
+                      ) : null;
+                    })}
+                  </span>
+                ) : asset.kind === "image" && href ? (
                   // eslint-disable-next-line @next/next/no-img-element -- file is served by the API
                   <img src={href} alt="" className="h-12 w-16 rounded-md object-cover" />
                 ) : null}
@@ -180,28 +227,20 @@ export function ActivityView() {
         </ul>
         {canAttach ? (
           <form onSubmit={attach} className="mt-4 grid gap-3 border-t border-raised pt-4">
-            <label className="flex flex-col gap-1 text-[11px] font-bold text-muted">
-              Kind
-              <select value={kind} onChange={(event) => setKind(event.target.value as Kind)} className="rounded-[9px] bg-raised px-3 py-2.5 text-[13px] font-normal text-foreground outline-none">
-                <option value="image">Image</option>
-                <option value="pdf">PDF</option>
-                <option value="document">Document</option>
-                <option value="link">YouTube link</option>
-              </select>
-            </label>
-            {kind === "link" ? (
+            {mode === "link" ? (
               <label className="flex flex-col gap-1 text-[11px] font-bold text-muted">
-                URL
+                YouTube URL
                 <input required type="url" value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://www.youtube.com/watch?v=" className="rounded-[9px] bg-raised px-3 py-2.5 text-[13px] font-normal text-foreground outline-none" />
               </label>
             ) : (
               <label className="flex flex-col gap-1 text-[11px] font-bold text-muted">
-                File
+                {mode === "document" ? "Word document" : mode === "slides" ? "Images" : "Image"}
                 <input
                   required
                   type="file"
-                  accept={kind === "image" ? "image/*" : kind === "pdf" ? "application/pdf" : ".doc,.docx"}
-                  onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+                  multiple={mode === "slides"}
+                  accept={mode === "document" ? ".doc,.docx" : "image/*"}
+                  onChange={(event) => setFiles(Array.from(event.target.files ?? []))}
                   className="text-[13px] font-normal"
                 />
               </label>

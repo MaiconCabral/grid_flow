@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CalendarDays, Clock, Download, LayoutGrid, List, MessageSquare, MoreHorizontal, Paperclip, Plus, Search, Smile, X, Zap } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { notifyError, notifySuccess } from "@/lib/alerts";
 import { ApiError, api } from "@/lib/api-client";
 import {
@@ -11,6 +11,7 @@ import {
   assetUrl,
   avatarColor,
   channels,
+  coverGradient,
   dateLabel,
   formats,
   initials,
@@ -82,6 +83,7 @@ export function WorkspaceView() {
   const [hello, setHello] = useState("Good afternoon");
   const [staff, setStaff] = useState<StaffUser[]>([]);
   const [draftOpen, setDraftOpen] = useState(false);
+  const [briefingFile, setBriefingFile] = useState<File | null>(null);
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [saving, setSaving] = useState(false);
   const [dragging, setDragging] = useState<number | null>(null);
@@ -141,6 +143,20 @@ export function WorkspaceView() {
     { label: "Scheduled", value: metrics.scheduled },
   ];
 
+  /** Removes a task from the board. */
+  async function remove(id: number) {
+    const previous = items;
+    setItems(items.filter((activity) => activity.id !== id));
+    try {
+      await api(`/activities/${id}`, { method: "DELETE" });
+      await reload();
+      notifySuccess("Activity deleted.");
+    } catch (error) {
+      setItems(previous);
+      notifyError(error instanceof ApiError ? error.message : "Could not delete the task.");
+    }
+  }
+
   /** Moves a card when the admin drops it on an allowed column. */
   async function move(id: number, status: StageId) {
     const current = items.find((activity) => activity.id === id);
@@ -161,20 +177,19 @@ export function WorkspaceView() {
     event.preventDefault();
     setSaving(true);
     try {
-      await api("/activities", {
-        method: "POST",
-        body: JSON.stringify({
-          workspace_id: Number(draft.workspaceId),
-          assignee_id: draft.assigneeId ? Number(draft.assigneeId) : null,
-          title: draft.title,
-          briefing: draft.briefing,
-          channel: draft.channel,
-          format: draft.format,
-          due_on: draft.dueOn || null,
-        }),
-      });
+      const body = new FormData();
+      body.set("workspace_id", String(Number(draft.workspaceId)));
+      if (draft.assigneeId) body.set("assignee_id", String(Number(draft.assigneeId)));
+      body.set("title", draft.title);
+      body.set("briefing", draft.briefing);
+      body.set("channel", draft.channel);
+      body.set("format", draft.format);
+      if (draft.dueOn) body.set("due_on", draft.dueOn);
+      if (briefingFile) body.set("briefing_file", briefingFile);
+      await api("/activities", { method: "POST", body });
       setDraftOpen(false);
       setDraft(emptyDraft);
+      setBriefingFile(null);
       await reload();
       notifySuccess("Activity created.");
     } catch (error) {
@@ -291,11 +306,13 @@ export function WorkspaceView() {
           slug={slug}
           filtering={filtering}
           canMove={role === "agency_admin"}
+          canDelete={role === "agency_admin"}
           canCreate={canCreate}
           dragging={dragging}
           onDragStart={setDragging}
           onDragEnd={() => setDragging(null)}
           onMove={move}
+          onDelete={remove}
           onCreate={openDraft}
         />
       ) : null}
@@ -316,7 +333,9 @@ export function WorkspaceView() {
           staff={staff}
           saving={saving}
           onChange={setDraft}
-          onClose={() => setDraftOpen(false)}
+          onClose={() => { setDraftOpen(false); setBriefingFile(null); }}
+          briefingFile={briefingFile}
+          onBriefingFile={setBriefingFile}
           onSubmit={create}
         />
       ) : null}
@@ -357,22 +376,26 @@ function Board({
   slug,
   filtering,
   canMove,
+  canDelete,
   canCreate,
   dragging,
   onDragStart,
   onDragEnd,
   onMove,
+  onDelete,
   onCreate,
 }: {
   activities: BoardActivity[];
   slug: string;
   filtering: boolean;
   canMove: boolean;
+  canDelete: boolean;
   canCreate: boolean;
   dragging: number | null;
   onDragStart: (id: number) => void;
   onDragEnd: () => void;
   onMove: (id: number, status: StageId) => void;
+  onDelete: (id: number) => void;
   onCreate: () => void;
 }) {
   return (
@@ -406,7 +429,16 @@ function Board({
             </header>
             <div className="space-y-3">
               {cards.map((activity) => (
-                <ActivityCard key={activity.id} activity={activity} slug={slug} canMove={canMove} onDragStart={onDragStart} onDragEnd={onDragEnd} />
+                <ActivityCard
+                  key={activity.id}
+                  activity={activity}
+                  slug={slug}
+                  canMove={canMove}
+                  canDelete={canDelete && activity.status !== "approved" && activity.status !== "scheduled"}
+                  onDragStart={onDragStart}
+                  onDragEnd={onDragEnd}
+                  onDelete={onDelete}
+                />
               ))}
               {cards.length === 0 ? (
                 <p className="flex min-h-[120px] flex-col items-center justify-center rounded-[9px] bg-card text-[10px] text-faint">
@@ -527,18 +559,38 @@ function ActivityCard({
   activity,
   slug,
   canMove,
+  canDelete,
   onDragStart,
   onDragEnd,
+  onDelete,
 }: {
   activity: BoardActivity;
   slug: string;
   canMove: boolean;
+  canDelete: boolean;
   onDragStart: (id: number) => void;
   onDragEnd: () => void;
+  onDelete: (id: number) => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const menu = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    /** Closes the card menu after a click outside it. */
+    function onPointer(event: MouseEvent) {
+      if (!menu.current?.contains(event.target as Node)) {
+        setOpen(false);
+        setConfirming(false);
+      }
+    }
+    document.addEventListener("mousedown", onPointer);
+    return () => document.removeEventListener("mousedown", onPointer);
+  }, [open]);
+
   return (
-    <Link
-      href={activityHref(slug, activity.id)}
+    <div
       draggable={canMove}
       onDragStart={(event) => {
         event.dataTransfer.setData("text/plain", String(activity.id));
@@ -546,34 +598,80 @@ function ActivityCard({
         onDragStart(activity.id);
       }}
       onDragEnd={onDragEnd}
-      className={`block overflow-hidden rounded-[10px] bg-card shadow-[0_8px_18px_rgba(0,0,0,0.06)] transition hover:-translate-y-0.5 ${canMove ? "cursor-grab active:cursor-grabbing" : ""}`}
+      className={`relative overflow-hidden rounded-[10px] bg-card shadow-[0_8px_18px_rgba(0,0,0,0.06)] transition hover:-translate-y-0.5 ${canMove ? "cursor-grab active:cursor-grabbing" : ""}`}
     >
-      <div className="relative h-[100px] overflow-hidden">
-        <Cover activity={activity} className="h-full w-full" />
-        <span className={`absolute bottom-2 left-2 rounded-[5px] bg-black/70 px-1.5 py-1 text-[8px] font-bold backdrop-blur ${typeClass(activity.channel)}`}>
-          {typeLabel(activity.channel, activity.format)}
-        </span>
-        <span className="absolute top-1.5 right-1.5 grid size-[23px] place-items-center rounded-md bg-black/55 text-white">
-          <MoreHorizontal className="size-3" />
-        </span>
-      </div>
-      <div className="px-[11px] pt-[11px] pb-2.5">
-        <p className="text-[9px] font-bold tracking-[0.3px] text-lime">{activity.workspace.name}</p>
-        <p className="mt-1 font-display text-xs leading-snug font-semibold">{activity.title}</p>
-        <div className="mt-3.5 flex items-center justify-between">
-          <span className="text-[9px] text-muted">{dateLabel(activity.due_on)}</span>
-          <Assignee activity={activity} />
+      <Link href={activityHref(slug, activity.id)} className="block">
+        <div className="relative h-[150px] overflow-hidden">
+          <Cover activity={activity} className="h-full w-full" />
+          <span className={`absolute bottom-2 left-2 rounded-[5px] bg-black/70 px-1.5 py-1 text-[8px] font-bold backdrop-blur ${typeClass(activity.channel)}`}>
+            {typeLabel(activity.channel, activity.format)}
+          </span>
         </div>
+        <div className="px-[11px] pt-[11px] pb-2.5">
+          <p className="text-[9px] font-bold tracking-[0.3px] text-lime">{activity.workspace.name}</p>
+          <p className="mt-1 font-display text-xs leading-snug font-semibold">{activity.title}</p>
+          <div className="mt-3.5 flex items-center justify-between">
+            <span className="text-[9px] text-muted">{dateLabel(activity.due_on)}</span>
+            <Assignee activity={activity} />
+          </div>
+        </div>
+        <Meta activity={activity} />
+      </Link>
+      <div ref={menu} className="absolute top-1.5 right-1.5 z-10">
+        <button
+          type="button"
+          aria-label={`Options for ${activity.title}`}
+          aria-expanded={open}
+          draggable={false}
+          onMouseDown={(event) => event.stopPropagation()}
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            setConfirming(false);
+            setOpen((current) => !current);
+          }}
+          className="grid size-[23px] place-items-center rounded-md bg-black/55 text-white"
+        >
+          <MoreHorizontal className="size-3" />
+        </button>
+        {open ? (
+          <div className="absolute top-7 right-0 w-36 overflow-hidden rounded-lg border border-line bg-card py-1 text-[12px] shadow-lg">
+            {confirming ? (
+              <div className="px-3 py-2">
+                <p className="text-[11px] leading-snug text-muted">Delete this task?</p>
+                <button type="button" onClick={() => onDelete(activity.id)} className="mt-2 block text-left font-semibold text-[#e07a7a]">
+                  Delete
+                </button>
+                <button type="button" onClick={() => setConfirming(false)} className="mt-1 block text-left font-semibold">
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <>
+                <Link href={activityHref(slug, activity.id)} className="block px-3 py-1.5 font-semibold hover:bg-raised" onClick={() => setOpen(false)}>
+                  View
+                </Link>
+                {canDelete ? (
+                  <button type="button" onClick={() => setConfirming(true)} className="block w-full px-3 py-1.5 text-left font-semibold text-[#e07a7a] hover:bg-raised">
+                    Delete
+                  </button>
+                ) : null}
+              </>
+            )}
+          </div>
+        ) : null}
       </div>
-      <Meta activity={activity} />
-    </Link>
+    </div>
   );
 }
 
 /** Shows the cover image or a plain stand-in. */
 function Cover({ activity, className }: { activity: BoardActivity; className: string }) {
   const src = assetUrl(activity.cover_url);
-  if (!src) return <span className={`block bg-soft ${className}`} />;
+  if (!src) {
+    const gradient = coverGradient(activity);
+    return <span className={`block ${gradient ? "" : "bg-soft"} ${className}`} style={gradient} />;
+  }
   return <img src={src} alt="" className={`object-cover ${className}`} />; // eslint-disable-line @next/next/no-img-element -- file is served by the API
 }
 
@@ -624,6 +722,8 @@ function ActivityDialog({
   saving,
   onChange,
   onClose,
+  briefingFile,
+  onBriefingFile,
   onSubmit,
 }: {
   draft: Draft;
@@ -632,6 +732,8 @@ function ActivityDialog({
   saving: boolean;
   onChange: (draft: Draft) => void;
   onClose: () => void;
+  briefingFile: File | null;
+  onBriefingFile: (file: File | null) => void;
   onSubmit: (event: FormEvent) => void;
 }) {
   const { theme } = useTheme();
@@ -681,6 +783,16 @@ function ActivityDialog({
             rows={4}
             className="rounded-[9px] bg-raised px-3 py-2.5 text-[13px] font-normal text-foreground outline-none"
           />
+        </label>
+        <label className="flex flex-col gap-1 text-[11px] font-bold text-muted">
+          Briefing file
+          <input
+            type="file"
+            accept=".pdf,.doc,.docx,application/pdf"
+            onChange={(event) => onBriefingFile(event.target.files?.[0] ?? null)}
+            className="text-[13px] font-normal"
+          />
+          <span className="font-normal text-faint">{briefingFile ? briefingFile.name : "Optional PDF or Word document."}</span>
         </label>
         <Select label="Channel" value={draft.channel} onChange={(channel) => onChange({ ...draft, channel })}>
           {channels.map((item) => (

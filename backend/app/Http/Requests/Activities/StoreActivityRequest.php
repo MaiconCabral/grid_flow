@@ -27,6 +27,7 @@ class StoreActivityRequest extends FormRequest
             'channel' => ['required', Rule::enum(ActivityChannel::class)],
             'format' => ['required', Rule::enum(ActivityFormat::class)],
             'due_on' => ['nullable', 'date'],
+            'briefing_file' => ['nullable', 'file', 'max:10240', 'extensions:pdf,doc,docx'],
         ];
     }
 }

@@ -9,19 +9,20 @@ import { ApiError, api } from "@/lib/api-client";
 import {
   assetUrl,
   avatarColor,
+  coverGradient,
   dateLabel,
+  deliveryMode,
   eventWhen,
   initials,
   roleLabels,
   statusLabel,
   typeLabel,
+  youtubeEmbed,
   type ActivityComment,
   type ActivityDetail,
   type ActivityVersion,
 } from "@/lib/activities";
 import type { AuthUser } from "@/lib/session";
-
-type Kind = "image" | "pdf" | "document" | "link";
 
 /** Shows one piece with its versions, pins, comments, and the client's decision. */
 export function ApprovalView() {
@@ -32,12 +33,12 @@ export function ApprovalView() {
   const [tab, setTab] = useState<"comments" | "details">("comments");
   const [draft, setDraft] = useState("");
   const [replyTo, setReplyTo] = useState<ActivityComment | null>(null);
-  const [pendingPin, setPendingPin] = useState<{ x: number; y: number } | null>(null);
+  const [pendingPin, setPendingPin] = useState<{ x: number; y: number; fileId: number | null } | null>(null);
+  const [slide, setSlide] = useState(0);
   const [internal, setInternal] = useState(false);
   const [note, setNote] = useState("");
   const [asking, setAsking] = useState(false);
-  const [kind, setKind] = useState<Kind>("image");
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
   const [shared, setShared] = useState(false);
@@ -88,9 +89,11 @@ export function ApprovalView() {
   const selected = versions.find((item) => item.id === versionId) ?? versions[0] ?? null;
   const selectedIndex = selected ? versions.findIndex((item) => item.id === selected.id) : 0;
   const staff = user.role === "agency_admin" || user.role === "designer" || user.role === "copywriter";
-  const canUpload = staff && activity.status === "production";
+  const canUpload = staff && (activity.status === "production" || activity.format === "video");
   const canDecide = user.role === "client" && user.workspace_id === activity.workspace.id;
-  const preview = assetUrl(selected?.url ?? null);
+  const mode = deliveryMode(activity.format);
+  const slideFile = selected?.files[slide] ?? selected?.files[0] ?? null;
+  const preview = assetUrl(slideFile?.url ?? selected?.url ?? null);
   const thread = activity.comments.filter((comment) => comment.version_id === null || comment.version_id === selected?.id);
 
   /** Moves the preview to the previous or next version. */
@@ -98,6 +101,7 @@ export function ApprovalView() {
     if (versions.length === 0) return;
     const next = (selectedIndex + direction + versions.length) % versions.length;
     setVersionId(versions[next].id);
+    setSlide(0);
     setPendingPin(null);
   }
 
@@ -108,7 +112,7 @@ export function ApprovalView() {
     const rect = event.currentTarget.getBoundingClientRect();
     const x = Math.round(((event.clientX - rect.left) / rect.width) * 10000) / 100;
     const y = Math.round(((event.clientY - rect.top) / rect.height) * 10000) / 100;
-    setPendingPin({ x: Math.min(100, Math.max(0, x)), y: Math.min(100, Math.max(0, y)) });
+    setPendingPin({ x: Math.min(100, Math.max(0, x)), y: Math.min(100, Math.max(0, y)), fileId: slideFile?.id ?? null });
     setReplyTo(null);
     setTab("comments");
   }
@@ -123,7 +127,7 @@ export function ApprovalView() {
       const detail = pendingPin && selected
         ? await api<ActivityDetail>(`/activities/${activity.id}/versions/${selected.id}/annotations`, {
             method: "POST",
-            body: JSON.stringify({ x: pendingPin.x, y: pendingPin.y, body, is_internal: internal }),
+            body: JSON.stringify({ x: pendingPin.x, y: pendingPin.y, file_id: pendingPin.fileId, body, is_internal: internal }),
           })
         : await api<ActivityDetail>(`/activities/${activity.id}/comments`, {
             method: "POST",
@@ -166,16 +170,15 @@ export function ApprovalView() {
     event.preventDefault();
     if (!activity) return;
     const body = new FormData();
-    body.set("kind", kind);
-    if (kind === "link") body.set("url", url);
-    else if (file) body.set("file", file);
+    if (deliveryMode(activity.format) === "link") body.set("url", url);
+    else if (files.length > 0) files.forEach((item) => body.append("files[]", item));
     else return;
     setBusy(true);
     try {
       const detail = await api<ActivityDetail>(`/activities/${activity.id}/assets`, { method: "POST", body });
       setActivity(detail);
       setVersionId(detail.versions.find((item) => item.is_current)?.id ?? null);
-      setFile(null);
+      setFiles([]);
       setUrl("");
       notifySuccess("Version uploaded.");
     } catch (error) {
@@ -239,6 +242,11 @@ export function ApprovalView() {
           </p>
           <h1 className="mb-2 font-display text-[30px] leading-[1.18] font-extrabold tracking-[-1.3px]">{activity.title}</h1>
           <p className="text-[13px] text-muted">{activity.briefing}</p>
+          {activity.briefing_file ? (
+            <a href={assetUrl(activity.briefing_file.url) ?? undefined} target="_blank" rel="noreferrer" className="mt-2 inline-block text-[13px] font-semibold text-lime">
+              {activity.briefing_file.name}
+            </a>
+          ) : null}
         </div>
         <div className="flex items-center gap-2">
           <span className={`rounded-lg px-3 py-2 text-[10px] font-bold ${activity.status === "approved" ? "bg-lime-dark text-good" : "bg-orange-soft text-[#ebb77a]"}`}>
@@ -256,19 +264,19 @@ export function ApprovalView() {
           <div className="flex items-center justify-between gap-3 bg-raised px-[17px] py-[15px]">
             <div>
               <p className="text-sm font-semibold">{selected ? selected.name : "No file yet"}</p>
-              <p className="text-xs text-muted">{selected ? `Version ${selected.number} · ${selected.author ?? "Someone"} · ${eventWhen(selected.created_at)}` : "Upload a version to start the review."}</p>
+              <p className="text-xs text-muted">{selected ? `Version ${selected.number} · ${selected.author ?? "Someone"} · ${eventWhen(selected.created_at)}` : mode === "link" ? "Paste a YouTube URL to start the review." : "Upload a version to start the review."}</p>
             </div>
             <button type="button" aria-label="Download file" onClick={download} disabled={!preview} className="grid size-8 place-items-center rounded-lg hover:bg-soft disabled:opacity-40">
               <Download className="size-4" />
             </button>
           </div>
           <div className="bg-raised p-5">
-            <Preview version={selected} preview={preview} pendingPin={pendingPin} onPlace={placePin} onShift={shift} />
+            <Preview version={selected} preview={preview} embed={youtubeEmbed(selected?.kind === "link" ? preview : null)} slide={slide} pendingPin={pendingPin} gradient={coverGradient(activity)} onPlace={placePin} onShift={shift} onSlide={(index) => { setSlide(index); setPendingPin(null); }} />
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3 px-1">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted">Version</span>
                 {versions.map((item) => (
-                  <button key={item.id} type="button" onClick={() => { setVersionId(item.id); setPendingPin(null); }} className={`rounded-[5px] px-2 py-1.5 text-[10px] ${item.id === selected?.id ? "bg-lime-dark font-semibold text-lime" : "text-muted"}`}>
+                  <button key={item.id} type="button" onClick={() => { setVersionId(item.id); setSlide(0); setPendingPin(null); }} className={`rounded-[5px] px-2 py-1.5 text-[10px] ${item.id === selected?.id ? "bg-lime-dark font-semibold text-lime" : "text-muted"}`}>
                     v{item.number}
                     {item.is_current ? <span className="ml-1 opacity-80">Current</span> : null}
                   </button>
@@ -277,17 +285,11 @@ export function ApprovalView() {
               <p className="text-xs text-muted">{selected?.kind === "image" ? "Click anywhere to add a pin" : "This file has no pins"}{selected ? ` · viewing v${selected.number}` : ""}</p>
             </div>
             {canUpload ? (
-              <form onSubmit={upload} className="mt-4 grid gap-3 border-t border-line pt-4 sm:grid-cols-[160px_minmax(0,1fr)_auto]">
-                <select value={kind} onChange={(event) => setKind(event.target.value as Kind)} aria-label="Kind" className="rounded-[9px] bg-card px-3 py-2 text-[13px] outline-none">
-                  <option value="image">Image</option>
-                  <option value="pdf">PDF</option>
-                  <option value="document">Document</option>
-                  <option value="link">YouTube link</option>
-                </select>
-                {kind === "link" ? (
-                  <input key="link" required type="url" value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://www.youtube.com/watch?v=" className="rounded-[9px] bg-card px-3 py-2 text-[13px] outline-none" />
+              <form onSubmit={upload} className="mt-4 grid gap-3 border-t border-line pt-4 sm:grid-cols-[minmax(0,1fr)_auto]">
+                {mode === "link" ? (
+                  <input key="link" required type="url" value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://www.youtube.com/watch?v=" aria-label="YouTube URL" className="rounded-[9px] bg-card px-3 py-2 text-[13px] outline-none" />
                 ) : (
-                  <input key={kind} required type="file" accept={kind === "image" ? "image/*" : kind === "pdf" ? "application/pdf" : ".doc,.docx"} onChange={(event) => setFile(event.target.files?.[0] ?? null)} className="text-[13px]" />
+                  <input key={mode} required type="file" multiple={mode === "slides"} accept={mode === "document" ? ".doc,.docx" : "image/*"} aria-label={mode === "document" ? "Word document" : "Images"} onChange={(event) => setFiles(Array.from(event.target.files ?? []))} className="text-[13px]" />
                 )}
                 <button type="submit" disabled={busy} className="rounded-[9px] bg-lime px-3 py-2 text-[11px] font-bold text-lime-ink disabled:opacity-60">
                   {busy ? "Saving..." : "Upload version"}
@@ -409,19 +411,31 @@ export function ApprovalView() {
 function Preview({
   version,
   preview,
+  embed,
+  slide,
   pendingPin,
+  gradient,
   onPlace,
   onShift,
+  onSlide,
 }: {
   version: ActivityVersion | null;
   preview: string | null;
-  pendingPin: { x: number; y: number } | null;
+  embed: string | null;
+  slide: number;
+  pendingPin: { x: number; y: number; fileId: number | null } | null;
+  gradient?: { backgroundImage: string };
   onPlace: (event: MouseEvent<HTMLDivElement>) => void;
   onShift: (direction: number) => void;
+  onSlide: (index: number) => void;
 }) {
+  const current = version?.files[slide] ?? version?.files[0] ?? null;
+  const pins = (version?.annotations ?? []).filter((pin) => (pin.file_id == null ? slide === 0 : pin.file_id === current?.id));
   return (
-    <div className="relative mx-auto aspect-[1.57] max-w-[690px] overflow-hidden rounded-[7px] bg-soft" onClick={onPlace}>
-      {version?.kind === "image" && preview ? (
+    <div className="relative mx-auto aspect-[1.57] max-w-[690px] overflow-hidden rounded-[7px] bg-soft" style={embed || (version?.kind === "image" && preview) ? undefined : gradient} onClick={onPlace}>
+      {embed ? (
+        <iframe src={embed} title={version?.name ?? "Video"} className="h-full w-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+      ) : version?.kind === "image" && preview ? (
         // eslint-disable-next-line @next/next/no-img-element -- file is served by the API
         <img src={preview} alt="" className="h-full w-full object-cover" />
       ) : (
@@ -429,12 +443,19 @@ function Preview({
           {preview ? <a href={preview} target="_blank" rel="noreferrer" className="font-semibold text-lime" onClick={(event) => event.stopPropagation()}>{version?.name}</a> : "Nothing attached yet."}
         </div>
       )}
-      {version?.annotations.map((pin) => (
+      {pins.map((pin) => (
         <button key={pin.id} type="button" data-pin aria-label={`Pin ${pin.number}`} className="absolute grid size-6 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-lime text-[10px] font-extrabold text-lime-ink shadow-[0_0_0_5px_rgba(187,255,82,0.2)]" style={{ left: `${pin.x}%`, top: `${pin.y}%` }}>
           {pin.number}
         </button>
       ))}
       {pendingPin ? <span data-pin className="absolute size-6 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-lime" style={{ left: `${pendingPin.x}%`, top: `${pendingPin.y}%` }} /> : null}
+      {(version?.files.length ?? 0) > 1 ? (
+        <span className="absolute inset-x-0 bottom-3 flex justify-center gap-1.5">
+          {version?.files.map((file, index) => (
+            <button key={file.id} type="button" aria-label={`Slide ${index + 1}`} onClick={(event) => { event.stopPropagation(); onSlide(index); }} className={`size-2 rounded-full ${index === slide ? "bg-white" : "bg-white/45"}`} />
+          ))}
+        </span>
+      ) : null}
       <button type="button" aria-label="Previous version" onClick={(event) => { event.stopPropagation(); onShift(-1); }} className="absolute top-1/2 left-3 grid size-8 -translate-y-1/2 place-items-center rounded-full bg-black/50 text-white">
         <ChevronLeft className="size-4" />
       </button>

@@ -13,6 +13,18 @@ export type BoardActivity = {
   assets_count: number;
   events_count: number;
   cover_url: string | null;
+  video_url: string | null;
+  cover_from: string | null;
+  cover_to: string | null;
+  slides: string[];
+  briefing_file: { name: string; url: string } | null;
+};
+
+export type ActivityFile = {
+  id: number;
+  position: number;
+  name: string;
+  url: string | null;
 };
 
 export type ActivityAsset = {
@@ -22,11 +34,13 @@ export type ActivityAsset = {
   url: string | null;
   author: string | null;
   created_at: string | null;
+  files: ActivityFile[];
 };
 
 export type ActivityPin = {
   id: number;
   number: number;
+  file_id: number | null;
   x: number;
   y: number;
   author: string | null;
@@ -144,6 +158,39 @@ export function typeLabel(channel: string, format: string) {
 /** Picks the badge color for a channel. */
 export function typeClass(channel: string) {
   return channelTone[channel] ?? "text-lime";
+}
+
+/** Paints the cover gradient stored with a task. */
+export function coverGradient(activity: { cover_from: string | null; cover_to: string | null }) {
+  if (!activity.cover_from || !activity.cover_to) return undefined;
+  return { backgroundImage: `linear-gradient(145deg, ${activity.cover_from}, ${activity.cover_to})` };
+}
+
+/** Tells the upload form which control a format needs. */
+export function deliveryMode(format: string): "image" | "slides" | "document" | "link" {
+  if (format === "video") return "link";
+  if (format === "text") return "document";
+  if (format === "carousel") return "slides";
+  return "image";
+}
+
+/** Turns a YouTube address into an embed the preview can play. */
+export function youtubeEmbed(url: string | null) {
+  if (!url) return null;
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+  const host = parsed.hostname.replace(/^www\./, "");
+  const parts = parsed.pathname.split("/").filter(Boolean);
+  let id: string | null = null;
+  if (host === "youtu.be") id = parts[0] ?? null;
+  else if (host === "youtube.com" || host === "m.youtube.com" || host === "youtube-nocookie.com") {
+    id = parsed.searchParams.get("v") ?? (parts[0] === "embed" || parts[0] === "shorts" ? parts[1] ?? null : null);
+  }
+  return id ? `https://www.youtube-nocookie.com/embed/${id}` : null;
 }
 
 /** Turns a stored path into an address the browser can open. */

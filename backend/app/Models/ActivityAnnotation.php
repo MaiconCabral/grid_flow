@@ -14,6 +14,7 @@ class ActivityAnnotation extends Model
     protected $fillable = [
         'tenant_id',
         'activity_version_id',
+        'activity_version_file_id',
         'user_id',
         'number',
         'x',

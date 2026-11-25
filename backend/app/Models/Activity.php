@@ -25,6 +25,11 @@ class Activity extends Model
         'format',
         'status',
         'due_on',
+        'storage_key',
+        'cover_from',
+        'cover_to',
+        'briefing_name',
+        'briefing_path',
     ];
 
     protected function casts(): array

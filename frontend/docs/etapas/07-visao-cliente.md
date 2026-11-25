@@ -4,7 +4,7 @@ Quem entra com papel `client` não vê o painel, o quadro nem a lista de aprova�
 
 ## Grade
 
-O mês vem de `due_on`, com setas para o anterior e o seguinte. Na primeira carga, se o mês atual não tem peça, abre o mês mais recente que tem. Feed reúne post, carrossel, vídeo e texto. Stories fica só com `format: story`. No Feed há um filtro de formato. Peça sem data aparece no grupo No date.
+O mês vem de `due_on`, com setas para o anterior e o seguinte. Na primeira carga, se o mês atual não tem peça, abre o mês mais recente que tem. A grade separa por formato (Post, Carousel, Story, Video, Text). Só aparece o formato que tem peça enviada: sem vídeo, a aba Video não entra. Peça sem data aparece no grupo No date do formato aberto.
 
 O card repete a capa e o chip de canal do quadro, com o badge de status no canto. Pending Approval é laranja, Approved é lima, In Production e Scheduled usam o laranja suave. O clique abre o lightbox.
 

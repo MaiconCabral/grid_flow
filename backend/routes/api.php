@@ -33,7 +33,9 @@ Route::prefix('v1')->group(function () {
             Route::post('activities', [ActivityController::class, 'store']);
             Route::get('activities/{activity}', [ActivityController::class, 'show']);
             Route::patch('activities/{activity}', [ActivityController::class, 'update']);
+            Route::delete('activities/{activity}', [ActivityController::class, 'destroy']);
             Route::post('activities/{activity}/assets', [ActivityController::class, 'storeAsset']);
+            Route::post('activities/{activity}/briefing', [ActivityController::class, 'storeBriefing']);
             Route::post('activities/{activity}/comments', [ActivityController::class, 'storeComment']);
             Route::patch('activities/{activity}/comments/{comment}', [ActivityController::class, 'updateComment']);
             Route::post('activities/{activity}/versions/{version}/annotations', [ActivityController::class, 'storeAnnotation']);

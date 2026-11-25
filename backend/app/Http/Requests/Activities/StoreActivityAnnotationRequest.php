@@ -22,6 +22,7 @@ class StoreActivityAnnotationRequest extends FormRequest
             'x' => ['required', 'numeric', 'min:0', 'max:100'],
             'y' => ['required', 'numeric', 'min:0', 'max:100'],
             'body' => ['required', 'string', 'max:2000'],
+            'file_id' => ['nullable', 'integer'],
             'is_internal' => ['sometimes', 'boolean'],
         ];
     }

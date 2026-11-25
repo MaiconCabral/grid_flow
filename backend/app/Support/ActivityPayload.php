@@ -9,6 +9,7 @@ use App\Models\ActivityAnnotation;
 use App\Models\ActivityComment;
 use App\Models\ActivityEvent;
 use App\Models\ActivityVersion;
+use App\Models\ActivityVersionFile;
 use App\Models\User;
 
 class ActivityPayload
@@ -16,9 +17,9 @@ class ActivityPayload
     /** Builds the card fields returned by the board. */
     public function summary(Activity $activity): array
     {
-        $activity->loadMissing('versions');
+        $activity->loadMissing('versions.files');
         $current = $activity->versions->firstWhere('is_current', true);
-        $cover = $current?->kind === AssetKind::Image ? $current : null;
+        $slides = $this->slides($current);
 
         return [
             'id' => $activity->id,
@@ -28,6 +29,12 @@ class ActivityPayload
             'format' => $activity->format->value,
             'status' => $activity->status->value,
             'due_on' => $activity->due_on?->toDateString(),
+            'cover_from' => $activity->cover_from,
+            'cover_to' => $activity->cover_to,
+            'briefing_file' => $activity->briefing_path === null ? null : [
+                'name' => $activity->briefing_name,
+                'url' => '/storage/'.$activity->briefing_path,
+            ],
             'workspace' => [
                 'id' => $activity->workspace?->id,
                 'name' => $activity->workspace?->name,
@@ -38,7 +45,9 @@ class ActivityPayload
             ],
             'assets_count' => $activity->versions->count(),
             'events_count' => $activity->events_count ?? $activity->events->count(),
-            'cover_url' => $this->fileUrl($cover),
+            'cover_url' => $slides[0] ?? null,
+            'video_url' => $this->videoUrl($current),
+            'slides' => $slides,
         ];
     }
 
@@ -49,6 +58,7 @@ class ActivityPayload
             'workspace',
             'assignee',
             'versions.uploader',
+            'versions.files',
             'versions.annotations.author',
             'versions.annotations.comments',
             'comments.author',
@@ -105,9 +115,15 @@ class ActivityPayload
             'id' => $version->id,
             'kind' => $version->kind->value,
             'name' => $version->name,
-            'url' => $this->fileUrl($version),
+            'url' => $this->address($version->path, $version->url),
             'author' => $version->uploader?->name,
             'created_at' => $version->created_at?->toIso8601String(),
+            'files' => $version->files->sortBy('position')->values()->map(fn (ActivityVersionFile $file) => [
+                'id' => $file->id,
+                'position' => $file->position,
+                'name' => $file->name,
+                'url' => $this->address($file->path, $file->url),
+            ]),
         ];
     }
 
@@ -128,6 +144,7 @@ class ActivityPayload
             'annotations' => $annotations->values()->map(fn (ActivityAnnotation $annotation) => [
                 'id' => $annotation->id,
                 'number' => $annotation->number,
+                'file_id' => $annotation->activity_version_file_id,
                 'x' => $annotation->x,
                 'y' => $annotation->y,
                 'author' => $annotation->author?->name,
@@ -153,17 +170,38 @@ class ActivityPayload
         ];
     }
 
-    /** Turns a stored file into a path the browser can open. */
-    private function fileUrl(?ActivityVersion $version): ?string
+    /** Returns the YouTube address when the current version is a link. */
+    private function videoUrl(?ActivityVersion $version): ?string
     {
-        if ($version === null) {
+        if ($version === null || $version->kind !== AssetKind::Link) {
             return null;
         }
 
-        if ($version->kind === AssetKind::Link) {
-            return $version->url;
+        return $this->address($version->path, $version->url);
+    }
+
+    /** Lists the image addresses of the current version. */
+    private function slides(?ActivityVersion $version): array
+    {
+        if ($version === null || $version->kind !== AssetKind::Image) {
+            return [];
         }
 
-        return $version->path ? '/storage/'.$version->path : null;
+        return $version->files
+            ->sortBy('position')
+            ->map(fn (ActivityVersionFile $file) => $this->address($file->path, $file->url))
+            ->filter()
+            ->values()
+            ->all();
+    }
+
+    /** Turns a stored file or a remote link into a path the browser can open. */
+    private function address(?string $path, ?string $url): ?string
+    {
+        if ($url) {
+            return $url;
+        }
+
+        return $path ? '/storage/'.$path : null;
     }
 }

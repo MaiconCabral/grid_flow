@@ -10,15 +10,18 @@ use App\Enums\UserRole;
 use App\Models\Activity;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Support\ActivityFolder;
+use App\Support\CoverPalette;
 use App\Support\TenantContext;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\ValidationException;
 
 class CreateActivity
 {
-    public function __construct(private RecordActivityEvent $events) {}
+    public function __construct(private RecordActivityEvent $events, private StoreActivityBriefing $briefings) {}
 
     /** Creates a task in To Do for a brand of the current agency. */
-    public function handle(User $author, array $data): Activity
+    public function handle(User $author, array $data, ?UploadedFile $briefing = null): Activity
     {
         $workspace = Workspace::query()->find($data['workspace_id'] ?? null);
 
@@ -29,6 +32,7 @@ class CreateActivity
         }
 
         $assignee = $this->assignee($data['assignee_id'] ?? null);
+        $tone = CoverPalette::pick();
 
         $activity = Activity::query()->create([
             'tenant_id' => app(TenantContext::class)->id(),
@@ -41,7 +45,14 @@ class CreateActivity
             'format' => ActivityFormat::from($data['format']),
             'status' => ActivityStatus::Todo,
             'due_on' => $data['due_on'] ?? null,
+            'storage_key' => ActivityFolder::key($workspace->name),
+            'cover_from' => $tone['from'],
+            'cover_to' => $tone['to'],
         ]);
+
+        if ($briefing !== null) {
+            $this->briefings->handle($activity, $briefing);
+        }
 
         $this->events->handle($activity, $author, ActivityEventType::Created, null, ActivityStatus::Todo);
 

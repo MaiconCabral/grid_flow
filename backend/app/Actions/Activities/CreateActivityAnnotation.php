@@ -6,6 +6,7 @@ use App\Enums\AssetKind;
 use App\Models\Activity;
 use App\Models\ActivityAnnotation;
 use App\Models\ActivityVersion;
+use App\Models\ActivityVersionFile;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -27,11 +28,14 @@ class CreateActivityAnnotation
             ]);
         }
 
-        return DB::transaction(function () use ($activity, $version, $actor, $data) {
+        $file = $this->slide($version, $data['file_id'] ?? null);
+
+        return DB::transaction(function () use ($activity, $version, $actor, $data, $file) {
             $number = ((int) $version->annotations()->max('number')) + 1;
 
             $annotation = $version->annotations()->create([
                 'tenant_id' => $activity->tenant_id,
+                'activity_version_file_id' => $file?->id,
                 'user_id' => $actor->id,
                 'number' => $number,
                 'x' => $data['x'],
@@ -46,5 +50,25 @@ class CreateActivityAnnotation
 
             return $annotation;
         });
+    }
+
+    /** Resolves the slide a pin belongs to, defaulting to the first image. */
+    private function slide(ActivityVersion $version, mixed $fileId): ?ActivityVersionFile
+    {
+        $files = $version->files()->orderBy('position')->get();
+
+        if ($fileId === null || $fileId === '') {
+            return $files->first();
+        }
+
+        $file = $files->firstWhere('id', (int) $fileId);
+
+        if ($file === null) {
+            throw ValidationException::withMessages([
+                'file_id' => 'The selected slide does not belong to this version.',
+            ]);
+        }
+
+        return $file;
     }
 }

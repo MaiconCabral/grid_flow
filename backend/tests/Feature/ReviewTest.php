@@ -39,8 +39,7 @@ class ReviewTest extends TestCase
 
         $this->as($designer)->getJson("/api/v1/activities/{$theirs}")->assertForbidden();
         $this->as($designer)->post("/api/v1/activities/{$theirs}/assets", [
-            'kind' => 'image',
-            'file' => UploadedFile::fake()->image('nope.jpg'),
+            'files' => [UploadedFile::fake()->image('nope.jpg')],
         ])->assertForbidden();
     }
 
@@ -67,13 +66,11 @@ class ReviewTest extends TestCase
         $this->as($admin)->patchJson("/api/v1/activities/{$id}", ['status' => 'production'])->assertOk();
 
         $this->as($designer)->post("/api/v1/activities/{$id}/assets", [
-            'kind' => 'image',
-            'file' => UploadedFile::fake()->image('v1.jpg'),
+            'files' => [UploadedFile::fake()->image('v1.jpg')],
         ])->assertCreated()->assertJsonPath('versions.0.number', 1)->assertJsonPath('versions.0.is_current', true);
 
         $this->as($designer)->post("/api/v1/activities/{$id}/assets", [
-            'kind' => 'image',
-            'file' => UploadedFile::fake()->image('v2.jpg'),
+            'files' => [UploadedFile::fake()->image('v2.jpg')],
         ])->assertCreated()
             ->assertJsonPath('versions.0.is_current', false)
             ->assertJsonPath('versions.1.number', 2)
@@ -93,8 +90,7 @@ class ReviewTest extends TestCase
         $id = $this->task($admin, $brand, $designer);
         $this->as($admin)->patchJson("/api/v1/activities/{$id}", ['status' => 'production'])->assertOk();
         $versionId = $this->as($designer)->post("/api/v1/activities/{$id}/assets", [
-            'kind' => 'image',
-            'file' => UploadedFile::fake()->image('cover.jpg'),
+            'files' => [UploadedFile::fake()->image('cover.jpg')],
         ])->json('versions.0.id');
 
         $this->as($client)->postJson("/api/v1/activities/{$id}/versions/{$versionId}/annotations", [

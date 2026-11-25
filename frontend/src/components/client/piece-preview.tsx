@@ -10,9 +10,11 @@ import {
   assetUrl,
   avatarColor,
   channelLabel,
+  coverGradient,
   initials,
   statusBadgeClass,
   statusLabel,
+  youtubeEmbed,
   type BoardActivity,
 } from "@/lib/activities";
 
@@ -37,6 +39,12 @@ export function PiecePreview({
   const { theme } = useTheme();
   const activity = pieces[index];
   const [busy, setBusy] = useState(false);
+  const [slide, setSlide] = useState(0);
+  const [slideFor, setSlideFor] = useState<number | null>(activity?.id ?? null);
+  if ((activity?.id ?? null) !== slideFor) {
+    setSlideFor(activity?.id ?? null);
+    setSlide(0);
+  }
   const total = pieces.length;
   const pending = activity?.status === "pending";
 
@@ -103,7 +111,7 @@ export function PiecePreview({
           <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
             <Arrow label="Previous piece" disabled={index === 0} onClick={() => onIndex(index - 1)} direction="left" />
             <div className="flex justify-center">
-              <SocialFrame activity={activity} />
+              <SocialFrame activity={activity} slide={slide} onSlide={setSlide} />
             </div>
             <Arrow label="Next piece" disabled={index >= total - 1} onClick={() => onIndex(index + 1)} direction="right" />
           </div>
@@ -157,15 +165,32 @@ function Arrow({
 }
 
 /** Frames the cover the way that network will show it. */
-function SocialFrame({ activity }: { activity: BoardActivity }) {
-  const src = assetUrl(activity.cover_url);
+function SocialFrame({ activity, slide, onSlide }: { activity: BoardActivity; slide: number; onSlide: (index: number) => void }) {
+  const slides = activity.slides.length > 0 ? activity.slides : activity.cover_url ? [activity.cover_url] : [];
+  const src = assetUrl(slides[slide] ?? slides[0] ?? null);
   const caption = activity.briefing.trim() || activity.title;
   const kind = frameKind(activity.channel, activity.format);
+  const gradient = coverGradient(activity);
+  const embed = activity.format === "video" ? youtubeEmbed(assetUrl(activity.video_url)) : null;
+
+  if (activity.format === "video") {
+    return (
+      <div className="w-full max-w-[640px] overflow-hidden rounded-xl bg-black shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
+        <div className="relative aspect-video">
+          {embed ? (
+            <iframe src={embed} title={activity.title} className="h-full w-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+          ) : (
+            <Cover src={null} title={activity.title} gradient={gradient} className="h-full w-full" />
+          )}
+        </div>
+      </div>
+    );
+  }
 
   if (kind === "story") {
     return (
       <div className="relative aspect-[9/16] w-[280px] overflow-hidden rounded-[28px] bg-black shadow-[0_24px_70px_rgba(0,0,0,0.35)] ring-1 ring-white/15">
-        <Cover src={src} title={activity.title} className="h-full w-full" />
+        <Cover src={src} title={activity.title} gradient={gradient} className="h-full w-full" />
         <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-black/70 to-transparent px-4 pt-4 pb-10">
           <p className="text-[12px] font-semibold text-white">{activity.workspace.name}</p>
         </div>
@@ -180,7 +205,7 @@ function SocialFrame({ activity }: { activity: BoardActivity }) {
     return (
       <div className="w-full max-w-[640px] overflow-hidden rounded-xl bg-black shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
         <div className="relative aspect-video">
-          <Cover src={src} title={activity.title} className="h-full w-full" />
+          <Cover src={src} title={activity.title} gradient={gradient} className="h-full w-full" />
           <span className="absolute top-1/2 left-1/2 grid size-14 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-black">
             <Play className="size-6" fill="currentColor" />
           </span>
@@ -205,8 +230,8 @@ function SocialFrame({ activity }: { activity: BoardActivity }) {
         </span>
       </header>
       <div className="relative aspect-square bg-[#efefef]">
-        <Cover src={src} title={activity.title} className="h-full w-full" />
-        {activity.format === "carousel" ? <Dots /> : null}
+        <Cover src={src} title={activity.title} gradient={gradient} className="h-full w-full" />
+        {slides.length > 1 ? <Dots count={slides.length} active={slide} onPick={onSlide} /> : null}
       </div>
       <p className="max-h-32 overflow-y-auto px-3 py-3 text-[13px] leading-snug whitespace-pre-wrap">{caption}</p>
     </article>
@@ -221,10 +246,10 @@ function frameKind(channel: string, format: string): Frame {
 }
 
 /** Shows the cover, or the title when the piece has no image. */
-function Cover({ src, title, className }: { src: string | null; title: string; className: string }) {
+function Cover({ src, title, gradient, className }: { src: string | null; title: string; gradient?: { backgroundImage: string }; className: string }) {
   if (!src) {
     return (
-      <span className={`grid place-items-center bg-[#1c1c1c] px-6 text-center text-sm font-semibold text-white ${className}`}>
+      <span className={`grid place-items-center px-6 text-center text-sm font-semibold text-white ${className}`} style={gradient ?? { background: "#1c1c1c" }}>
         {title}
       </span>
     );
@@ -232,13 +257,13 @@ function Cover({ src, title, className }: { src: string | null; title: string; c
   return <img src={src} alt="" className={`object-cover ${className}`} />; // eslint-disable-line @next/next/no-img-element -- file is served by the API
 }
 
-/** Marks a carousel even though only the cover image is stored. */
-function Dots() {
+/** Switches the open slide of a carousel. */
+function Dots({ count, active, onPick }: { count: number; active: number; onPick: (index: number) => void }) {
   return (
     <span className="absolute inset-x-0 bottom-3 flex justify-center gap-1.5">
-      <span className="size-1.5 rounded-full bg-white" />
-      <span className="size-1.5 rounded-full bg-white/45" />
-      <span className="size-1.5 rounded-full bg-white/45" />
+      {Array.from({ length: count }, (_, index) => (
+        <button key={index} type="button" aria-label={`Slide ${index + 1}`} onClick={() => onPick(index)} className={`size-1.5 rounded-full ${index === active ? "bg-white" : "bg-white/45"}`} />
+      ))}
     </span>
   );
 }

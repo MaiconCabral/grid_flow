@@ -7,6 +7,8 @@ import { notifyError } from "@/lib/alerts";
 import { ApiError, api } from "@/lib/api-client";
 import {
   assetUrl,
+  coverGradient,
+  formatLabel,
   formats,
   statusBadgeClass,
   statusLabel,
@@ -17,36 +19,46 @@ import {
 } from "@/lib/activities";
 import { PiecePreview } from "@/components/client/piece-preview";
 
-type Surface = "feed" | "stories";
-
-const formatFilters = [{ value: "all", label: "All" }, ...formats.filter((item) => item.value !== "story")];
-
 /** Lists the brand's sent pieces as a monthly feed the client can open. */
 export function ClientHome() {
   const slug = usePathname().split("/")[1] ?? "";
   const [items, setItems] = useState<BoardActivity[] | null>(null);
-  const [surface, setSurface] = useState<Surface>("feed");
-  const [format, setFormat] = useState("all");
+  const [chosenFormat, setChosenFormat] = useState<string | null>(null);
   const [chosen, setChosen] = useState<string | null>(null);
   const [openId, setOpenId] = useState<number | null>(null);
 
   useEffect(() => {
     let active = true;
-    api<ActivityBoard>("/activities")
-      .then((board) => {
-        if (active) setItems(board.data);
-      })
-      .catch((error: unknown) => notifyError(error instanceof ApiError ? error.message : "Could not load the pieces."));
+    /** Reloads the feed so a piece sent for approval shows its image. */
+    function load() {
+      api<ActivityBoard>("/activities")
+        .then((board) => {
+          if (active) setItems(board.data);
+        })
+        .catch((error: unknown) => notifyError(error instanceof ApiError ? error.message : "Could not load the pieces."));
+    }
+    /** Refreshes the feed when the client comes back to the tab. */
+    function onVisible() {
+      if (document.visibilityState === "visible") load();
+    }
+    load();
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       active = false;
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
 
   const sent = useMemo(() => (items ?? []).filter((item) => item.status !== "todo"), [items]);
   const month = chosen ?? preferredMonth(sent);
+  const available = useMemo(
+    () => formats.filter((item) => sent.some((activity) => activity.format === item.value)),
+    [sent],
+  );
+  const format = available.some((item) => item.value === chosenFormat) ? chosenFormat : (available[0]?.value ?? null);
 
-  const visible = sent.filter((item) => item.due_on?.startsWith(month) && matches(item, surface, format));
-  const loose = sent.filter((item) => !item.due_on && matches(item, surface, format));
+  const visible = sent.filter((item) => item.due_on?.startsWith(month) && item.format === format);
+  const loose = sent.filter((item) => !item.due_on && item.format === format);
   const sequence = [...visible, ...loose];
   const openIndex = openId === null ? -1 : sequence.findIndex((item) => item.id === openId);
 
@@ -72,40 +84,23 @@ export function ClientHome() {
               <ChevronRight className="size-5" />
             </MonthButton>
           </div>
-          <p className="mt-2 text-[13px] text-muted">Review what is going out on social.</p>
+          <p className="mt-2 text-[13px] text-muted">{deliveryLine(format)}</p>
         </div>
-        <div className="flex flex-col items-start gap-3 sm:items-end">
-          <div className="inline-flex rounded-full bg-raised p-1">
-            <SurfaceButton active={surface === "feed"} onClick={() => setSurface("feed")}>
-              Feed
-            </SurfaceButton>
-            <SurfaceButton active={surface === "stories"} onClick={() => setSurface("stories")}>
-              Stories
-            </SurfaceButton>
+        {available.length > 0 ? (
+          <div className="inline-flex flex-wrap rounded-full bg-raised p-1">
+            {available.map((item) => (
+              <SurfaceButton key={item.value} active={format === item.value} onClick={() => { setChosenFormat(item.value); setOpenId(null); }}>
+                {item.label}
+              </SurfaceButton>
+            ))}
           </div>
-          {surface === "feed" ? (
-            <div className="flex flex-wrap gap-1.5">
-              {formatFilters.map((item) => (
-                <button
-                  key={item.value}
-                  type="button"
-                  onClick={() => setFormat(item.value)}
-                  className={`rounded-full px-3 py-1 text-[11px] font-bold ${
-                    format === item.value ? "bg-lime text-lime-ink" : "bg-raised text-muted hover:text-foreground"
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </div>
+        ) : null}
       </header>
 
       {items === null ? <p className="mt-10 text-sm text-muted">Loading pieces...</p> : null}
       {items !== null && sent.length === 0 ? <p className="mt-10 text-sm text-muted">No pieces have been sent yet.</p> : null}
       {items !== null && sent.length > 0 && visible.length === 0 ? (
-        <p className="mt-10 text-sm text-muted">{surface === "stories" ? "No stories this month." : "Nothing scheduled this month."}</p>
+        <p className="mt-10 text-sm text-muted">No {format ? formatPlural(format) : "pieces"} this month.</p>
       ) : null}
 
       <ul className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -152,8 +147,8 @@ function PieceCard({ activity, onOpen }: { activity: BoardActivity; onOpen: (id:
       onClick={() => onOpen(activity.id)}
       className="block w-full overflow-hidden rounded-[10px] bg-card text-left shadow-[0_8px_18px_rgba(0,0,0,0.06)] transition hover:-translate-y-0.5"
     >
-      <span className="relative block aspect-square overflow-hidden">
-        <Cover src={src} />
+      <span className="relative block h-[150px] overflow-hidden">
+        <Cover src={src} activity={activity} />
         <span className={`absolute top-2 right-2 rounded-lg px-2 py-1 text-[10px] font-bold ${statusBadgeClass(activity.status)}`}>
           {statusLabel(activity.status)}
         </span>
@@ -170,8 +165,11 @@ function PieceCard({ activity, onOpen }: { activity: BoardActivity; onOpen: (id:
 }
 
 /** Shows the cover image or a plain stand-in. */
-function Cover({ src }: { src: string | null }) {
-  if (!src) return <span className="block h-full w-full bg-soft" />;
+function Cover({ src, activity }: { src: string | null; activity: BoardActivity }) {
+  if (!src) {
+    const gradient = coverGradient(activity);
+    return <span className={`block h-full w-full ${gradient ? "" : "bg-soft"}`} style={gradient} />;
+  }
   return <img src={src} alt="" className="h-full w-full object-cover" />; // eslint-disable-line @next/next/no-img-element -- file is served by the API
 }
 
@@ -184,7 +182,7 @@ function MonthButton({ label, onClick, children }: { label: string; onClick: () 
   );
 }
 
-/** Highlights Feed or Stories. */
+/** Highlights the delivery format the client is reviewing. */
 function SurfaceButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
@@ -197,12 +195,16 @@ function SurfaceButton({ active, onClick, children }: { active: boolean; onClick
   );
 }
 
-/** Keeps a piece on Feed or Stories, and on the selected format. */
-function matches(activity: BoardActivity, surface: Surface, format: string) {
-  const story = activity.format === "story";
-  if (surface === "stories") return story;
-  if (story) return false;
-  return format === "all" || activity.format === format;
+/** Names the format open on the grade. */
+function deliveryLine(format: string | null) {
+  if (!format) return "Review what is going out on social.";
+  return `Reviewing ${formatPlural(format)}.`;
+}
+
+/** Turns a format into the plural used in the client copy. */
+function formatPlural(format: string) {
+  const name = formatLabel(format).toLowerCase();
+  return name === "story" ? "stories" : `${name}s`;
 }
 
 /** Opens the current month, or the latest month that has a sent piece. */

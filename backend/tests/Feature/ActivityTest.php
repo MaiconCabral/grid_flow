@@ -137,7 +137,7 @@ class ActivityTest extends TestCase
             ->assertJsonPath('events.2.note', 'The headline is too long.');
     }
 
-    /** Lets the team attach a file and a YouTube link during production. */
+    /** Lets the team attach the delivery that matches the format. */
     public function test_the_team_can_attach_a_delivery(): void
     {
         Storage::fake('public');
@@ -147,40 +147,149 @@ class ActivityTest extends TestCase
             'role' => UserRole::Client,
             'workspace_id' => $brand->id,
         ]);
-        $id = $this->as($admin)->postJson('/api/v1/activities', [
+        $created = $this->as($admin)->post('/api/v1/activities', [
             'workspace_id' => $brand->id,
             'assignee_id' => $designer->id,
             'title' => 'In the studio',
             'briefing' => 'Attach the cut.',
             'channel' => 'youtube',
             'format' => 'video',
-        ])->json('id');
+            'briefing_file' => UploadedFile::fake()->create('brief.pdf', 12, 'application/pdf'),
+        ]);
+        $created->assertCreated()
+            ->assertJsonPath('briefing_file.name', 'brief.pdf')
+            ->assertJsonStructure(['cover_from', 'cover_to']);
+        $id = $created->json('id');
+
+        $this->as($admin)->patchJson("/api/v1/activities/{$id}", ['status' => 'pending'])->assertOk();
+        $this->as($designer)->postJson("/api/v1/activities/{$id}/assets", [
+            'url' => 'https://youtu.be/dQw4w9WgXcQ',
+        ])->assertCreated()
+            ->assertJsonPath('assets.0.url', 'https://youtu.be/dQw4w9WgXcQ')
+            ->assertJsonPath('video_url', 'https://youtu.be/dQw4w9WgXcQ');
 
         $this->as($admin)->patchJson("/api/v1/activities/{$id}", ['status' => 'production'])->assertOk();
 
-        $stored = $this->as($designer)->post("/api/v1/activities/{$id}/assets", [
-            'kind' => 'image',
-            'file' => UploadedFile::fake()->image('cover.jpg'),
-        ]);
-        $stored->assertCreated()->assertJsonPath('assets.0.kind', 'image');
+        $this->as($designer)->post("/api/v1/activities/{$id}/assets", [
+            'files' => [UploadedFile::fake()->image('cover.jpg')],
+        ])->assertUnprocessable();
 
-        $this->as($designer)->postJson("/api/v1/activities/{$id}/assets", [
-            'kind' => 'link',
+        $stored = $this->as($designer)->postJson("/api/v1/activities/{$id}/assets", [
             'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-        ])->assertCreated()->assertJsonPath('assets.1.kind', 'link');
+        ]);
+        $stored->assertCreated()->assertJsonPath('assets.0.kind', 'link');
 
         $this->as($designer)->postJson("/api/v1/activities/{$id}/assets", [
-            'kind' => 'link',
             'url' => 'https://example.com/video',
         ])->assertUnprocessable()->assertJsonValidationErrors('url');
 
-        $this->as($client)->post("/api/v1/activities/{$id}/assets", [
-            'kind' => 'image',
-            'file' => UploadedFile::fake()->image('nope.jpg'),
+        $this->as($client)->postJson("/api/v1/activities/{$id}/assets", [
+            'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
         ])->assertForbidden();
 
-        $relative = ltrim((string) str_replace('/storage/', '', $stored->json('assets.0.url')), '/');
-        Storage::disk('public')->assertExists($relative);
+        $this->assertStringContainsString('/storage/aster_', (string) $created->json('briefing_file.url'));
+        Storage::disk('public')->assertExists(ltrim(str_replace('/storage/', '', (string) $created->json('briefing_file.url')), '/'));
+    }
+
+    /** Stores every carousel image in one version and a document on a text task. */
+    public function test_a_carousel_keeps_several_images_and_text_keeps_a_document(): void
+    {
+        Storage::fake('public');
+        [$admin, $brand, $designer] = $this->agency();
+        $carousel = $this->as($admin)->postJson('/api/v1/activities', [
+            'workspace_id' => $brand->id,
+            'assignee_id' => $designer->id,
+            'title' => 'Frames',
+            'briefing' => 'Three frames.',
+            'channel' => 'instagram',
+            'format' => 'carousel',
+        ])->json('id');
+        $this->as($admin)->patchJson("/api/v1/activities/{$carousel}", ['status' => 'production'])->assertOk();
+
+        $slides = $this->as($designer)->post("/api/v1/activities/{$carousel}/assets", [
+            'files' => [
+                UploadedFile::fake()->image('one.jpg'),
+                UploadedFile::fake()->image('two.jpg'),
+                UploadedFile::fake()->image('three.jpg'),
+            ],
+        ]);
+        $slides->assertCreated()
+            ->assertJsonCount(3, 'versions.0.files')
+            ->assertJsonCount(3, 'slides');
+        $this->assertStringContainsString('/storage/aster_', (string) $slides->json('slides.0'));
+
+        $text = $this->as($admin)->postJson('/api/v1/activities', [
+            'workspace_id' => $brand->id,
+            'assignee_id' => $designer->id,
+            'title' => 'Caption',
+            'briefing' => 'The words.',
+            'channel' => 'facebook',
+            'format' => 'text',
+        ])->json('id');
+        $this->as($admin)->patchJson("/api/v1/activities/{$text}", ['status' => 'production'])->assertOk();
+        $this->as($designer)->post("/api/v1/activities/{$text}/assets", [
+            'files' => [UploadedFile::fake()->create('caption.docx', 20, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')],
+        ])->assertCreated()->assertJsonPath('assets.0.kind', 'document')->assertJsonPath('cover_url', null);
+    }
+
+    /** Lets an admin delete a task and its stored files. */
+    public function test_an_admin_can_delete_a_task(): void
+    {
+        Storage::fake('public');
+        [$admin, $brand, $designer] = $this->agency();
+        $id = $this->as($admin)->post('/api/v1/activities', [
+            'workspace_id' => $brand->id,
+            'assignee_id' => $designer->id,
+            'title' => 'Throwaway',
+            'briefing' => 'Remove me.',
+            'channel' => 'instagram',
+            'format' => 'post',
+            'briefing_file' => UploadedFile::fake()->create('brief.pdf', 12, 'application/pdf'),
+        ])->json('id');
+        $this->as($admin)->patchJson("/api/v1/activities/{$id}", ['status' => 'production'])->assertOk();
+        $stored = $this->as($designer)->post("/api/v1/activities/{$id}/assets", [
+            'files' => [UploadedFile::fake()->image('cover.jpg')],
+        ])->assertCreated();
+        $relative = ltrim(str_replace('/storage/', '', (string) $stored->json('cover_url')), '/');
+
+        $this->as($designer)->deleteJson("/api/v1/activities/{$id}")->assertForbidden();
+        $this->as($admin)->deleteJson("/api/v1/activities/{$id}")->assertNoContent();
+        $this->as($admin)->getJson("/api/v1/activities/{$id}")->assertNotFound();
+        Storage::disk('public')->assertMissing($relative);
+    }
+
+    /** Keeps approved and scheduled tasks on the board. */
+    public function test_an_admin_cannot_delete_an_approved_or_scheduled_task(): void
+    {
+        [$admin, $brand] = $this->agency();
+        $client = User::factory()->create([
+            'tenant_id' => $admin->tenant_id,
+            'role' => UserRole::Client,
+            'workspace_id' => $brand->id,
+        ]);
+        $approved = $this->as($admin)->postJson('/api/v1/activities', [
+            'workspace_id' => $brand->id,
+            'title' => 'Signed off',
+            'briefing' => 'The client already approved this.',
+            'channel' => 'instagram',
+            'format' => 'post',
+        ])->json('id');
+        $this->as($admin)->patchJson("/api/v1/activities/{$approved}", ['status' => 'pending'])->assertOk();
+        $this->as($client)->postJson("/api/v1/activities/{$approved}/approve")->assertOk();
+
+        $scheduled = $this->as($admin)->postJson('/api/v1/activities', [
+            'workspace_id' => $brand->id,
+            'title' => 'On the calendar',
+            'briefing' => 'Already booked.',
+            'channel' => 'tiktok',
+            'format' => 'story',
+        ])->json('id');
+        $this->as($admin)->patchJson("/api/v1/activities/{$scheduled}", ['status' => 'scheduled'])->assertOk();
+
+        $this->as($admin)->deleteJson("/api/v1/activities/{$approved}")->assertForbidden();
+        $this->as($admin)->deleteJson("/api/v1/activities/{$scheduled}")->assertForbidden();
+        $this->as($admin)->getJson("/api/v1/activities/{$approved}")->assertOk();
+        $this->as($admin)->getJson("/api/v1/activities/{$scheduled}")->assertOk();
     }
 
     /** Builds an agency with two brands and a designer. */

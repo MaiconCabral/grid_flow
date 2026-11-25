@@ -44,6 +44,12 @@ class ActivityVersion extends Model
         return $this->belongsTo(User::class, 'uploaded_by');
     }
 
+    /** Lists the slides or the single file of this version. */
+    public function files(): HasMany
+    {
+        return $this->hasMany(ActivityVersionFile::class)->orderBy('position');
+    }
+
     /** Lists the pins placed on this version. */
     public function annotations(): HasMany
     {

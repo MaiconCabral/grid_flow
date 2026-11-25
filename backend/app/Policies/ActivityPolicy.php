@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\ActivityStatus;
 use App\Enums\UserRole;
 use App\Models\Activity;
 use App\Models\User;
@@ -29,6 +30,16 @@ class ActivityPolicy
     /** Allows only an agency admin to move a task between columns. */
     public function update(User $user, Activity $activity): bool
     {
+        return $user->role === UserRole::AgencyAdmin && $this->sameAgency($user, $activity);
+    }
+
+    /** Allows an agency admin to remove a task that is not approved or scheduled. */
+    public function delete(User $user, Activity $activity): bool
+    {
+        if (in_array($activity->status, [ActivityStatus::Approved, ActivityStatus::Scheduled], true)) {
+            return false;
+        }
+
         return $user->role === UserRole::AgencyAdmin && $this->sameAgency($user, $activity);
     }
 

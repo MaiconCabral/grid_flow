@@ -2,10 +2,9 @@
 
 namespace App\Http\Requests\Activities;
 
-use App\Enums\AssetKind;
+use App\Enums\ActivityFormat;
 use App\Models\Activity;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreActivityAssetRequest extends FormRequest
 {
@@ -17,24 +16,24 @@ class StoreActivityAssetRequest extends FormRequest
         return $activity instanceof Activity && ($this->user()?->can('upload', $activity) ?? false);
     }
 
-    /** Requires either a file of the chosen kind or a link. */
+    /** Requires the file shape that matches the task format. */
     public function rules(): array
     {
-        return [
-            'kind' => ['required', Rule::enum(AssetKind::class)],
-            'url' => ['exclude_unless:kind,link', 'required', 'url', 'max:500'],
-            'file' => $this->fileRules(),
-        ];
-    }
+        $activity = $this->route('activity');
+        $format = $activity instanceof Activity ? $activity->format : ActivityFormat::Post;
 
-    /** Matches the uploaded file to the declared kind. */
-    private function fileRules(): array
-    {
-        return match ($this->input('kind')) {
-            AssetKind::Image->value => ['required', 'file', 'max:10240', 'mimes:jpg,jpeg,png,webp,gif'],
-            AssetKind::Pdf->value => ['required', 'file', 'max:10240', 'mimes:pdf'],
-            AssetKind::Document->value => ['required', 'file', 'max:10240', 'mimes:doc,docx'],
-            default => ['nullable'],
-        };
+        if ($format === ActivityFormat::Video) {
+            return [
+                'url' => ['required', 'url', 'max:500'],
+            ];
+        }
+
+        $limit = $format === ActivityFormat::Carousel ? 10 : 1;
+        $extensions = $format === ActivityFormat::Text ? 'doc,docx' : 'jpg,jpeg,png,webp,gif';
+
+        return [
+            'files' => ['required', 'array', 'min:1', 'max:'.$limit],
+            'files.*' => ['file', 'max:10240', 'extensions:'.$extensions],
+        ];
     }
 }

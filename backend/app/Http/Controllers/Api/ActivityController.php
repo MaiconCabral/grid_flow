@@ -6,15 +6,18 @@ use App\Actions\Activities\ApproveActivity;
 use App\Actions\Activities\CreateActivity;
 use App\Actions\Activities\CreateActivityAnnotation;
 use App\Actions\Activities\CreateActivityComment;
+use App\Actions\Activities\DeleteActivity;
 use App\Actions\Activities\MoveActivity;
 use App\Actions\Activities\RequestActivityChanges;
 use App\Actions\Activities\ResolveActivityComment;
 use App\Actions\Activities\StoreActivityAsset;
+use App\Actions\Activities\StoreActivityBriefing;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Activities\RequestChangesRequest;
 use App\Http\Requests\Activities\StoreActivityAnnotationRequest;
 use App\Http\Requests\Activities\StoreActivityAssetRequest;
+use App\Http\Requests\Activities\StoreActivityBriefingRequest;
 use App\Http\Requests\Activities\StoreActivityCommentRequest;
 use App\Http\Requests\Activities\StoreActivityRequest;
 use App\Http\Requests\Activities\UpdateActivityCommentRequest;
@@ -27,6 +30,8 @@ use App\Models\Workspace;
 use App\Support\ActivityPayload;
 use App\Support\VisibleActivities;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Gate;
 
 class ActivityController extends Controller
@@ -40,7 +45,7 @@ class ActivityController extends Controller
 
         $user = request()->user();
         $activities = $this->visible->for($user)
-            ->with(['workspace', 'assignee', 'versions'])
+            ->with(['workspace', 'assignee', 'versions.files'])
             ->withCount('events')
             ->orderBy('due_on')
             ->orderBy('id')
@@ -71,9 +76,18 @@ class ActivityController extends Controller
     /** Creates a task that starts in To Do. */
     public function store(StoreActivityRequest $request, CreateActivity $action): JsonResponse
     {
-        $activity = $action->handle($request->user(), $request->validated());
+        $activity = $action->handle($request->user(), $request->validated(), $request->file('briefing_file'));
 
         return response()->json($this->payload->detail($activity, $request->user()), 201);
+    }
+
+    /** Removes a task and the files stored in its folder. */
+    public function destroy(Activity $activity, DeleteActivity $action): Response
+    {
+        Gate::authorize('delete', $activity);
+        $action->handle($activity);
+
+        return response()->noContent();
     }
 
     /** Moves a task to another column, except Approved. */
@@ -87,9 +101,18 @@ class ActivityController extends Controller
     /** Stores the next version of a piece. */
     public function storeAsset(StoreActivityAssetRequest $request, Activity $activity, StoreActivityAsset $action): JsonResponse
     {
-        $action->handle($activity, $request->user(), $request->validated(), $request->file('file'));
+        $files = $request->file('files') ?? [];
+        $action->handle($activity, $request->user(), $request->validated(), $files instanceof UploadedFile ? [$files] : $files);
 
         return response()->json($this->payload->detail($activity->refresh(), $request->user()), 201);
+    }
+
+    /** Stores or replaces the optional briefing file. */
+    public function storeBriefing(StoreActivityBriefingRequest $request, Activity $activity, StoreActivityBriefing $action): JsonResponse
+    {
+        $action->handle($activity, $request->file('file'));
+
+        return response()->json($this->payload->detail($activity->refresh(), $request->user()));
     }
 
     /** Adds a comment that is not tied to a new pin. */
