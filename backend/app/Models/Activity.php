@@ -83,4 +83,10 @@ class Activity extends Model
     {
         return $this->hasMany(ActivityEvent::class);
     }
+
+    /** Lists the notices stored for this task. */
+    public function userNotifications(): HasMany
+    {
+        return $this->hasMany(UserNotification::class);
+    }
 }

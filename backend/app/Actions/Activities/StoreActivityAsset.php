@@ -2,6 +2,7 @@
 
 namespace App\Actions\Activities;
 
+use App\Actions\Notifications\NotifyActivity;
 use App\Enums\ActivityEventType;
 use App\Enums\ActivityFormat;
 use App\Enums\ActivityStatus;
@@ -15,7 +16,7 @@ use Illuminate\Validation\ValidationException;
 
 class StoreActivityAsset
 {
-    public function __construct(private RecordActivityEvent $events) {}
+    public function __construct(private RecordActivityEvent $events, private NotifyActivity $notifications) {}
 
     /** Stores the next version using the file shape of the task format. */
     public function handle(Activity $activity, User $actor, array $data, array $files, ?UploadedFile $cover = null): ActivityVersion
@@ -75,6 +76,7 @@ class StoreActivityAsset
             }
 
             $this->events->handle($activity, $actor, ActivityEventType::AssetAdded, null, null, $version->name);
+            $this->notifications->assetAdded($activity, $actor);
 
             return $version;
         });

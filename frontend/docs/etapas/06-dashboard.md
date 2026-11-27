@@ -12,7 +12,7 @@ O cliente não usa este painel. A home dele é a grade de peças em [07-visao-cl
 
 ## Menu
 
-Team & Clients e Settings só aparecem para o admin. Storage e Help center estão ocultos pela flag; o sino de notificações continua, com os três avisos de exemplo. No menu do usuário ficam Account preferences e Sign out. Invite teammates está oculto. Os outros papéis que abrem a URL veem que a página não está disponível. O cliente vê só Pieces. Os selos de Workspace e Approval Center contam as tarefas visíveis e as pendentes para a equipe. O cartão da agência abre a lista de agências só quando a pessoa pertence a duas ou mais. A troca grava o cookie e recarrega o painel da agência escolhida. Quem tem uma agência vê só o nome.
+Team & Clients e Settings só aparecem para o admin. Storage e Help center estão ocultos pela flag; o sino de notificações lê os avisos reais, como em [notificacoes.md](notificacoes.md). No menu do usuário ficam Account preferences e Sign out. Invite teammates está oculto. Os outros papéis que abrem a URL veem que a página não está disponível. O cliente vê só Pieces. Os selos de Workspace e Approval Center contam as tarefas visíveis e as pendentes para a equipe. O cartão da agência abre a lista de agências só quando a pessoa pertence a duas ou mais. A troca grava o cookie e recarrega o painel da agência escolhida. Quem tem uma agência vê só o nome.
 
 ## Arquivos
 

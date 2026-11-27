@@ -2,6 +2,7 @@
 
 namespace App\Actions\Activities;
 
+use App\Actions\Notifications\NotifyActivity;
 use App\Enums\ActivityEventType;
 use App\Enums\ActivityStatus;
 use App\Models\Activity;
@@ -10,7 +11,7 @@ use Illuminate\Validation\ValidationException;
 
 class ApproveActivity
 {
-    public function __construct(private RecordActivityEvent $events) {}
+    public function __construct(private RecordActivityEvent $events, private NotifyActivity $notifications) {}
 
     /** Marks a pending task as approved by its brand client. */
     public function handle(Activity $activity, User $actor): Activity
@@ -26,6 +27,7 @@ class ApproveActivity
         $activity->save();
 
         $this->events->handle($activity, $actor, ActivityEventType::Approved, $from, ActivityStatus::Approved);
+        $this->notifications->approved($activity, $actor);
 
         return $activity;
     }

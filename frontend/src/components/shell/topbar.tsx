@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bell, Check, ChevronDown, Moon, Sun, UserCog } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { activityFeed, agency, currentUser } from "@/data/mock";
+import { agency, currentUser } from "@/data/mock";
+import { notificationAge, type AppNotification } from "@/lib/notifications";
 import { useTheme } from "@/components/theme-provider";
 import { notifyError, notifySuccess } from "@/lib/alerts";
 import { publishAgency, useAgency, type AgencyAppearance } from "@/lib/agency-theme";
@@ -25,12 +26,18 @@ export function Topbar({
   tenantName,
   user,
   canEditTheme = false,
+  notifications = [],
+  unread = 0,
+  onOpenNotification,
 }: {
   title: string;
   tenantSlug: string;
   tenantName?: string;
   user?: { name: string; role: string; roleKey?: string; initials: string } | null;
   canEditTheme?: boolean;
+  notifications?: AppNotification[];
+  unread?: number;
+  onOpenNotification?: (item: AppNotification) => void;
 }) {
   const { theme } = useTheme();
   const storedAgency = useAgency();
@@ -154,17 +161,26 @@ export function Topbar({
             className="relative grid size-[35px] place-items-center rounded-[9px] bg-raised text-muted hover:bg-soft hover:text-foreground"
           >
             <Bell className="size-4" />
-            <span className="absolute top-1 right-1 size-1.5 rounded-full bg-lime" />
+            {unread > 0 ? <span className="absolute top-1 right-1 size-1.5 rounded-full bg-lime" /> : null}
           </button>
           {menu === "bell" ? (
             <div className="absolute top-11 right-0 z-30 w-[290px] rounded-[13px] bg-raised p-2.5 shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
               <p className="px-2 py-1.5 text-[9px] font-bold tracking-[1px] text-faint uppercase">Notifications</p>
-              <ul>
-                {activityFeed.slice(0, 3).map((item) => (
-                  <li key={item.name} className="rounded-lg px-2 py-2.5 text-[11px] hover:bg-soft">
-                    <span className="font-semibold">{item.name}</span> <span className="text-muted">{item.text}</span>{" "}
-                    <span>{item.emphasis}</span>
-                    <span className="mt-0.5 block text-[10px] text-faint">{item.time}</span>
+              {notifications.length === 0 ? <p className="px-2 py-2.5 text-[11px] text-muted">No notifications yet.</p> : null}
+              <ul className="max-h-80 overflow-y-auto">
+                {notifications.map((item) => (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMenu(null);
+                        onOpenNotification?.(item);
+                      }}
+                      className="block w-full rounded-lg px-2 py-2.5 text-left text-[11px] hover:bg-soft"
+                    >
+                      <span className={item.read_at ? "text-muted" : "font-semibold"}>{item.body}</span>
+                      <span className="mt-0.5 block text-[10px] text-faint">{notificationAge(item.created_at)}</span>
+                    </button>
                   </li>
                 ))}
               </ul>

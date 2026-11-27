@@ -42,6 +42,8 @@ O painel fica em `src/components/dashboard/`. O detalhe está em [etapas/06-dash
 
 A home do cliente fica em `src/components/client/`. O detalhe está em [etapas/07-visao-cliente.md](etapas/07-visao-cliente.md).
 
+O sino e a modal ficam no shell. O detalhe está em [etapas/notificacoes.md](etapas/notificacoes.md).
+
 ## Controles ocultos
 
 `src/lib/placeholders.ts` guarda `showVisualPlaceholders` em `false`. O markup continua no código; a tela não mostra esses controles enquanto a flag está desligada:
@@ -53,8 +55,8 @@ A home do cliente fica em `src/components/client/`. O detalhe está em [etapas/0
 - a aba Plans em Settings
 - o atalho Invite teammates no menu do usuário
 
-O sino de notificações permanece, ainda com os três avisos de exemplo. Team & Clients continua em Manage. A troca de agência, o tema e Account preferences também.
+O sino de notificações permanece e lê os avisos reais. Team & Clients continua em Manage. A troca de agência, o tema e Account preferences também.
 
 ## Etapas futuras na interface
 
-- **Upload em nuvem e tempo real.** URL pré-assinada e escuta do canal do workspace. O anexo atual vai para o disco local da API.
+- **Upload em nuvem e tempo real.** URL pré-assinada e escuta do canal da pessoa. O aviso já existe e a tela busca a cada minuto. O anexo atual vai para o disco local da API.

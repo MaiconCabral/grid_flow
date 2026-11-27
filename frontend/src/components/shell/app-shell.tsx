@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { NotificationAlert } from "@/components/shell/notification-alert";
 import { Sidebar } from "@/components/shell/sidebar";
 import { Topbar } from "@/components/shell/topbar";
+import { useNotifications } from "@/components/shell/use-notifications";
 import { publishAgency } from "@/lib/agency-theme";
 import { api } from "@/lib/api-client";
 import type { AuthAccount } from "@/lib/session";
@@ -27,6 +29,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [, tenantSlug = "", section = "dashboard"] = pathname.split("/");
   const [account, setAccount] = useState<AuthAccount | null>(null);
+  const notices = useNotifications();
 
   useEffect(() => {
     api<AuthAccount>("/auth/me")
@@ -67,8 +70,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           tenantName={account?.tenant.name}
           user={user}
           canEditTheme={account?.user.role === "agency_admin"}
+          notifications={notices.items}
+          unread={notices.unread}
+          onOpenNotification={(item) => void notices.open(item)}
         />
         <main className="min-h-0 flex-1 overflow-auto">{children}</main>
+        {notices.alert ? <NotificationAlert item={notices.alert} onOpen={(item) => void notices.open(item)} onClose={notices.dismiss} /> : null}
       </div>
     </div>
   );

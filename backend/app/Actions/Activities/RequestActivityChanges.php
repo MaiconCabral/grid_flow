@@ -2,6 +2,7 @@
 
 namespace App\Actions\Activities;
 
+use App\Actions\Notifications\NotifyActivity;
 use App\Enums\ActivityEventType;
 use App\Enums\ActivityStatus;
 use App\Models\Activity;
@@ -10,7 +11,7 @@ use Illuminate\Validation\ValidationException;
 
 class RequestActivityChanges
 {
-    public function __construct(private RecordActivityEvent $events) {}
+    public function __construct(private RecordActivityEvent $events, private NotifyActivity $notifications) {}
 
     /** Sends a pending task back to production with the client's note. */
     public function handle(Activity $activity, User $actor, string $note): Activity
@@ -33,6 +34,7 @@ class RequestActivityChanges
             ActivityStatus::Production,
             $note,
         );
+        $this->notifications->revisionRequested($activity, $actor);
 
         return $activity;
     }
