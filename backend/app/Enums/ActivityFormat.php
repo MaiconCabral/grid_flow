@@ -8,5 +8,5 @@ enum ActivityFormat: string
     case Carousel = 'carousel';
     case Story = 'story';
     case Video = 'video';
-    case Text = 'text';
+    case Blog = 'blog';
 }

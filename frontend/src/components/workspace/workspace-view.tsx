@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, Clock, Download, LayoutGrid, List, MessageSquare, MoreHorizontal, Paperclip, Plus, Search, Smile, X, Zap } from "lucide-react";
+import { CalendarDays, Clock, Download, LayoutGrid, List, MessageSquare, MoreHorizontal, Paperclip, Plus, Search, Smile, Upload, X, Zap } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { notifyError, notifySuccess } from "@/lib/alerts";
+import { showVisualPlaceholders } from "@/lib/placeholders";
 import { ApiError, api } from "@/lib/api-client";
 import {
   addDays,
@@ -13,6 +14,7 @@ import {
   channels,
   coverGradient,
   dateLabel,
+  deliveryNotice,
   formats,
   initials,
   isoDate,
@@ -219,10 +221,12 @@ export function WorkspaceView() {
           <p className="text-[13px] text-muted">Keep your team moving and your clients in the loop.</p>
         </div>
         <div className="flex gap-2">
-          <button type="button" style={headingButton} className="inline-flex items-center gap-2 rounded-[9px] bg-raised px-[14px] py-[10px] text-foreground hover:bg-soft">
-            <Download size={15} />
-            Export
-          </button>
+          {showVisualPlaceholders ? (
+            <button type="button" style={headingButton} className="inline-flex items-center gap-2 rounded-[9px] bg-raised px-[14px] py-[10px] text-foreground hover:bg-soft">
+              <Download size={15} />
+              Export
+            </button>
+          ) : null}
           {canCreate ? (
             <button type="button" onClick={openDraft} style={headingButton} className="inline-flex items-center gap-2 rounded-[9px] bg-lime px-[14px] py-[10px] text-[#17240b] shadow-[0_8px_25px_rgba(187,255,82,0.12)] hover:-translate-y-px hover:shadow-[0_10px_30px_rgba(187,255,82,0.23)]">
               <Plus size={17} />
@@ -784,16 +788,24 @@ function ActivityDialog({
             className="rounded-[9px] bg-raised px-3 py-2.5 text-[13px] font-normal text-foreground outline-none"
           />
         </label>
-        <label className="flex flex-col gap-1 text-[11px] font-bold text-muted">
+        <div className="flex flex-col items-start gap-1.5 text-[11px] font-bold text-muted">
           Briefing file
-          <input
-            type="file"
-            accept=".pdf,.doc,.docx,application/pdf"
-            onChange={(event) => onBriefingFile(event.target.files?.[0] ?? null)}
-            className="text-[13px] font-normal"
-          />
-          <span className="font-normal text-faint">{briefingFile ? briefingFile.name : "Optional PDF or Word document."}</span>
-        </label>
+          <label
+            className="inline-flex w-fit max-w-full cursor-pointer items-center gap-2 rounded-[9px] px-3.5 py-2.5 text-[11px] font-bold text-lime-ink"
+            style={{ background: "color-mix(in srgb, var(--lime) 34%, white)" }}
+          >
+            <Upload className="size-3.5 shrink-0" />
+            <span className="truncate">{briefingFile ? briefingFile.name : "Upload briefing"}</span>
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx,application/pdf"
+              aria-label="Upload briefing"
+              onChange={(event) => onBriefingFile(event.target.files?.[0] ?? null)}
+              className="sr-only"
+            />
+          </label>
+          <span className="font-normal text-faint">Optional PDF or Word document.</span>
+        </div>
         <Select label="Channel" value={draft.channel} onChange={(channel) => onChange({ ...draft, channel })}>
           {channels.map((item) => (
             <option key={item.value} value={item.value}>
@@ -808,6 +820,7 @@ function ActivityDialog({
             </option>
           ))}
         </Select>
+        <p className="text-[12px] leading-relaxed font-normal text-muted">{deliveryNotice(draft.format)}</p>
         <Select label="Assignee" value={draft.assigneeId} onChange={(assigneeId) => onChange({ ...draft, assigneeId })} required={false}>
           <option value="">Unassigned</option>
           {staff.map((person) => (

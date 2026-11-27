@@ -19,6 +19,7 @@ class ActivityComment extends Model
         'parent_id',
         'user_id',
         'body',
+        'scope',
         'is_internal',
         'resolved_at',
     ];

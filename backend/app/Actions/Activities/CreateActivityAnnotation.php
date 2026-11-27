@@ -22,13 +22,12 @@ class CreateActivityAnnotation
             abort(404);
         }
 
-        if ($version->kind !== AssetKind::Image) {
+        $file = $this->slide($version, $data['file_id'] ?? null);
+        if ($version->kind !== AssetKind::Image && $file?->role !== 'cover') {
             throw ValidationException::withMessages([
                 'version' => 'Pins can be placed only on an image.',
             ]);
         }
-
-        $file = $this->slide($version, $data['file_id'] ?? null);
 
         return DB::transaction(function () use ($activity, $version, $actor, $data, $file) {
             $number = ((int) $version->annotations()->max('number')) + 1;
@@ -45,6 +44,7 @@ class CreateActivityAnnotation
             $this->comments->handle($activity, $actor, [
                 'body' => $data['body'],
                 'version_id' => $version->id,
+                'scope' => 'asset',
                 'is_internal' => $data['is_internal'] ?? false,
             ])->forceFill(['annotation_id' => $annotation->id])->save();
 
@@ -58,7 +58,7 @@ class CreateActivityAnnotation
         $files = $version->files()->orderBy('position')->get();
 
         if ($fileId === null || $fileId === '') {
-            return $files->first();
+            return $files->firstWhere('role', 'cover') ?? $files->first();
         }
 
         $file = $files->firstWhere('id', (int) $fileId);

@@ -66,10 +66,14 @@ class ReviewTest extends TestCase
         $this->as($admin)->patchJson("/api/v1/activities/{$id}", ['status' => 'production'])->assertOk();
 
         $this->as($designer)->post("/api/v1/activities/{$id}/assets", [
+            'headline' => 'First cut',
+            'caption' => 'Version one.',
             'files' => [UploadedFile::fake()->image('v1.jpg')],
         ])->assertCreated()->assertJsonPath('versions.0.number', 1)->assertJsonPath('versions.0.is_current', true);
 
         $this->as($designer)->post("/api/v1/activities/{$id}/assets", [
+            'headline' => 'Second cut',
+            'caption' => 'Version two.',
             'files' => [UploadedFile::fake()->image('v2.jpg')],
         ])->assertCreated()
             ->assertJsonPath('versions.0.is_current', false)
@@ -90,8 +94,11 @@ class ReviewTest extends TestCase
         $id = $this->task($admin, $brand, $designer);
         $this->as($admin)->patchJson("/api/v1/activities/{$id}", ['status' => 'production'])->assertOk();
         $versionId = $this->as($designer)->post("/api/v1/activities/{$id}/assets", [
+            'headline' => 'Cover line',
+            'caption' => 'The published caption.',
             'files' => [UploadedFile::fake()->image('cover.jpg')],
         ])->json('versions.0.id');
+        $this->as($admin)->patchJson("/api/v1/activities/{$id}", ['status' => 'pending'])->assertOk();
 
         $this->as($client)->postJson("/api/v1/activities/{$id}/versions/{$versionId}/annotations", [
             'x' => 42.5,
@@ -101,19 +108,30 @@ class ReviewTest extends TestCase
             ->assertJsonPath('versions.0.annotations.0.x', 42.5)
             ->assertJsonPath('versions.0.annotations.0.number', 1)
             ->assertJsonPath('comments.0.body', 'Move the logo up.')
+            ->assertJsonPath('comments.0.scope', 'asset')
             ->assertJsonPath('comments.0.pin', 1);
+
+        $this->as($client)->postJson("/api/v1/activities/{$id}/comments", [
+            'body' => 'Shorten the caption.',
+            'version_id' => $versionId,
+            'scope' => 'copy',
+        ])->assertCreated()
+            ->assertJsonPath('comments.1.scope', 'copy')
+            ->assertJsonPath('comments.0.scope', 'asset');
 
         $this->as($designer)->postJson("/api/v1/activities/{$id}/comments", [
             'body' => 'We can crop this later.',
             'version_id' => $versionId,
             'is_internal' => true,
-        ])->assertCreated()->assertJsonPath('comments.1.is_internal', true);
+        ])->assertCreated()->assertJsonPath('comments.2.is_internal', true);
 
         $this->as($client)->getJson("/api/v1/activities/{$id}")
             ->assertOk()
             ->assertJsonMissing(['body' => 'We can crop this later.']);
 
         $commentId = $this->as($client)->getJson("/api/v1/activities/{$id}")->json('comments.0.id');
+        $this->assertSame('asset', $this->as($client)->getJson("/api/v1/activities/{$id}")->json('comments.0.scope'));
+        $this->assertSame('copy', $this->as($client)->getJson("/api/v1/activities/{$id}")->json('comments.1.scope'));
         $resolved = $this->as($designer)->patchJson("/api/v1/activities/{$id}/comments/{$commentId}", [
             'resolved' => true,
         ]);

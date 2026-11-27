@@ -4,15 +4,15 @@ O quadro deixa o mock e passa a ler as tarefas da agência. A interface continua
 
 ## Tarefa
 
-O admin cria a tarefa no lightbox New activity: marca, título, briefing, canal, formato, responsável e data. O briefing pode levar um PDF ou DOC opcional. O responsável é designer, redator ou admin. A tarefa nasce em To Do, com uma pasta `marca_hash` no disco público e um degradê de capa.
+O admin cria a tarefa no lightbox New activity: marca, título, briefing, canal, formato, responsável e data. O briefing pode levar um PDF ou DOC opcional. O título e o briefing ficam internos. O lightbox só avisa o que a entrega vai pedir. O responsável é designer, redator ou admin. A tarefa nasce em To Do, com uma pasta `marca_hash` no disco público e um degradê de capa.
 
-Canais: Instagram, LinkedIn, Facebook, YouTube e TikTok. Formatos: Post, Carousel, Story, Video e Text. O card mostra os dois no selo.
+Canais: Instagram, LinkedIn, Facebook, YouTube e TikTok. Formatos: Post, Carousel, Story, Video e Blog. O card mostra os dois no selo.
 
-O admin arrasta o card entre To Do, In Production, Pending Approval e Scheduled. A API recusa o destino Approved. Designer e redator veem as tarefas da agência e não movem o card. O cliente vê só a marca dele. O filtro All clients usa as marcas reais. Os quatro números do topo contam tarefas de verdade. O botão Export continua só visual.
+O admin arrasta o card entre To Do, In Production, Pending Approval e Scheduled. A API recusa o destino Approved. Designer e redator veem as tarefas da agência e não movem o card. O cliente vê só a marca dele, e só em Pending Approval, Approved e Scheduled. O filtro All clients usa as marcas reais. Os quatro números do topo contam tarefas de verdade. O botão Export está oculto por `showVisualPlaceholders` no front. O markup permanece.
 
 ## Entrega e decisão
 
-Em In Production, designer, redator ou admin anexa o que o formato pede: uma imagem no post e no story, várias imagens no carrossel, um PDF ou DOC no texto e uma URL do YouTube no vídeo. O PDF aparece na ficha, na central de aprovação e no lightbox do cliente; o DOCX vira texto na tela e o .doc abre em outra aba. Fora dessa coluna a API recusa a entrega. O arquivo de briefing pode ser trocado em qualquer status. Sem imagem, o card usa o degradê.
+Em In Production, designer, redator ou admin anexa o que o formato pede. Post, story, vídeo e carrossel levam título e legenda publicados, gravados na versão (`headline` e `caption`). O blog leva o título, uma capa e um PDF, DOC ou DOCX; a legenda não entra. O PDF aparece na aba Copy; o DOCX vira texto na tela e o .doc abre em outra aba. A capa do blog vira `cover_url` do card. Um `PATCH` da versão atual muda só o texto, sem arquivo novo. Fora de In Production a API recusa a entrega, exceto o vídeo, que a equipe anexa em qualquer status. O arquivo de briefing pode ser trocado em qualquer status. Sem imagem, o card usa o degradê.
 
 Na ficha `/{slug}/workspace/{id}`, com a tarefa em Pending Approval, o cliente daquela marca vê Approve e Request changes. Approve grava Approved. Request changes volta para In Production e guarda a nota no histórico. Cliente de outra marca recebe 403. O admin não aprova.
 
@@ -23,7 +23,8 @@ O histórico guarda quem fez e quando: criação, troca de status, anexo, aprova
 Tudo fica na agência, com `tenant_id` e o escopo atual.
 
 - `activities` — marca, autor, responsável, título, briefing, canal, formato, status, data, pasta, degradê e o arquivo de briefing
-- `activity_version_files` — slides de uma versão, com posição, nome e caminho ou URL
+- `activity_versions` — número, autor, tipo, nome, título publicado, legenda, caminho ou URL e versão atual
+- `activity_version_files` — slides de uma versão, com posição, papel (`asset` ou `cover`), nome e caminho ou URL
 - `activity_assets` — tipo, nome, caminho ou URL, autor
 - `activity_events` — ator, tipo, status de origem e destino, nota
 
@@ -33,6 +34,7 @@ Rotas sob `auth:sanctum` e `tenant`:
 - `GET` e `PATCH /api/v1/activities/{activity}`
 - `GET /api/v1/activities/{activity}/document`
 - `POST /api/v1/activities/{activity}/assets`
+- `PATCH /api/v1/activities/{activity}/versions/{version}` — título e legenda da versão atual
 - `POST /api/v1/activities/{activity}/briefing`
 - `POST /api/v1/activities/{activity}/approve`
 - `POST /api/v1/activities/{activity}/request-changes`

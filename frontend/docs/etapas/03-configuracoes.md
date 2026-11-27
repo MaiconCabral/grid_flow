@@ -20,7 +20,7 @@ O shell aplica as variáveis `--background`, `--sidebar`, `--card`, `--raised`, 
 
 ## Plans
 
-Starter, Studio e Agency aparecem como informação. O plano marcado vem de `plan` no banco. Ninguém troca de plano nesta etapa.
+Starter, Studio e Agency continuam no código e no `GET /settings`, como informação. A aba Plans está oculta por `showVisualPlaceholders`. Ninguém troca de plano nesta etapa.
 
 ## Menu e marca
 

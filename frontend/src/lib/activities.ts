@@ -1,5 +1,10 @@
 export type StageId = "todo" | "production" | "pending" | "approved" | "scheduled";
 
+/** Statuses the client feed shows. To Do and In Production stay with the agency. */
+export function clientCanSee(status: StageId) {
+  return status === "pending" || status === "approved" || status === "scheduled";
+}
+
 export type BoardActivity = {
   id: number;
   title: string;
@@ -19,11 +24,14 @@ export type BoardActivity = {
   cover_to: string | null;
   slides: string[];
   briefing_file: { name: string; url: string } | null;
+  headline: string | null;
+  caption: string | null;
 };
 
 export type ActivityFile = {
   id: number;
   position: number;
+  role: string;
   name: string;
   url: string | null;
 };
@@ -49,6 +57,8 @@ export type ActivityPin = {
 
 export type ActivityVersion = ActivityAsset & {
   number: number;
+  headline: string | null;
+  caption: string | null;
   is_current: boolean;
   annotations: ActivityPin[];
 };
@@ -56,6 +66,7 @@ export type ActivityVersion = ActivityAsset & {
 export type ActivityComment = {
   id: number;
   body: string;
+  scope: "asset" | "copy";
   parent_id: number | null;
   version_id: number | null;
   annotation_id: number | null;
@@ -118,7 +129,7 @@ export const formats = [
   { value: "carousel", label: "Carousel" },
   { value: "story", label: "Story" },
   { value: "video", label: "Video" },
-  { value: "text", label: "Text" },
+  { value: "blog", label: "Blog" },
 ];
 
 const channelTone: Record<string, string> = {
@@ -168,11 +179,17 @@ export function coverGradient(activity: { cover_from: string | null; cover_to: s
 }
 
 /** Tells the upload form which control a format needs. */
-export function deliveryMode(format: string): "image" | "slides" | "document" | "link" {
+export function deliveryMode(format: string): "image" | "slides" | "blog" | "link" {
   if (format === "video") return "link";
-  if (format === "text") return "document";
+  if (format === "blog") return "blog";
   if (format === "carousel") return "slides";
   return "image";
+}
+
+/** Explains what the assignee sends and what the client reviews. */
+export function deliveryNotice(format: string) {
+  if (format === "blog") return "The assignee adds a cover and the article file. The client reviews both.";
+  return "The assignee adds a title and caption with the creative. The client reviews both.";
 }
 
 /** Reads the extension that decides how a text file is shown. */

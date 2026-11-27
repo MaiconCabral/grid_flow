@@ -10,6 +10,12 @@ enum ActivityStatus: string
     case Approved = 'approved';
     case Scheduled = 'scheduled';
 
+    /** Statuses a client may see. Earlier columns stay with the agency. */
+    public static function visibleToClient(): array
+    {
+        return [self::Pending, self::Approved, self::Scheduled];
+    }
+
     /** Statuses an admin may set by moving a card. */
     public static function movable(): array
     {

@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { ChevronLeft, ChevronRight, Download, Send, Share2, Upload } from "lucide-react";
 import { useEffect, useState, type FormEvent, type MouseEvent } from "react";
 import { DocumentFrame } from "@/components/document-frame";
+import { showVisualPlaceholders } from "@/lib/placeholders";
 import { notifyError, notifySuccess } from "@/lib/alerts";
 import { ApiError, api } from "@/lib/api-client";
 import {
@@ -13,6 +14,7 @@ import {
   coverGradient,
   dateLabel,
   deliveryMode,
+  deliveryNotice,
   eventWhen,
   initials,
   roleLabels,
@@ -32,6 +34,7 @@ export function ApprovalView() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [versionId, setVersionId] = useState<number | null>(null);
   const [tab, setTab] = useState<"comments" | "details">("comments");
+  const [previewTab, setPreviewTab] = useState<"creative" | "copy">("creative");
   const [draft, setDraft] = useState("");
   const [replyTo, setReplyTo] = useState<ActivityComment | null>(null);
   const [pendingPin, setPendingPin] = useState<{ x: number; y: number; fileId: number | null } | null>(null);
@@ -40,6 +43,10 @@ export function ApprovalView() {
   const [note, setNote] = useState("");
   const [asking, setAsking] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
+  const [cover, setCover] = useState<File | null>(null);
+  const [headline, setHeadline] = useState("");
+  const [caption, setCaption] = useState("");
+  const [trackedVersion, setTrackedVersion] = useState<number | null>(null);
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
   const [shared, setShared] = useState(false);
@@ -93,9 +100,18 @@ export function ApprovalView() {
   const canUpload = staff && (activity.status === "production" || activity.format === "video");
   const canDecide = user.role === "client" && user.workspace_id === activity.workspace.id;
   const mode = deliveryMode(activity.format);
-  const slideFile = selected?.files[slide] ?? selected?.files[0] ?? null;
-  const preview = assetUrl(slideFile?.url ?? selected?.url ?? null);
-  const thread = activity.comments.filter((comment) => comment.version_id === null || comment.version_id === selected?.id);
+  const coverFile = selected?.files.find((file) => file.role === "cover") ?? null;
+  const slideFile = selected?.files.filter((file) => file.role !== "cover")[slide] ?? selected?.files.find((file) => file.role !== "cover") ?? null;
+  const selectedId = selected?.id ?? null;
+  if (selectedId !== trackedVersion) {
+    setTrackedVersion(selectedId);
+    setHeadline(selected?.headline ?? "");
+    setCaption(selected?.caption ?? "");
+  }
+  const preview = assetUrl((previewTab === "copy" ? selected?.url : coverFile?.url ?? slideFile?.url ?? selected?.url) ?? null);
+  const scope = previewTab === "copy" ? "copy" : "asset";
+  const thread = activity.comments.filter((comment) => (comment.version_id === null || comment.version_id === selected?.id) && comment.scope === scope);
+  const canPin = previewTab === "creative" && (selected?.kind === "image" || Boolean(coverFile));
 
   /** Moves the preview to the previous or next version. */
   function shift(direction: number) {
@@ -108,14 +124,21 @@ export function ApprovalView() {
 
   /** Records a pin position from a click on the image. */
   function placePin(event: MouseEvent<HTMLDivElement>) {
-    if (!selected || selected.kind !== "image") return;
+    if (!canPin) return;
     if ((event.target as HTMLElement).closest("[data-pin]")) return;
     const rect = event.currentTarget.getBoundingClientRect();
     const x = Math.round(((event.clientX - rect.left) / rect.width) * 10000) / 100;
     const y = Math.round(((event.clientY - rect.top) / rect.height) * 10000) / 100;
-    setPendingPin({ x: Math.min(100, Math.max(0, x)), y: Math.min(100, Math.max(0, y)), fileId: slideFile?.id ?? null });
+    setPendingPin({ x: Math.min(100, Math.max(0, x)), y: Math.min(100, Math.max(0, y)), fileId: coverFile?.id ?? slideFile?.id ?? null });
     setReplyTo(null);
     setTab("comments");
+  }
+
+  /** Opens the creative or the copy, each with its own comments. */
+  function openPreview(next: "creative" | "copy") {
+    setPreviewTab(next);
+    setPendingPin(null);
+    setReplyTo(null);
   }
 
   /** Sends a comment, or a pin with its first comment. */
@@ -136,6 +159,7 @@ export function ApprovalView() {
               body,
               parent_id: replyTo?.id ?? null,
               version_id: selected?.id ?? null,
+              scope,
               is_internal: internal,
             }),
           });
@@ -171,19 +195,45 @@ export function ApprovalView() {
     event.preventDefault();
     if (!activity) return;
     const body = new FormData();
-    if (deliveryMode(activity.format) === "link") body.set("url", url);
+    body.set("headline", headline);
+    if (mode !== "blog") body.set("caption", caption);
+    if (mode === "link") body.set("url", url);
     else if (files.length > 0) files.forEach((item) => body.append("files[]", item));
     else return;
+    if (mode === "blog") {
+      if (!cover) return;
+      body.set("cover", cover);
+    }
     setBusy(true);
     try {
       const detail = await api<ActivityDetail>(`/activities/${activity.id}/assets`, { method: "POST", body });
       setActivity(detail);
       setVersionId(detail.versions.find((item) => item.is_current)?.id ?? null);
       setFiles([]);
+      setCover(null);
       setUrl("");
       notifySuccess("Version uploaded.");
     } catch (error) {
       notifyError(error instanceof ApiError ? error.message : "Could not upload the version.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** Updates the published title and caption of the current version. */
+  async function saveCopy(event: FormEvent) {
+    event.preventDefault();
+    if (!activity || !selected?.is_current) return;
+    setBusy(true);
+    try {
+      const detail = await api<ActivityDetail>(`/activities/${activity.id}/versions/${selected.id}`, {
+        method: "PATCH",
+        body: JSON.stringify(mode === "blog" ? { headline } : { headline, caption }),
+      });
+      setActivity(detail);
+      notifySuccess("Copy saved.");
+    } catch (error) {
+      notifyError(error instanceof ApiError ? error.message : "Could not save the copy.");
     } finally {
       setBusy(false);
     }
@@ -253,10 +303,12 @@ export function ApprovalView() {
           <span className={`rounded-lg px-3 py-2 text-[10px] font-bold ${activity.status === "approved" ? "bg-lime-dark text-good" : "bg-orange-soft text-[#ebb77a]"}`}>
             {statusLabel(activity.status)}
           </span>
-          <button type="button" onClick={() => { setShared(true); window.setTimeout(() => setShared(false), 2000); }} className="inline-flex items-center gap-2 rounded-[9px] bg-raised px-3.5 py-2.5 text-[11px] font-bold">
-            <Share2 className="size-4" />
-            {shared ? "Link copied" : "Share"}
-          </button>
+          {showVisualPlaceholders ? (
+            <button type="button" onClick={() => { setShared(true); window.setTimeout(() => setShared(false), 2000); }} className="inline-flex items-center gap-2 rounded-[9px] bg-raised px-3.5 py-2.5 text-[11px] font-bold">
+              <Share2 className="size-4" />
+              {shared ? "Link copied" : "Share"}
+            </button>
+          ) : null}
         </div>
       </header>
 
@@ -272,7 +324,30 @@ export function ApprovalView() {
             </button>
           </div>
           <div className="bg-raised p-5">
-            <Preview activityId={activity.id} version={selected} preview={preview} embed={youtubeEmbed(selected?.kind === "link" ? preview : null)} slide={slide} pendingPin={pendingPin} gradient={coverGradient(activity)} onPlace={placePin} onShift={shift} onSlide={(index) => { setSlide(index); setPendingPin(null); }} />
+            <div className="mb-3 flex gap-2">
+              <button type="button" onClick={() => openPreview("creative")} className={`rounded-full px-3 py-1.5 text-[11px] font-bold ${previewTab === "creative" ? "bg-lime text-lime-ink" : "text-muted"}`}>
+                Creative
+              </button>
+              <button type="button" onClick={() => openPreview("copy")} className={`rounded-full px-3 py-1.5 text-[11px] font-bold ${previewTab === "copy" ? "bg-lime text-lime-ink" : "text-muted"}`}>
+                Copy
+              </button>
+            </div>
+            {previewTab === "copy" ? (
+              <CopyPane
+                format={activity.format}
+                version={selected}
+                activityId={activity.id}
+                headline={headline}
+                caption={caption}
+                canEdit={canUpload && Boolean(selected?.is_current)}
+                busy={busy}
+                onHeadline={setHeadline}
+                onCaption={setCaption}
+                onSave={saveCopy}
+              />
+            ) : (
+              <Preview activityId={activity.id} version={selected} preview={assetUrl(coverFile?.url ?? slideFile?.url ?? selected?.url ?? null)} embed={youtubeEmbed(selected?.kind === "link" ? preview : null)} slide={slide} pendingPin={pendingPin} gradient={coverGradient(activity)} onPlace={placePin} onShift={shift} onSlide={(index) => { setSlide(index); setPendingPin(null); }} />
+            )}
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3 px-1">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted">Version</span>
@@ -283,18 +358,30 @@ export function ApprovalView() {
                   </button>
                 ))}
               </div>
-              <p className="text-xs text-muted">{selected?.kind === "image" ? "Click anywhere to add a pin" : "This file has no pins"}{selected ? ` · viewing v${selected.number}` : ""}</p>
+              <p className="text-xs text-muted">{previewTab === "copy" ? "Comments here stay with the copy" : canPin ? "Click anywhere to add a pin" : "This file has no pins"}{selected ? ` · viewing v${selected.number}` : ""}</p>
             </div>
             {canUpload ? (
-              <form onSubmit={upload} className="mt-4 grid gap-3 border-t border-line pt-4 sm:grid-cols-[minmax(0,1fr)_auto]">
-                {mode === "link" ? (
-                  <input key="link" required type="url" value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://www.youtube.com/watch?v=" aria-label="YouTube URL" className="rounded-[9px] bg-card px-3 py-2 text-[13px] outline-none" />
-                ) : (
-                  <FileButton mode={mode} files={files} onPick={(picked) => setFiles(picked)} />
-                )}
-                <button type="submit" disabled={busy} className="rounded-[9px] bg-lime px-3 py-2 text-[11px] font-bold text-lime-ink disabled:opacity-60">
-                  {busy ? "Saving..." : "Upload version"}
-                </button>
+              <form onSubmit={upload} className="mt-4 grid gap-3 border-t border-line pt-4">
+                <p className="text-xs text-muted">{deliveryNotice(activity.format)}</p>
+                {previewTab === "creative" ? (
+                  <>
+                    <input required value={headline} onChange={(event) => setHeadline(event.target.value)} maxLength={160} placeholder="Title" aria-label="Title" className="rounded-[9px] bg-card px-3 py-2 text-[13px] outline-none" />
+                    {mode === "blog" ? null : (
+                      <textarea required value={caption} onChange={(event) => setCaption(event.target.value)} maxLength={5000} rows={3} placeholder="Caption" aria-label="Caption" className="rounded-[9px] bg-card px-3 py-2 text-[13px] outline-none" />
+                    )}
+                  </>
+                ) : null}
+                <div className="flex flex-wrap items-center gap-3">
+                  {mode === "link" ? (
+                    <input key="link" required type="url" value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://www.youtube.com/watch?v=" aria-label="YouTube URL" className="min-w-[240px] flex-1 rounded-[9px] bg-card px-3 py-2 text-[13px] outline-none" />
+                  ) : (
+                    <FileButton mode={mode} files={files} onPick={(picked) => setFiles(picked)} />
+                  )}
+                  {mode === "blog" ? <CoverButton file={cover} onPick={setCover} /> : null}
+                  <button type="submit" disabled={busy} className="rounded-[9px] bg-lime px-3 py-2 text-[11px] font-bold text-lime-ink disabled:opacity-60">
+                    {busy ? "Saving..." : "Upload version"}
+                  </button>
+                </div>
               </form>
             ) : null}
           </div>
@@ -410,7 +497,7 @@ export function ApprovalView() {
 
 /** Opens the file picker as a button in a lighter accent. */
 function FileButton({ mode, files, onPick }: { mode: string; files: File[]; onPick: (files: File[]) => void }) {
-  const idle = mode === "document" ? "Upload PDF or Word" : mode === "slides" ? "Upload images" : "Upload image";
+  const idle = mode === "blog" ? "Upload PDF or Word" : mode === "slides" ? "Upload images" : "Upload image";
   const label = files.length === 0 ? idle : files.length === 1 ? files[0].name : `${files.length} files`;
 
   return (
@@ -425,12 +512,81 @@ function FileButton({ mode, files, onPick }: { mode: string; files: File[]; onPi
         required
         type="file"
         multiple={mode === "slides"}
-        accept={mode === "document" ? ".pdf,.doc,.docx" : "image/*"}
+        accept={mode === "blog" ? ".pdf,.doc,.docx" : "image/*"}
         aria-label={idle}
         onChange={(event) => onPick(Array.from(event.target.files ?? []))}
         className="sr-only"
       />
     </label>
+  );
+}
+
+/** Picks the blog cover with the same lighter accent as the article upload. */
+function CoverButton({ file, onPick }: { file: File | null; onPick: (file: File | null) => void }) {
+  return (
+    <label
+      className="inline-flex w-fit max-w-full cursor-pointer items-center gap-2 rounded-[9px] px-3.5 py-2.5 text-[11px] font-bold text-lime-ink"
+      style={{ background: "color-mix(in srgb, var(--lime) 34%, white)" }}
+    >
+      <Upload className="size-3.5 shrink-0" />
+      <span className="truncate">{file ? file.name : "Upload cover"}</span>
+      <input required type="file" accept="image/*" aria-label="Upload cover" onChange={(event) => onPick(event.target.files?.[0] ?? null)} className="sr-only" />
+    </label>
+  );
+}
+
+/** Shows the published title and caption, and the article when the piece is a blog. */
+function CopyPane({
+  format,
+  version,
+  activityId,
+  headline,
+  caption,
+  canEdit,
+  busy,
+  onHeadline,
+  onCaption,
+  onSave,
+}: {
+  format: string;
+  version: ActivityVersion | null;
+  activityId: number;
+  headline: string;
+  caption: string;
+  canEdit: boolean;
+  busy: boolean;
+  onHeadline: (value: string) => void;
+  onCaption: (value: string) => void;
+  onSave: (event: FormEvent) => void;
+}) {
+  return (
+    <form onSubmit={onSave} className="mx-auto grid max-w-[690px] gap-3">
+      {canEdit ? (
+        <>
+          <label className="grid gap-1 text-[11px] font-bold text-muted">
+            Title
+            <input required value={headline} onChange={(event) => onHeadline(event.target.value)} maxLength={160} className="rounded-[9px] bg-card px-3 py-2 text-[13px] font-normal text-foreground outline-none" />
+          </label>
+          {format === "blog" ? null : (
+            <label className="grid gap-1 text-[11px] font-bold text-muted">
+              Caption
+              <textarea required value={caption} onChange={(event) => onCaption(event.target.value)} maxLength={5000} rows={6} className="rounded-[9px] bg-card px-3 py-2 text-[13px] font-normal text-foreground outline-none" />
+            </label>
+          )}
+          <button type="submit" disabled={busy} className="w-fit rounded-[9px] bg-lime px-3 py-2 text-[11px] font-bold text-lime-ink disabled:opacity-60">
+            {busy ? "Saving..." : "Save copy"}
+          </button>
+        </>
+      ) : (
+        <>
+          <h2 className="text-lg font-semibold">{version?.headline || "No title yet"}</h2>
+          {format === "blog" ? null : <p className="text-sm leading-relaxed whitespace-pre-wrap">{version?.caption || "No caption yet"}</p>}
+        </>
+      )}
+      {format === "blog" && version?.kind === "document" ? (
+        <DocumentFrame activityId={activityId} versionId={version.id} name={version.name} url={version.url} title={version.name} />
+      ) : null}
+    </form>
   );
 }
 
@@ -458,6 +614,28 @@ function Preview({
   onShift: (direction: number) => void;
   onSlide: (index: number) => void;
 }) {
+  const cover = version?.files.find((file) => file.role === "cover") ?? null;
+  if (cover) {
+    const src = assetUrl(cover.url);
+    const pins = (version?.annotations ?? []).filter((pin) => pin.file_id == null || pin.file_id === cover.id);
+    return (
+      <div className="relative mx-auto aspect-[1.57] max-w-[690px] overflow-hidden rounded-[7px] bg-soft" style={src ? undefined : gradient} onClick={onPlace}>
+        {src ? (
+          // eslint-disable-next-line @next/next/no-img-element -- file is served by the API
+          <img src={src} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <div className="grid h-full place-items-center text-sm text-muted">Nothing attached yet.</div>
+        )}
+        {pins.map((pin) => (
+          <button key={pin.id} type="button" data-pin aria-label={`Pin ${pin.number}`} className="absolute grid size-6 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-lime text-[10px] font-extrabold text-lime-ink shadow-[0_0_0_5px_rgba(187,255,82,0.2)]" style={{ left: `${pin.x}%`, top: `${pin.y}%` }}>
+            {pin.number}
+          </button>
+        ))}
+        {pendingPin ? <span data-pin className="absolute size-6 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-lime" style={{ left: `${pendingPin.x}%`, top: `${pendingPin.y}%` }} /> : null}
+      </div>
+    );
+  }
+
   if (version?.kind === "document") {
     return (
       <DocumentFrame
@@ -471,7 +649,8 @@ function Preview({
     );
   }
 
-  const current = version?.files[slide] ?? version?.files[0] ?? null;
+  const slides = version?.files.filter((file) => file.role !== "cover") ?? [];
+  const current = slides[slide] ?? slides[0] ?? null;
   const pins = (version?.annotations ?? []).filter((pin) => (pin.file_id == null ? slide === 0 : pin.file_id === current?.id));
   return (
     <div className="relative mx-auto aspect-[1.57] max-w-[690px] overflow-hidden rounded-[7px] bg-soft" style={embed || (version?.kind === "image" && preview) ? undefined : gradient} onClick={onPlace}>
@@ -491,9 +670,9 @@ function Preview({
         </button>
       ))}
       {pendingPin ? <span data-pin className="absolute size-6 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-lime" style={{ left: `${pendingPin.x}%`, top: `${pendingPin.y}%` }} /> : null}
-      {(version?.files.length ?? 0) > 1 ? (
+      {slides.length > 1 ? (
         <span className="absolute inset-x-0 bottom-3 flex justify-center gap-1.5">
-          {version?.files.map((file, index) => (
+          {slides.map((file, index) => (
             <button key={file.id} type="button" aria-label={`Slide ${index + 1}`} onClick={(event) => { event.stopPropagation(); onSlide(index); }} className={`size-2 rounded-full ${index === slide ? "bg-white" : "bg-white/45"}`} />
           ))}
         </span>

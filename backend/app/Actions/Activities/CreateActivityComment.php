@@ -23,6 +23,10 @@ class CreateActivityComment
         }
 
         $version = $this->version($activity, $data['version_id'] ?? null);
+        $scope = $parent?->scope ?? ($data['scope'] ?? 'asset');
+        if (! in_array($scope, ['asset', 'copy'], true)) {
+            $scope = 'asset';
+        }
 
         return $activity->comments()->create([
             'tenant_id' => $activity->tenant_id,
@@ -30,6 +34,7 @@ class CreateActivityComment
             'parent_id' => $parent?->id,
             'user_id' => $actor->id,
             'body' => $data['body'],
+            'scope' => $scope,
             'is_internal' => $internal,
         ]);
     }

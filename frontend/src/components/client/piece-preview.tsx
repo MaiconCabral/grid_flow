@@ -169,21 +169,28 @@ function Arrow({
 function SocialFrame({ activity, slide, onSlide }: { activity: BoardActivity; slide: number; onSlide: (index: number) => void }) {
   const slides = activity.slides.length > 0 ? activity.slides : activity.cover_url ? [activity.cover_url] : [];
   const src = assetUrl(slides[slide] ?? slides[0] ?? null);
-  const caption = activity.briefing.trim() || activity.title;
+  const caption = activity.caption?.trim() ?? "";
+  const publishedTitle = activity.headline?.trim() || activity.title;
   const kind = frameKind(activity.channel, activity.format);
   const gradient = coverGradient(activity);
   const embed = activity.format === "video" ? youtubeEmbed(assetUrl(activity.video_url)) : null;
 
-  if (activity.format === "text") {
+  if (activity.format === "blog") {
     return (
-      <DocumentFrame
-        activityId={activity.id}
-        name={activity.document?.name ?? null}
-        url={activity.document?.url ?? null}
-        title={activity.title}
-        gradient={gradient}
-        className="w-full max-w-[640px] shadow-[0_24px_70px_rgba(0,0,0,0.35)]"
-      />
+      <div className="w-full max-w-[640px]">
+        <div className="overflow-hidden rounded-xl shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
+          <Cover src={src} title={publishedTitle} gradient={gradient} className="aspect-[16/9] w-full" />
+        </div>
+        <p className="mt-3 text-center text-sm font-semibold text-white">{publishedTitle}</p>
+        <DocumentFrame
+          activityId={activity.id}
+          name={activity.document?.name ?? null}
+          url={activity.document?.url ?? null}
+          title={publishedTitle}
+          gradient={gradient}
+          className="mt-3 shadow-[0_24px_70px_rgba(0,0,0,0.35)]"
+        />
+      </div>
     );
   }
 
@@ -209,7 +216,8 @@ function SocialFrame({ activity, slide, onSlide }: { activity: BoardActivity; sl
           <p className="text-[12px] font-semibold text-white">{activity.workspace.name}</p>
         </div>
         <p className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-4 pt-10 pb-4 text-[12px] leading-snug text-white">
-          {caption}
+          {publishedTitle}
+          {caption ? ` ${caption}` : ""}
         </p>
       </div>
     );
@@ -224,7 +232,10 @@ function SocialFrame({ activity, slide, onSlide }: { activity: BoardActivity; sl
             <Play className="size-6" fill="currentColor" />
           </span>
         </div>
-        <p className="px-4 py-3 text-[13px] leading-snug whitespace-pre-wrap text-white">{caption}</p>
+        <p className="px-4 py-3 text-[13px] leading-snug whitespace-pre-wrap text-white">
+          <span className="font-semibold">{publishedTitle}</span>
+          {caption ? `\n${caption}` : ""}
+        </p>
       </div>
     );
   }
@@ -247,7 +258,10 @@ function SocialFrame({ activity, slide, onSlide }: { activity: BoardActivity; sl
         <Cover src={src} title={activity.title} gradient={gradient} className="h-full w-full" />
         {slides.length > 1 ? <Dots count={slides.length} active={slide} onPick={onSlide} /> : null}
       </div>
-      <p className="max-h-32 overflow-y-auto px-3 py-3 text-[13px] leading-snug whitespace-pre-wrap">{caption}</p>
+      <p className="max-h-32 overflow-y-auto px-3 py-3 text-[13px] leading-snug whitespace-pre-wrap">
+        <span className="font-semibold">{publishedTitle}</span>
+        {caption ? `\n${caption}` : ""}
+      </p>
     </article>
   );
 }

@@ -18,7 +18,7 @@ class StoreActivityAsset
     public function __construct(private RecordActivityEvent $events) {}
 
     /** Stores the next version using the file shape of the task format. */
-    public function handle(Activity $activity, User $actor, array $data, array $files): ActivityVersion
+    public function handle(Activity $activity, User $actor, array $data, array $files, ?UploadedFile $cover = null): ActivityVersion
     {
         if ($activity->format !== ActivityFormat::Video && $activity->status !== ActivityStatus::Production) {
             throw ValidationException::withMessages([
@@ -30,11 +30,22 @@ class StoreActivityAsset
             ? [$this->youtube($data['url'])]
             : $this->paths($activity, $files);
 
-        $kind = $activity->format === ActivityFormat::Video
-            ? AssetKind::Link
-            : ($activity->format === ActivityFormat::Text ? AssetKind::Document : AssetKind::Image);
+        if ($activity->format === ActivityFormat::Blog && $cover !== null) {
+            $stored[] = [
+                'name' => $cover->getClientOriginalName(),
+                'url' => null,
+                'path' => $cover->store($activity->storage_key, 'public'),
+                'role' => 'cover',
+            ];
+        }
 
-        return DB::transaction(function () use ($activity, $actor, $kind, $stored) {
+        $kind = match ($activity->format) {
+            ActivityFormat::Video => AssetKind::Link,
+            ActivityFormat::Blog => AssetKind::Document,
+            default => AssetKind::Image,
+        };
+
+        return DB::transaction(function () use ($activity, $actor, $kind, $stored, $data) {
             $activity->versions()->update(['is_current' => false]);
             $number = ((int) $activity->versions()->max('number')) + 1;
             $first = $stored[0];
@@ -45,6 +56,8 @@ class StoreActivityAsset
                 'number' => $number,
                 'kind' => $kind,
                 'name' => $first['name'],
+                'headline' => $data['headline'] ?? null,
+                'caption' => $activity->format === ActivityFormat::Blog ? null : ($data['caption'] ?? null),
                 'path' => $first['path'],
                 'url' => $first['url'],
                 'is_current' => true,
@@ -54,6 +67,7 @@ class StoreActivityAsset
                 $version->files()->create([
                     'tenant_id' => $activity->tenant_id,
                     'position' => $position,
+                    'role' => $file['role'] ?? 'asset',
                     'name' => $file['name'],
                     'path' => $file['path'],
                     'url' => $file['url'],
@@ -78,7 +92,7 @@ class StoreActivityAsset
             ]);
         }
 
-        return ['name' => 'YouTube', 'url' => $url, 'path' => null];
+        return ['name' => 'YouTube', 'url' => $url, 'path' => null, 'role' => 'asset'];
     }
 
     /** Puts each uploaded file in the task folder. */
@@ -89,6 +103,7 @@ class StoreActivityAsset
                 'name' => $file->getClientOriginalName(),
                 'url' => null,
                 'path' => $file->store($activity->storage_key, 'public'),
+                'role' => 'asset',
             ];
         }, $files));
     }

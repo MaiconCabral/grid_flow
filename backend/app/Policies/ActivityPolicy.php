@@ -83,7 +83,8 @@ class ActivityPolicy
 
         if ($user->role === UserRole::Client) {
             return $user->workspace_id !== null
-                && (int) $user->workspace_id === (int) $activity->workspace_id;
+                && (int) $user->workspace_id === (int) $activity->workspace_id
+                && in_array($activity->status, ActivityStatus::visibleToClient(), true);
         }
 
         return (int) $user->id === (int) $activity->assignee_id;

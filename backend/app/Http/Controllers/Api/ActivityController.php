@@ -12,6 +12,7 @@ use App\Actions\Activities\RequestActivityChanges;
 use App\Actions\Activities\ResolveActivityComment;
 use App\Actions\Activities\StoreActivityAsset;
 use App\Actions\Activities\StoreActivityBriefing;
+use App\Actions\Activities\UpdateActivityCopy;
 use App\Enums\AssetKind;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
@@ -22,6 +23,7 @@ use App\Http\Requests\Activities\StoreActivityBriefingRequest;
 use App\Http\Requests\Activities\StoreActivityCommentRequest;
 use App\Http\Requests\Activities\StoreActivityRequest;
 use App\Http\Requests\Activities\UpdateActivityCommentRequest;
+use App\Http\Requests\Activities\UpdateActivityCopyRequest;
 use App\Http\Requests\Activities\UpdateActivityRequest;
 use App\Models\Activity;
 use App\Models\ActivityComment;
@@ -118,9 +120,17 @@ class ActivityController extends Controller
     public function storeAsset(StoreActivityAssetRequest $request, Activity $activity, StoreActivityAsset $action): JsonResponse
     {
         $files = $request->file('files') ?? [];
-        $action->handle($activity, $request->user(), $request->validated(), $files instanceof UploadedFile ? [$files] : $files);
+        $action->handle($activity, $request->user(), $request->validated(), $files instanceof UploadedFile ? [$files] : $files, $request->file('cover'));
 
         return response()->json($this->payload->detail($activity->refresh(), $request->user()), 201);
+    }
+
+    /** Updates the published title and caption of the current version. */
+    public function updateCopy(UpdateActivityCopyRequest $request, Activity $activity, ActivityVersion $version, UpdateActivityCopy $action): JsonResponse
+    {
+        $action->handle($activity, $version, $request->validated());
+
+        return response()->json($this->payload->detail($activity->refresh(), $request->user()));
     }
 
     /** Stores or replaces the optional briefing file. */

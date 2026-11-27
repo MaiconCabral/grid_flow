@@ -10,6 +10,7 @@ import {
   assetUrl,
   dateLabel,
   deliveryMode,
+  deliveryNotice,
   eventSentence,
   eventWhen,
   statusLabel,
@@ -25,7 +26,11 @@ export function ActivityView() {
   const [activity, setActivity] = useState<ActivityDetail | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [files, setFiles] = useState<File[]>([]);
+  const [cover, setCover] = useState<File | null>(null);
   const [briefingUpload, setBriefingUpload] = useState<File | null>(null);
+  const [headline, setHeadline] = useState("");
+  const [caption, setCaption] = useState("");
+  const [trackedVersion, setTrackedVersion] = useState<number | null>(null);
   const [url, setUrl] = useState("");
   const [note, setNote] = useState("");
   const [asking, setAsking] = useState(false);
@@ -76,25 +81,57 @@ export function ActivityView() {
   const canDecide = user.role === "client" && user.workspace_id === activity.workspace.id && activity.status === "pending";
   const mode = deliveryMode(activity.format);
   const current = activity.versions.find((item) => item.is_current) ?? activity.versions.at(-1) ?? null;
+  const currentId = current?.id ?? null;
+  if (currentId !== trackedVersion) {
+    setTrackedVersion(currentId);
+    setHeadline(current?.headline ?? "");
+    setCaption(current?.caption ?? "");
+  }
   const video = current?.kind === "link" ? youtubeEmbed(assetUrl(current.url)) : null;
+  const coverImage = assetUrl(current?.files.find((file) => file.role === "cover")?.url ?? null);
 
   /** Stores the delivery the format accepts. */
   async function attach(event: FormEvent) {
     event.preventDefault();
     if (!activity) return;
     const body = new FormData();
+    body.set("headline", headline);
+    if (mode !== "blog") body.set("caption", caption);
     if (mode === "link") body.set("url", url);
     else if (files.length > 0) files.forEach((item) => body.append("files[]", item));
     else return;
+    if (mode === "blog") {
+      if (!cover) return;
+      body.set("cover", cover);
+    }
     setBusy(true);
     try {
       const detail = await api<ActivityDetail>(`/activities/${activity.id}/assets`, { method: "POST", body });
       setActivity(detail);
       setFiles([]);
+      setCover(null);
       setUrl("");
       notifySuccess("Delivery added.");
     } catch (error) {
       notifyError(error instanceof ApiError ? error.message : "Could not add the delivery.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** Updates the published title and caption without a new file. */
+  async function saveCopy() {
+    if (!activity || !current) return;
+    setBusy(true);
+    try {
+      const detail = await api<ActivityDetail>(`/activities/${activity.id}/versions/${current.id}`, {
+        method: "PATCH",
+        body: JSON.stringify(mode === "blog" ? { headline } : { headline, caption }),
+      });
+      setActivity(detail);
+      notifySuccess("Copy saved.");
+    } catch (error) {
+      notifyError(error instanceof ApiError ? error.message : "Could not save the copy.");
     } finally {
       setBusy(false);
     }
@@ -187,6 +224,12 @@ export function ActivityView() {
 
       <section className="mt-4 rounded-[14px] bg-card p-5">
         <h2 className="text-[11px] font-bold tracking-wide text-muted uppercase">Delivery</h2>
+        {current?.headline ? <p className="mt-3 text-sm font-semibold">{current.headline}</p> : null}
+        {current?.caption ? <p className="mt-1 text-sm leading-relaxed whitespace-pre-wrap text-muted">{current.caption}</p> : null}
+        {coverImage ? (
+          // eslint-disable-next-line @next/next/no-img-element -- file is served by the API
+          <img src={coverImage} alt="" className="mt-3 h-[150px] w-full rounded-[10px] object-cover" />
+        ) : null}
         {video ? (
           <iframe src={video} title={current?.name ?? "Video"} className="mt-3 aspect-video w-full rounded-[10px]" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
         ) : null}
@@ -211,9 +254,9 @@ export function ActivityView() {
                     {asset.kind} {asset.author ? `· ${asset.author}` : ""}
                   </span>
                 </span>
-                {asset.kind === "image" && asset.files.length > 0 ? (
+                {asset.files.some((item) => item.role === "cover") || (asset.kind === "image" && asset.files.length > 0) ? (
                   <span className="flex shrink-0 gap-1">
-                    {asset.files.map((item) => {
+                    {asset.files.filter((item) => asset.kind === "image" || item.role === "cover").map((item) => {
                       const thumb = assetUrl(item.url);
                       return thumb ? (
                         // eslint-disable-next-line @next/next/no-img-element -- file is served by the API
@@ -231,6 +274,17 @@ export function ActivityView() {
         </ul>
         {canAttach ? (
           <form onSubmit={attach} className="mt-4 grid gap-3 border-t border-raised pt-4">
+            <p className="text-[12px] leading-relaxed text-muted">{deliveryNotice(activity.format)}</p>
+            <label className="flex flex-col gap-1 text-[11px] font-bold text-muted">
+              Title
+              <input required value={headline} onChange={(event) => setHeadline(event.target.value)} maxLength={160} className="rounded-[9px] bg-raised px-3 py-2.5 text-[13px] font-normal text-foreground outline-none" />
+            </label>
+            {mode === "blog" ? null : (
+              <label className="flex flex-col gap-1 text-[11px] font-bold text-muted">
+                Caption
+                <textarea required value={caption} onChange={(event) => setCaption(event.target.value)} maxLength={5000} rows={4} className="rounded-[9px] bg-raised px-3 py-2.5 text-[13px] font-normal text-foreground outline-none" />
+              </label>
+            )}
             {mode === "link" ? (
               <label className="flex flex-col gap-1 text-[11px] font-bold text-muted">
                 YouTube URL
@@ -238,20 +292,33 @@ export function ActivityView() {
               </label>
             ) : (
               <label className="flex flex-col gap-1 text-[11px] font-bold text-muted">
-                {mode === "document" ? "PDF or Word document" : mode === "slides" ? "Images" : "Image"}
+                {mode === "blog" ? "PDF or Word document" : mode === "slides" ? "Images" : "Image"}
                 <input
                   required
                   type="file"
                   multiple={mode === "slides"}
-                  accept={mode === "document" ? ".pdf,.doc,.docx" : "image/*"}
+                  accept={mode === "blog" ? ".pdf,.doc,.docx" : "image/*"}
                   onChange={(event) => setFiles(Array.from(event.target.files ?? []))}
                   className="text-[13px] font-normal"
                 />
               </label>
             )}
-            <button type="submit" disabled={busy} className="w-fit rounded-[9px] bg-lime px-3 py-2 text-[11px] font-bold text-lime-ink disabled:opacity-60">
-              {busy ? "Saving..." : "Add delivery"}
-            </button>
+            {mode === "blog" ? (
+              <label className="flex flex-col gap-1 text-[11px] font-bold text-muted">
+                Cover
+                <input required type="file" accept="image/*" onChange={(event) => setCover(event.target.files?.[0] ?? null)} className="text-[13px] font-normal" />
+              </label>
+            ) : null}
+            <div className="flex flex-wrap gap-2">
+              <button type="submit" disabled={busy} className="w-fit rounded-[9px] bg-lime px-3 py-2 text-[11px] font-bold text-lime-ink disabled:opacity-60">
+                {busy ? "Saving..." : "Add delivery"}
+              </button>
+              {current ? (
+                <button type="button" disabled={busy} onClick={saveCopy} className="w-fit rounded-[9px] bg-raised px-3 py-2 text-[11px] font-bold disabled:opacity-60">
+                  Save copy
+                </button>
+              ) : null}
+            </div>
           </form>
         ) : null}
       </section>

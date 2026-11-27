@@ -19,6 +19,8 @@ class ActivityVersion extends Model
         'number',
         'kind',
         'name',
+        'headline',
+        'caption',
         'path',
         'url',
         'is_current',

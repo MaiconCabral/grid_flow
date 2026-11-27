@@ -1,8 +1,8 @@
 # Etapa 2 — Team & Clients
 
-A tela `/{slug}/team` gerencia a equipe interna e as marcas da agência logada. Os dados vêm de `GET /users` e `GET /workspaces`. A interface continua em inglês. O seletor “Viewing as” não muda o papel real.
+A tela `/{slug}/team` gerencia a equipe interna e as marcas da agência logada. Os dados vêm de `GET /users` e `GET /workspaces`. A interface continua em inglês. Viewing as está oculto por `showVisualPlaceholders` e não muda o papel real.
 
-O convite em `invite/[token]` e o e-mail transacional ficam para uma etapa futura. O admin define a senha no cadastro.
+O convite em `invite/[token]` e o e-mail transacional ficam para uma etapa futura. O admin define a senha no cadastro. O atalho Invite teammates no menu do usuário está oculto pela mesma flag. Team & Clients permanece no menu Manage.
 
 ## Quem acessa
 

@@ -10,7 +10,7 @@ Nome, tema, cores e plano ficam na linha da agência em `tenants`. Cada agência
 | `light_background` | `#f0f1ed` | Fundo do tema claro, entre as amostras permitidas |
 | `dark_background` | `#111313` | Fundo do tema escuro, entre as amostras permitidas |
 | `accent` | `#bbff52` | Cor de destaque, entre as amostras permitidas |
-| `plan` | `studio` | Plano atual. Esta etapa não troca o plano |
+| `plan` | `studio` | Plano atual. Esta etapa não troca o plano. A aba Plans do front está oculta por `showVisualPlaceholders` |
 
 `name` já existia. O slug continua fora do `PATCH`, porque entra na URL e no cookie.
 

@@ -14,6 +14,7 @@ class ActivityVersionFile extends Model
         'tenant_id',
         'activity_version_id',
         'position',
+        'role',
         'name',
         'path',
         'url',

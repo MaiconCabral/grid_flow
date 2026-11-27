@@ -9,6 +9,7 @@ import { useTheme } from "@/components/theme-provider";
 import { notifyError, notifySuccess } from "@/lib/alerts";
 import { publishAgency, useAgency, type AgencyAppearance } from "@/lib/agency-theme";
 import { ApiError, api } from "@/lib/api-client";
+import { showVisualPlaceholders } from "@/lib/placeholders";
 import { clearSession } from "@/lib/session";
 
 type Menu = "view" | "bell" | "user";
@@ -91,7 +92,7 @@ export function Topbar({
       </p>
 
       <div className="flex items-center gap-2.5">
-        {user && user.roleKey !== "client" ? (
+        {showVisualPlaceholders && user && user.roleKey !== "client" ? (
         <div className="relative">
           <button
             type="button"
@@ -193,9 +194,11 @@ export function Topbar({
                   <Link href={`/${tenantSlug}/settings`} onClick={() => setMenu(null)} className="block rounded-lg px-2 py-2.5 text-[11px] text-muted hover:bg-soft hover:text-foreground">
                     Account preferences
                   </Link>
-                  <Link href={`/${tenantSlug}/team`} onClick={() => setMenu(null)} className="block rounded-lg px-2 py-2.5 text-[11px] text-muted hover:bg-soft hover:text-foreground">
-                    Invite teammates
-                  </Link>
+                  {showVisualPlaceholders ? (
+                    <Link href={`/${tenantSlug}/team`} onClick={() => setMenu(null)} className="block rounded-lg px-2 py-2.5 text-[11px] text-muted hover:bg-soft hover:text-foreground">
+                      Invite teammates
+                    </Link>
+                  ) : null}
                 </>
               ) : null}
               <button type="button" onClick={signOut} className="block w-full rounded-lg px-2 py-2.5 text-left text-[11px] text-muted hover:bg-soft hover:text-foreground">

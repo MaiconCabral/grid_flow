@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { agency, currentUser } from "@/data/mock";
+import { showVisualPlaceholders } from "@/lib/placeholders";
 import { useAgency } from "@/lib/agency-theme";
 import { notifyError } from "@/lib/alerts";
 import { ApiError, api } from "@/lib/api-client";
@@ -158,7 +159,7 @@ export function Sidebar({
       </nav>
 
       <div className="mt-auto px-[11px] pt-3.5 pb-3.5">
-        {admin ? (
+        {showVisualPlaceholders && admin ? (
           <div className="mb-6">
             <div className="mb-2.5 flex items-center justify-between">
               <span>
@@ -177,22 +178,24 @@ export function Sidebar({
           </div>
         ) : null}
 
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setHelpOpen((open) => !open)}
-            className="flex w-full items-center gap-2 text-xs text-muted"
-          >
-            <CircleHelp className="size-3.5" />
-            Help center
-            <span className="ml-auto grid size-5 place-items-center rounded-md bg-soft text-[11px]">?</span>
-          </button>
-          {helpOpen ? (
-            <p className="absolute bottom-full z-30 mb-2 w-full rounded-[13px] bg-raised px-3 py-2 text-[11px] text-muted shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
-              Guides for approvals and production land here soon.
-            </p>
-          ) : null}
-        </div>
+        {showVisualPlaceholders ? (
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setHelpOpen((open) => !open)}
+              className="flex w-full items-center gap-2 text-xs text-muted"
+            >
+              <CircleHelp className="size-3.5" />
+              Help center
+              <span className="ml-auto grid size-5 place-items-center rounded-md bg-soft text-[11px]">?</span>
+            </button>
+            {helpOpen ? (
+              <p className="absolute bottom-full z-30 mb-2 w-full rounded-[13px] bg-raised px-3 py-2 text-[11px] text-muted shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
+                Guides for approvals and production land here soon.
+              </p>
+            ) : null}
+          </div>
+        ) : null}
 
         <div className="mt-3 flex items-center gap-[9px] rounded-xl bg-raised px-[9px] pt-[11px] pb-1">
           <span className="grid size-[30px] place-items-center rounded-full bg-[#6683a4] text-[10px] font-bold text-white">

@@ -15,6 +15,6 @@ O texto de escopo cita `middleware.ts`. Nesta versão do Next a proteção de ro
 | 5. Approval Center | [etapas/05-aprovacao.md](etapas/05-aprovacao.md) | Implementada |
 | 6. Dashboard | [etapas/06-dashboard.md](etapas/06-dashboard.md) | Implementada |
 | 7. Visão do cliente | [etapas/07-visao-cliente.md](etapas/07-visao-cliente.md) | Implementada |
-| 8. Upload em nuvem e tempo real | — | Não iniciada |
+| 8. Upload em nuvem e tempo real | [../../docs/pendencias.md](../../docs/pendencias.md) | Não iniciada |
 
-A árvore de pastas e o que cada etapa futura muda estão em [arquitetura.md](arquitetura.md).
+A árvore de pastas e o que cada etapa futura muda estão em [arquitetura.md](arquitetura.md). A etapa em aberto e os controles ocultos estão em [pendencias.md](../../docs/pendencias.md).

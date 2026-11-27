@@ -42,6 +42,19 @@ O painel fica em `src/components/dashboard/`. O detalhe está em [etapas/06-dash
 
 A home do cliente fica em `src/components/client/`. O detalhe está em [etapas/07-visao-cliente.md](etapas/07-visao-cliente.md).
 
+## Controles ocultos
+
+`src/lib/placeholders.ts` guarda `showVisualPlaceholders` em `false`. O markup continua no código; a tela não mostra esses controles enquanto a flag está desligada:
+
+- Export no quadro e Export report no painel
+- Share na peça de aprovação
+- Viewing as no topo
+- Storage e Help center no menu
+- a aba Plans em Settings
+- o atalho Invite teammates no menu do usuário
+
+O sino de notificações permanece, ainda com os três avisos de exemplo. Team & Clients continua em Manage. A troca de agência, o tema e Account preferences também.
+
 ## Etapas futuras na interface
 
 - **Upload em nuvem e tempo real.** URL pré-assinada e escuta do canal do workspace. O anexo atual vai para o disco local da API.

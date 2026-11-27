@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Enums\ActivityStatus;
 use App\Enums\UserRole;
 use App\Models\Activity;
 use App\Models\User;
@@ -15,7 +16,11 @@ class VisibleActivities
         $query = Activity::query();
 
         if ($user->role === UserRole::Client) {
-            $query->where('workspace_id', $user->workspace_id ?? 0);
+            $query->where('workspace_id', $user->workspace_id ?? 0)
+                ->whereIn('status', array_map(
+                    fn (ActivityStatus $status) => $status->value,
+                    ActivityStatus::visibleToClient(),
+                ));
         } elseif ($user->role !== UserRole::AgencyAdmin) {
             $query->where('assignee_id', $user->id);
         }

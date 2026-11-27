@@ -7,6 +7,7 @@ import { notifyError } from "@/lib/alerts";
 import { ApiError, api } from "@/lib/api-client";
 import {
   assetUrl,
+  clientCanSee,
   coverGradient,
   formatLabel,
   formats,
@@ -19,7 +20,7 @@ import {
 } from "@/lib/activities";
 import { PiecePreview } from "@/components/client/piece-preview";
 
-/** Lists the brand's sent pieces as a monthly feed the client can open. */
+/** Lists the brand's reviewable pieces as a monthly feed the client can open. */
 export function ClientHome() {
   const slug = usePathname().split("/")[1] ?? "";
   const [items, setItems] = useState<BoardActivity[] | null>(null);
@@ -49,7 +50,7 @@ export function ClientHome() {
     };
   }, []);
 
-  const sent = useMemo(() => (items ?? []).filter((item) => item.status !== "todo"), [items]);
+  const sent = useMemo(() => (items ?? []).filter((item) => clientCanSee(item.status)), [items]);
   const month = chosen ?? preferredMonth(sent);
   const available = useMemo(
     () => formats.filter((item) => sent.some((activity) => activity.format === item.value)),

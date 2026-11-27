@@ -97,4 +97,17 @@ Agência **Horizon Studio**, slug `horizon-studio`. As marcas abaixo existem só
 
 Maya Costa (`maya@studios.test`, designer) pertence às duas agências. O login abre Agency Alpha. No menu ela troca para Horizon Studio.
 
-Workspaces semeados em Agency Alpha: Aster & Co., Northstar Labs, Kora House. Em Horizon Studio: Lumen Atelier, Vela Market, Porto & Pine.
+Agência **Newton**, slug `newton`:
+
+| Nome | E-mail | Papel | Workspace |
+| --- | --- | --- | --- |
+| Thais | thais@newton.ag | agency_admin | — |
+| Caique | caique.lemos@newton.ag | designer | — |
+| Juliana | juliana.brito@newton.ag | copywriter | — |
+| Paulo | paulo@hernandez.com | client | Hernandez |
+| Pedro | pedro@febrasgo.com | client | Febrasgo |
+| João | joao@momentum.com | client | Momentum |
+
+O endereço pedido para o João era `joao@momentum`. O login exige um e-mail com domínio, então a conta semeada é `joao@momentum.com`.
+
+Workspaces semeados em Agency Alpha: Aster & Co., Northstar Labs, Kora House. Em Horizon Studio: Lumen Atelier, Vela Market, Porto & Pine. Em Newton: Hernandez, Febrasgo, Momentum. As peças entregues nascem com título e legenda publicados. O blog leva só o título, junto com a capa e o artigo.

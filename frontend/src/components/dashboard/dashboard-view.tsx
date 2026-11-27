@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { ArrowUpRight, CalendarDays, Clock, Download, TriangleAlert, TrendingUp } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { notifyError } from "@/lib/alerts";
+import { showVisualPlaceholders } from "@/lib/placeholders";
 import { ApiError, api } from "@/lib/api-client";
 import { dateLabel, eventSentence, eventWhen, initials, roleLabels, statusLabel, avatarColor } from "@/lib/activities";
 import type { Dashboard, DashboardAction } from "@/lib/dashboard";
@@ -67,10 +68,12 @@ export function DashboardView() {
         </div>
         {admin ? (
           <div className="flex gap-[9px]">
-            <button type="button" style={headingButton} className="inline-flex items-center gap-2 rounded-[9px] bg-raised px-[14px] py-[10px] text-foreground">
-              <Download size={15} />
-              Export report
-            </button>
+            {showVisualPlaceholders ? (
+              <button type="button" style={headingButton} className="inline-flex items-center gap-2 rounded-[9px] bg-raised px-[14px] py-[10px] text-foreground">
+                <Download size={15} />
+                Export report
+              </button>
+            ) : null}
             <Link href={`/${slug}/workspace`} style={headingButton} className="inline-flex items-center gap-2 rounded-[9px] bg-lime px-[14px] py-[10px] text-[#17240b]">
               New activity
             </Link>

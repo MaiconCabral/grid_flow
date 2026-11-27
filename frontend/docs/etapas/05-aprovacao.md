@@ -4,13 +4,13 @@
 
 ## Lista
 
-Marca, título, canal e formato, status, responsável e data. O admin vê a agência inteira. Designer e redator veem só as próprias tarefas. O cliente vê a marca dele. O quadro usa o mesmo corte.
+Marca, título, canal e formato, status, responsável e data. O admin vê a agência inteira. Designer e redator veem só as próprias tarefas. O cliente vê a marca dele, e só em Pending Approval, Approved e Scheduled. O quadro da equipe usa o mesmo corte de responsável, sem esse limite de status.
 
 ## Peça
 
-O preview mostra a versão aberta. As setas e os botões v1, v2 trocam a versão. Numa imagem, o clique calcula a posição em porcentagem e deixa o comentário preso àquele pino. Comments traz a conversa, a resposta, resolver e, para a equipe, a nota interna. Details mostra marca, formato, data, responsável e status.
+O preview tem duas abas. Creative mostra a imagem, o carrossel, o vídeo ou a capa do blog. Copy mostra o título e a legenda da versão aberta; no blog, o título e o artigo. As setas e os botões v1, v2 trocam a versão. Numa imagem, inclusive a capa, o clique calcula a posição em porcentagem e deixa o comentário preso àquele pino. Comments, à direita, mostra só a conversa da aba aberta: resposta, resolver e, para a equipe, a nota interna. Details mostra marca, formato, data, responsável e status.
 
-Em In Production, a equipe envia a próxima versão: imagem, PDF, DOC ou link do YouTube. **Request revisions** e **Approve piece** aparecem só para o cliente da marca. Share permanece visual. Download abre o arquivo da versão aberta.
+Em In Production, a equipe envia a próxima versão com o título e a legenda, ou, no blog, com a capa e o artigo. Na aba Copy, Save copy atualiza o texto da versão atual. O vídeo aceita o link em qualquer status. **Request revisions** e **Approve piece** aparecem só para o cliente da marca. Share está oculto por `showVisualPlaceholders`. Download abre o arquivo da versão aberta.
 
 ## Arquivos
 

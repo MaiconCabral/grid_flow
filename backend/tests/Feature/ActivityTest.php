@@ -164,9 +164,16 @@ class ActivityTest extends TestCase
         $this->as($admin)->patchJson("/api/v1/activities/{$id}", ['status' => 'pending'])->assertOk();
         $this->as($designer)->postJson("/api/v1/activities/{$id}/assets", [
             'url' => 'https://youtu.be/dQw4w9WgXcQ',
+        ])->assertUnprocessable()->assertJsonValidationErrors(['headline', 'caption']);
+        $this->as($designer)->postJson("/api/v1/activities/{$id}/assets", [
+            'url' => 'https://youtu.be/dQw4w9WgXcQ',
+            'headline' => 'In the studio',
+            'caption' => 'Watch the cut.',
         ])->assertCreated()
             ->assertJsonPath('assets.0.url', 'https://youtu.be/dQw4w9WgXcQ')
-            ->assertJsonPath('video_url', 'https://youtu.be/dQw4w9WgXcQ');
+            ->assertJsonPath('video_url', 'https://youtu.be/dQw4w9WgXcQ')
+            ->assertJsonPath('headline', 'In the studio')
+            ->assertJsonPath('caption', 'Watch the cut.');
 
         $this->as($admin)->patchJson("/api/v1/activities/{$id}", ['status' => 'production'])->assertOk();
 
@@ -176,11 +183,15 @@ class ActivityTest extends TestCase
 
         $stored = $this->as($designer)->postJson("/api/v1/activities/{$id}/assets", [
             'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            'headline' => 'In the studio',
+            'caption' => 'Watch the cut.',
         ]);
         $stored->assertCreated()->assertJsonPath('assets.0.kind', 'link');
 
         $this->as($designer)->postJson("/api/v1/activities/{$id}/assets", [
             'url' => 'https://example.com/video',
+            'headline' => 'In the studio',
+            'caption' => 'Watch the cut.',
         ])->assertUnprocessable()->assertJsonValidationErrors('url');
 
         $this->as($client)->postJson("/api/v1/activities/{$id}/assets", [
@@ -191,8 +202,8 @@ class ActivityTest extends TestCase
         Storage::disk('public')->assertExists(ltrim(str_replace('/storage/', '', (string) $created->json('briefing_file.url')), '/'));
     }
 
-    /** Stores every carousel image in one version and a document on a text task. */
-    public function test_a_carousel_keeps_several_images_and_text_keeps_a_document(): void
+    /** Stores every carousel image in one version and a cover plus a document on a blog. */
+    public function test_a_carousel_keeps_several_images_and_a_blog_keeps_a_cover_and_a_document(): void
     {
         Storage::fake('public');
         [$admin, $brand, $designer] = $this->agency();
@@ -207,6 +218,8 @@ class ActivityTest extends TestCase
         $this->as($admin)->patchJson("/api/v1/activities/{$carousel}", ['status' => 'production'])->assertOk();
 
         $slides = $this->as($designer)->post("/api/v1/activities/{$carousel}/assets", [
+            'headline' => 'Summer frames',
+            'caption' => 'Three frames for the drop.',
             'files' => [
                 UploadedFile::fake()->image('one.jpg'),
                 UploadedFile::fake()->image('two.jpg'),
@@ -214,6 +227,8 @@ class ActivityTest extends TestCase
             ],
         ]);
         $slides->assertCreated()
+            ->assertJsonPath('headline', 'Summer frames')
+            ->assertJsonPath('caption', 'Three frames for the drop.')
             ->assertJsonCount(3, 'versions.0.files')
             ->assertJsonCount(3, 'slides');
         $this->assertStringContainsString('/storage/aster_', (string) $slides->json('slides.0'));
@@ -224,23 +239,30 @@ class ActivityTest extends TestCase
             'title' => 'Caption',
             'briefing' => 'The words.',
             'channel' => 'facebook',
-            'format' => 'text',
+            'format' => 'blog',
         ])->json('id');
         $this->as($admin)->patchJson("/api/v1/activities/{$text}", ['status' => 'production'])->assertOk();
         $docx = $this->as($designer)->post("/api/v1/activities/{$text}/assets", [
+            'headline' => 'Saturday story',
             'files' => [UploadedFile::fake()->create('caption.docx', 20, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')],
+            'cover' => UploadedFile::fake()->image('cover.jpg'),
         ]);
         $docx->assertCreated()
             ->assertJsonPath('assets.0.kind', 'document')
-            ->assertJsonPath('cover_url', null)
-            ->assertJsonPath('document.name', 'caption.docx');
+            ->assertJsonPath('headline', 'Saturday story')
+            ->assertJsonPath('caption', null)
+            ->assertJsonPath('document.name', 'caption.docx')
+            ->assertJsonPath('versions.0.files.1.role', 'cover');
+        $this->assertStringContainsString('/storage/', (string) $docx->json('cover_url'));
         $this->as($designer)->get("/api/v1/activities/{$text}/document")->assertOk();
 
         $this->as($designer)->post("/api/v1/activities/{$text}/assets", [
+            'headline' => 'Saturday story',
             'files' => [UploadedFile::fake()->create('caption.pdf', 20, 'application/pdf')],
+            'cover' => UploadedFile::fake()->image('cover.jpg'),
         ])->assertCreated()
-            ->assertJsonPath('document.name', 'caption.pdf')
-            ->assertJsonPath('cover_url', null);
+            ->assertJsonPath('document.name', 'caption.pdf');
+        $this->assertStringContainsString('/storage/', (string) $this->as($designer)->getJson("/api/v1/activities/{$text}")->json('cover_url'));
         $this->assertStringContainsString('/storage/', (string) $this->as($designer)->getJson("/api/v1/activities/{$text}")->json('document.url'));
         $this->as($designer)->get('/api/v1/activities/'.$text.'/document?version='.$docx->json('assets.0.id'))->assertOk();
 
@@ -267,6 +289,8 @@ class ActivityTest extends TestCase
         ])->json('id');
         $this->as($admin)->patchJson("/api/v1/activities/{$id}", ['status' => 'production'])->assertOk();
         $stored = $this->as($designer)->post("/api/v1/activities/{$id}/assets", [
+            'headline' => 'Throwaway',
+            'caption' => 'Remove me.',
             'files' => [UploadedFile::fake()->image('cover.jpg')],
         ])->assertCreated();
         $relative = ltrim(str_replace('/storage/', '', (string) $stored->json('cover_url')), '/');
@@ -309,6 +333,127 @@ class ActivityTest extends TestCase
         $this->as($admin)->deleteJson("/api/v1/activities/{$scheduled}")->assertForbidden();
         $this->as($admin)->getJson("/api/v1/activities/{$approved}")->assertOk();
         $this->as($admin)->getJson("/api/v1/activities/{$scheduled}")->assertOk();
+    }
+
+    /** Updates the published copy of the current version without a new file. */
+    public function test_published_copy_can_change_without_a_new_file(): void
+    {
+        Storage::fake('public');
+        [$admin, $brand, $designer] = $this->agency();
+        $client = User::factory()->create([
+            'tenant_id' => $admin->tenant_id,
+            'role' => UserRole::Client,
+            'workspace_id' => $brand->id,
+        ]);
+        $id = $this->as($admin)->postJson('/api/v1/activities', [
+            'workspace_id' => $brand->id,
+            'assignee_id' => $designer->id,
+            'title' => 'Launch line',
+            'briefing' => 'Internal brief.',
+            'channel' => 'instagram',
+            'format' => 'post',
+        ])->json('id');
+        $this->as($admin)->patchJson("/api/v1/activities/{$id}", ['status' => 'production'])->assertOk();
+        $versionId = $this->as($designer)->post("/api/v1/activities/{$id}/assets", [
+            'headline' => 'First line',
+            'caption' => 'First caption.',
+            'files' => [UploadedFile::fake()->image('cover.jpg')],
+        ])->json('versions.0.id');
+
+        $this->as($designer)->patchJson("/api/v1/activities/{$id}/versions/{$versionId}", [
+            'headline' => 'Final line',
+            'caption' => 'Final caption.',
+        ])->assertOk()
+            ->assertJsonPath('headline', 'Final line')
+            ->assertJsonPath('caption', 'Final caption.')
+            ->assertJsonCount(1, 'versions');
+
+        $blog = $this->as($admin)->postJson('/api/v1/activities', [
+            'workspace_id' => $brand->id,
+            'assignee_id' => $designer->id,
+            'title' => 'Journal',
+            'briefing' => 'Internal brief.',
+            'channel' => 'facebook',
+            'format' => 'blog',
+        ])->json('id');
+        $this->as($admin)->patchJson("/api/v1/activities/{$blog}", ['status' => 'production'])->assertOk();
+        $delivered = $this->as($designer)->post("/api/v1/activities/{$blog}/assets", [
+            'headline' => 'Journal title',
+            'files' => [UploadedFile::fake()->create('article.pdf', 20, 'application/pdf')],
+            'cover' => UploadedFile::fake()->image('cover.jpg'),
+        ])->assertCreated();
+        $coverId = $delivered->json('versions.0.files.1.id');
+        $blogVersion = $delivered->json('versions.0.id');
+        $this->as($admin)->patchJson("/api/v1/activities/{$blog}", ['status' => 'pending'])->assertOk();
+
+        $this->as($client)->postJson("/api/v1/activities/{$blog}/versions/{$blogVersion}/annotations", [
+            'x' => 10,
+            'y' => 20,
+            'file_id' => $coverId,
+            'body' => 'Crop the cover.',
+        ])->assertCreated()
+            ->assertJsonPath('comments.0.scope', 'asset')
+            ->assertJsonPath('versions.0.annotations.0.file_id', $coverId);
+
+        $this->as($client)->postJson("/api/v1/activities/{$blog}/versions/{$blogVersion}/annotations", [
+            'x' => 10,
+            'y' => 20,
+            'file_id' => $delivered->json('versions.0.files.0.id'),
+            'body' => 'This file is the article.',
+        ])->assertUnprocessable();
+    }
+
+    /** Hides To Do and In Production from the brand client. */
+    public function test_a_client_sees_only_pieces_past_production(): void
+    {
+        [$admin, $brand, $designer] = $this->agency();
+        $client = User::factory()->create([
+            'tenant_id' => $admin->tenant_id,
+            'role' => UserRole::Client,
+            'workspace_id' => $brand->id,
+        ]);
+
+        $draft = $this->task($admin, $brand, 'Still a draft', 'todo');
+        $making = $this->task($admin, $brand, 'In the studio', 'production', $designer->id);
+        $review = $this->task($admin, $brand, 'Please review', 'pending');
+        $live = $this->task($admin, $brand, 'Going out', 'scheduled');
+
+        $this->as($client)->getJson('/api/v1/activities')
+            ->assertOk()
+            ->assertJsonMissing(['title' => 'Still a draft'])
+            ->assertJsonMissing(['title' => 'In the studio'])
+            ->assertJsonFragment(['title' => 'Please review'])
+            ->assertJsonFragment(['title' => 'Going out']);
+
+        $this->as($client)->getJson("/api/v1/activities/{$draft}")->assertForbidden();
+        $this->as($client)->getJson("/api/v1/activities/{$making}")->assertForbidden();
+        $this->as($client)->getJson("/api/v1/activities/{$review}")->assertOk();
+
+        $this->as($designer)->getJson("/api/v1/activities/{$making}")->assertOk();
+        $this->as($admin)->getJson('/api/v1/activities')
+            ->assertJsonFragment(['title' => 'Still a draft'])
+            ->assertJsonFragment(['title' => 'In the studio']);
+
+        $this->as($client)->getJson("/api/v1/activities/{$live}")->assertOk();
+    }
+
+    /** Creates a task and moves it when the test needs another column. */
+    private function task(User $admin, Workspace $brand, string $title, string $status, ?int $assigneeId = null): int
+    {
+        $id = $this->as($admin)->postJson('/api/v1/activities', [
+            'workspace_id' => $brand->id,
+            'assignee_id' => $assigneeId,
+            'title' => $title,
+            'briefing' => 'Client visibility coverage.',
+            'channel' => 'instagram',
+            'format' => 'post',
+        ])->assertCreated()->json('id');
+
+        if ($status !== 'todo') {
+            $this->as($admin)->patchJson("/api/v1/activities/{$id}", ['status' => $status])->assertOk();
+        }
+
+        return $id;
     }
 
     /** Builds an agency with two brands and a designer. */

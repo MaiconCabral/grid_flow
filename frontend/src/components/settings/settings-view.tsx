@@ -10,6 +10,7 @@ import {
   type AgencyAppearance,
 } from "@/lib/agency-theme";
 import { ApiError, api } from "@/lib/api-client";
+import { showVisualPlaceholders } from "@/lib/placeholders";
 import type { AuthUser } from "@/lib/session";
 
 type Plan = {
@@ -95,7 +96,7 @@ export function SettingsView() {
       <header>
         <p className="mb-3 text-[9px] font-bold tracking-[1.4px] text-muted uppercase">Manage</p>
         <h1 className="font-display text-[30px] leading-[1.18] font-extrabold tracking-[-1.3px]">Settings</h1>
-        <p className="mt-2 text-[13px] text-muted">Agency details, colors, and the current subscription.</p>
+        <p className="mt-2 text-[13px] text-muted">{showVisualPlaceholders ? "Agency details, colors, and the current subscription." : "Agency details and colors."}</p>
       </header>
 
       <div role="tablist" aria-label="Settings" className="mt-8 flex w-fit gap-1 rounded-[9px] bg-card p-1">
@@ -103,7 +104,7 @@ export function SettingsView() {
           [
             ["agency", "Agency"],
             ["appearance", "Appearance"],
-            ["plans", "Plans"],
+            ...(showVisualPlaceholders ? [["plans", "Plans"] as const] : []),
           ] as const
         ).map(([value, label]) => (
           <button
@@ -207,7 +208,7 @@ export function SettingsView() {
         </section>
       ) : null}
 
-      {tab === "plans" ? (
+      {showVisualPlaceholders && tab === "plans" ? (
         <section className="mt-4 grid gap-3 md:grid-cols-3">
           {settings.plans.map((plan) => {
             const current = plan.id === settings.plan;

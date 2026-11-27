@@ -23,6 +23,7 @@ class StoreActivityCommentRequest extends FormRequest
             'parent_id' => ['nullable', 'integer'],
             'version_id' => ['nullable', 'integer'],
             'is_internal' => ['sometimes', 'boolean'],
+            'scope' => ['sometimes', 'in:asset,copy'],
         ];
     }
 }

@@ -45,7 +45,9 @@ class ActivityPayload
             ],
             'assets_count' => $activity->versions->count(),
             'events_count' => $activity->events_count ?? $activity->events->count(),
-            'cover_url' => $slides[0] ?? null,
+            'headline' => $current?->headline,
+            'caption' => $current?->caption,
+            'cover_url' => $this->coverUrl($current) ?? ($slides[0] ?? null),
             'video_url' => $this->videoUrl($current),
             'document' => $this->document($current),
             'slides' => $slides,
@@ -122,6 +124,7 @@ class ActivityPayload
             'files' => $version->files->sortBy('position')->values()->map(fn (ActivityVersionFile $file) => [
                 'id' => $file->id,
                 'position' => $file->position,
+                'role' => $file->role,
                 'name' => $file->name,
                 'url' => $this->address($file->path, $file->url),
             ]),
@@ -141,6 +144,8 @@ class ActivityPayload
 
         return $this->assetRow($version) + [
             'number' => $version->number,
+            'headline' => $version->headline,
+            'caption' => $version->caption,
             'is_current' => $version->is_current,
             'annotations' => $annotations->values()->map(fn (ActivityAnnotation $annotation) => [
                 'id' => $annotation->id,
@@ -159,6 +164,7 @@ class ActivityPayload
         return [
             'id' => $comment->id,
             'body' => $comment->body,
+            'scope' => $comment->scope,
             'parent_id' => $comment->parent_id,
             'version_id' => $comment->activity_version_id,
             'annotation_id' => $comment->annotation_id,
@@ -169,6 +175,18 @@ class ActivityPayload
             'role' => $comment->author?->role?->value,
             'created_at' => $comment->created_at?->toIso8601String(),
         ];
+    }
+
+    /** Returns the cover image when the version has one. */
+    private function coverUrl(?ActivityVersion $version): ?string
+    {
+        if ($version === null) {
+            return null;
+        }
+
+        $cover = $version->files->firstWhere('role', 'cover');
+
+        return $cover === null ? null : $this->address($cover->path, $cover->url);
     }
 
     /** Returns the file name and address when the current version is a document. */
