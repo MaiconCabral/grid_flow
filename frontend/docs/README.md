@@ -18,4 +18,4 @@ O texto de escopo cita `middleware.ts`. Nesta versão do Next a proteção de ro
 | Notificações in-app | [etapas/notificacoes.md](etapas/notificacoes.md) | Implementada |
 | 8. Upload em nuvem e tempo real | [../../docs/pendencias.md](../../docs/pendencias.md) | Não iniciada |
 
-A árvore de pastas e o que cada etapa futura muda estão em [arquitetura.md](arquitetura.md). A etapa em aberto e os controles ocultos estão em [pendencias.md](../../docs/pendencias.md).
+A árvore de pastas e o que cada etapa futura muda estão em [arquitetura.md](arquitetura.md). A etapa em aberto e os controles ocultos estão em [pendencias.md](../../docs/pendencias.md). O servidor de teste, com GitHub Actions e Docker na VPS, está em [deploy/README.md](../../deploy/README.md).

@@ -1,0 +1,85 @@
+# GridFlow stack for the test server. Run from the folder with the .env (see deploy/README.md):
+#   docker compose pull && docker compose up -d
+#
+# router   the only entry; Nginx Proxy Manager forwards grid.<domain> to it
+# api      Laravel (PHP-FPM + nginx) · web: Next.js · mysql: one database
+#
+# Networks:
+#   grid_proxy     shared only by Nginx Proxy Manager and the router (create it once, see README)
+#   grid_internal  router, api, web and mysql; nothing else reaches it
+#
+# Services repeat their settings on purpose: the Hostinger Docker panel
+# cannot read YAML anchors (&app / <<: *app).
+
+name: grid
+
+services:
+  router:
+    image: nginx:1.27-alpine
+    container_name: grid-router
+    restart: unless-stopped
+    volumes:
+      - ./nginx/router.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - api
+      - web
+    networks:
+      - internal
+      - proxy
+
+  api:
+    image: ghcr.io/${GHCR_NAMESPACE}/grid-api:${IMAGE_TAG:-latest}
+    env_file: .env
+    restart: unless-stopped
+    environment:
+      # Caches config, routes, views and events on start; migrations run in the deploy job.
+      AUTORUN_ENABLED: "true"
+      AUTORUN_LARAVEL_MIGRATION: "false"
+      AUTORUN_LARAVEL_STORAGE_LINK: "true"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - storage:/var/www/html/storage
+    networks:
+      - internal
+
+  web:
+    image: ghcr.io/${GHCR_NAMESPACE}/grid-web:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    networks:
+      - internal
+
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      TZ: America/Sao_Paulo
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - internal
+
+volumes:
+  mysql-data:
+  storage:
+
+networks:
+  internal:
+  # Dedicated network between Nginx Proxy Manager and the router. It is created outside this
+  # stack (docker network create grid_proxy) and NPM is connected to it, so NPM reaches
+  # grid-router by name without joining the networks of other projects.
+  proxy:
+    external: true
+    name: ${NPM_NETWORK:-grid_proxy}

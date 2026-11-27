@@ -1,0 +1,10 @@
+**/.git
+**/.env
+**/.env.*
+!**/.env.example
+**/node_modules
+**/vendor
+**/.next
+backend/storage
+backend/bootstrap/cache
+frontend/.next

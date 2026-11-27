@@ -17,7 +17,7 @@ A stack deste repositório é Laravel 12 e PHP 8.2, com SQLite no ambiente local
 | Notificações in-app | [etapas/notificacoes.md](etapas/notificacoes.md) | Implementada |
 | 7. Upload em nuvem e tempo real | [../../docs/pendencias.md](../../docs/pendencias.md) | Não iniciada |
 
-A visão geral do isolamento e dos papéis está em [arquitetura.md](arquitetura.md). A etapa em aberto e os controles ocultos estão em [pendencias.md](../../docs/pendencias.md).
+A visão geral do isolamento e dos papéis está em [arquitetura.md](arquitetura.md). A etapa em aberto e os controles ocultos estão em [pendencias.md](../../docs/pendencias.md). O servidor de teste, com GitHub Actions e Docker na VPS, está em [deploy/README.md](../../deploy/README.md).
 
 ## O que cada etapa futura entrega
 
