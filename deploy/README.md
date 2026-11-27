@@ -7,12 +7,14 @@ Nada desta pasta muda o desenvolvimento local, que continua com XAMPP, `php arti
 ## Como funciona
 
 ```text
-Internet → NPM (80/443, certificado de grid.<dominio>)
-         → grid-router (nginx, só na rede do NPM, sem porta pública)
+Internet → NPM (80/443, gridflow.maiconcabral.com.br)
+         → grid-router (nginx, rede grid_proxy, sem porta pública)
               /api, /storage, /up → api   (Laravel: PHP-FPM + nginx)
               o resto             → web   (Next.js)
          mysql 8.4, um banco (grid_flow)
 ```
+
+Os nomes não seguem a pasta. A pasta é `/opt/gridflow`, a rede é `grid_proxy` e o container que o NPM alcança é `grid-router`.
 
 A agência não usa subdomínio. Ela entra no caminho `/{slug}` e no header `X-Tenant-ID`. Um nome de host basta, sem certificado wildcard.
 
@@ -33,13 +35,11 @@ A rede `grid_proxy` é só deste projeto. O odontoApp continua na `odonto_proxy`
 
 ### 1. DNS
 
-No painel do domínio, crie um registro A apontando para o IP da VPS:
-
-- `grid`
+No painel do domínio, crie um registro A apontando para o IP da VPS. No servidor de teste o nome é `gridflow`, e o host público ficou `gridflow.maiconcabral.com.br`.
 
 ### 2. Certificado no NPM
 
-Em **SSL Certificates → Add → Let's Encrypt**, peça o certificado de `grid.<dominio>`. Um nome só, pelo desafio HTTP, chega. Não precisa de wildcard.
+Em **SSL Certificates → Add → Let's Encrypt**, peça o certificado de `gridflow.maiconcabral.com.br`. Um nome só, pelo desafio HTTP, chega. Não precisa de wildcard.
 
 ### 3. Docker e pasta da stack
 
@@ -71,9 +71,10 @@ Copie para `/opt/gridflow` os arquivos `docker-compose.yml` e `nginx/`. Depois d
 cp .env.example /opt/gridflow/.env   # e preencha
 ```
 
-- Troque `grid.example.com` pelo domínio real em `APP_URL`, `MAIL_FROM_ADDRESS` e `NEXT_PUBLIC_API_URL`.
+- O domínio real entra em `APP_URL`, `MAIL_FROM_ADDRESS` e `NEXT_PUBLIC_API_URL`. No teste: `https://gridflow.maiconcabral.com.br`.
 - `GHCR_NAMESPACE` é o usuário ou a organização do GitHub, em minúsculas, o mesmo dono dos pacotes `grid-api` e `grid-web`.
-- Preencha `MYSQL_ROOT_PASSWORD` e `DB_PASSWORD`.
+- Preencha `MYSQL_ROOT_PASSWORD` e `DB_PASSWORD` só com letras e números. Uma senha que começa com `!` passa pelo shell do healthcheck, o MySQL fica unhealthy e o `up --wait` para. Sem `$`, aspas ou espaço.
+- `APP_KEY` e as senhas ficam só neste `.env`. O `deploy/.env.example` permanece sem esses valores. O `backend/.env` do XAMPP não serve aqui.
 - Gere a `APP_KEY` com:
 
   ```bash
@@ -86,9 +87,17 @@ cp .env.example /opt/gridflow/.env   # e preencha
 
 ### 5. Proxy host no NPM
 
-- **Domain names:** `grid.<dominio>`.
-- **Forward:** `http`, host `grid-router`, porta `80`.
+- **Domain names:** `gridflow.maiconcabral.com.br`.
+- **Forward:** `http`, host `grid-router`, porta `80`. O hostname é o container, não a pasta. `gridflow` nesse campo devolve 502.
 - **SSL:** o certificado desse nome, com *Force SSL* e *HTTP/2*.
+
+Nesta VPS o container do NPM se chama `nginx-proxy-manager`. Ele já entra na `grid_proxy`. A imagem dele não tem `wget`. O teste usa `curl`:
+
+```bash
+docker exec nginx-proxy-manager curl -fsS http://grid-router/up
+```
+
+A resposta certa é o HTML do Laravel com **Application up**.
 
 ### 6. Primeira subida
 
@@ -102,11 +111,11 @@ docker compose exec api php artisan storage:link
 docker compose exec api php artisan db:seed --force
 ```
 
-O seed roda uma vez. Ele cria as agências de demonstração. A senha de todas as contas é `password`. A lista está em [01-autenticacao.md](../backend/docs/etapas/01-autenticacao.md). Para entrar: `https://grid.<dominio>/login`, com `jordan@agency-alpha.test`.
+O seed roda uma vez, na mão. O workflow não o inclui. Sem ele o login responde `These credentials do not match our records`, porque as tabelas existem e os usuários não. A senha de todas as contas é `password`. A lista está em [01-autenticacao.md](../backend/docs/etapas/01-autenticacao.md). Para entrar: `https://gridflow.maiconcabral.com.br/login`, com `jordan@agency-alpha.test`.
 
-Os deploys seguintes não rodam o seed, para não recriar o que já foi testado.
+Não rode o seed de novo. Ele recria as agências.
 
-Confira `https://grid.<dominio>/up`.
+Confira `https://gridflow.maiconcabral.com.br/up`.
 
 ## GitHub Actions
 
@@ -120,13 +129,28 @@ A imagem do Next recebe `NEXT_PUBLIC_API_URL=https://<DEPLOY_DOMAIN>` no build. 
 Configure em **Settings → Secrets and variables → Actions**:
 
 - **Secrets:** `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY` (chave privada sem senha) e `VPS_PORT` (opcional, padrão 22).
-- **Variable:** `DEPLOY_DOMAIN`, por exemplo `grid.seudominio.com.br`.
+- **Variable:** `DEPLOY_DOMAIN`. No teste: `gridflow.maiconcabral.com.br`, sem `https://`.
 
 O deploy usa o ambiente `demo`. Crie-o em **Settings → Environments** se quiser exigir aprovação manual.
 
 O token do próprio workflow faz o login no GHCR durante o deploy, então a VPS não precisa guardar credenciais. Para ver as imagens sem login, torne os pacotes públicos em **Packages → Package settings**.
 
 O primeiro deploy só acontece quando este código está na `main`.
+
+## Ajustes da primeira subida
+
+A primeira publicação em `gridflow.maiconcabral.com.br` passou por estes pontos. O código e este guia já ficaram com o resultado.
+
+| O que apareceu | Causa | O que ficou |
+| --- | --- | --- |
+| `bootstrap/cache directory must be present` na imagem `grid-api` | O `.dockerignore` tira essa pasta, e o `package:discover` rodava antes do `mkdir` | `deploy/api.Dockerfile` cria `bootstrap/cache` e as pastas de `storage` antes do `composer dump-autoload` |
+| `sed: can't read .env` | O workflow lia `/opt/grid` e o arquivo estava em outra pasta | Pasta da stack e destino do Actions: `/opt/gridflow`. O projeto inteiro não vai por FTP. Só o `.env` nasce na VPS |
+| `container grid-mysql-1 is unhealthy` | A senha de root começava com `!`. O healthcheck do MySQL devolve erro e o Compose não sobe a API | Senhas só com letras e números. Com o volume `grid_mysql-data` recém-criado e sem dados, `docker compose down` e `docker volume rm grid_mysql-data` deixam o MySQL nascer de novo |
+| `client_max_body_size directive is duplicate` e a API unhealthy | A imagem serversideup já grava esse limite a partir de `PHP_POST_MAX_SIZE`. Um segundo arquivo em `/etc/nginx/conf.d` derruba o nginx da API | O `printf` saiu do Dockerfile. Os 110 MB continuam em `PHP_POST_MAX_SIZE` e `PHP_UPLOAD_MAX_FILE_SIZE`. O `router.conf` mantém o limite do nginx da frente |
+| `https://…/up` com 502, com os containers saudáveis | O proxy host apontava para `gridflow`, e não existe container com esse nome | Forward hostname `grid-router`, porta `80`, scheme `http`. A rede continua `grid_proxy`, a mesma em que o `nginx-proxy-manager` já está. Não usar `gridflow_proxy` |
+| Login com `These credentials do not match our records` | O deploy migra e não semeia | `docker compose exec api php artisan db:seed --force` uma vez |
+
+O HTML de `/up` com **Application up** confirma o caminho NPM → `grid-router` → API. O teste de dentro do NPM é `docker exec nginx-proxy-manager curl -fsS http://grid-router/up`.
 
 ## Operação
 
