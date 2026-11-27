@@ -14,9 +14,9 @@ COPY --chown=www-data:www-data backend/composer.json backend/composer.lock ./
 RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-interaction --no-progress
 
 COPY --chown=www-data:www-data backend/ ./
-RUN composer dump-autoload --optimize --no-dev \
-    && php artisan package:discover --ansi \
-    && mkdir -p storage/app/public storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
+RUN mkdir -p storage/app/public storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
+    && composer dump-autoload --optimize --no-dev \
+    && php artisan package:discover --ansi
 
 # A carousel may send ten 10 MB files. Laravel boots on /up.
 ENV HEALTHCHECK_PATH=/up \
