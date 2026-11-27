@@ -4,6 +4,8 @@ import { useSyncExternalStore } from "react";
 
 export type AgencyTheme = "dark" | "light";
 
+export type AgencyLocale = "en" | "pt";
+
 export type AgencyAppearance = {
   name: string;
   slug: string;
@@ -12,6 +14,7 @@ export type AgencyAppearance = {
   dark_background: string;
   accent: string;
   plan: string;
+  locale?: AgencyLocale;
 };
 
 export const lightBackgrounds = [

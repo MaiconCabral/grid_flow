@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Bell, Check, ChevronDown, Moon, Sun, UserCog } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { agency, currentUser } from "@/data/mock";
-import { notificationAge, type AppNotification } from "@/lib/notifications";
+import { useI18n } from "@/lib/i18n";
+import { notificationAge, notificationText, type AppNotification } from "@/lib/notifications";
 import { useTheme } from "@/components/theme-provider";
 import { notifyError, notifySuccess } from "@/lib/alerts";
 import { publishAgency, useAgency, type AgencyAppearance } from "@/lib/agency-theme";
@@ -39,6 +40,7 @@ export function Topbar({
   unread?: number;
   onOpenNotification?: (item: AppNotification) => void;
 }) {
+  const { t } = useI18n();
   const { theme } = useTheme();
   const storedAgency = useAgency();
   const [savingTheme, setSavingTheme] = useState(false);
@@ -70,9 +72,9 @@ export function Topbar({
         body: JSON.stringify({ theme: theme === "dark" ? "light" : "dark" }),
       });
       publishAgency(saved);
-      void notifySuccess("Theme updated.");
+      void notifySuccess(t("top.themeUpdated"));
     } catch (caught) {
-      void notifyError(caught instanceof ApiError ? caught.message : "Could not update the theme.");
+      void notifyError(caught instanceof ApiError ? caught.message : t("top.themeFailed"));
     } finally {
       setSavingTheme(false);
     }
@@ -144,7 +146,7 @@ export function Topbar({
         <div className="relative">
           <button
             type="button"
-            aria-label="Toggle theme"
+            aria-label={t("top.toggleTheme")}
             disabled={!canEditTheme || savingTheme}
             onClick={() => void changeTheme()}
             className="grid size-[35px] place-items-center rounded-[9px] bg-raised text-lime hover:bg-soft disabled:opacity-50"
@@ -156,7 +158,7 @@ export function Topbar({
         <div className="relative">
           <button
             type="button"
-            aria-label="Notifications"
+            aria-label={t("top.notifications")}
             onClick={() => toggle("bell")}
             className="relative grid size-[35px] place-items-center rounded-[9px] bg-raised text-muted hover:bg-soft hover:text-foreground"
           >
@@ -165,8 +167,8 @@ export function Topbar({
           </button>
           {menu === "bell" ? (
             <div className="absolute top-11 right-0 z-30 w-[290px] rounded-[13px] bg-raised p-2.5 shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
-              <p className="px-2 py-1.5 text-[9px] font-bold tracking-[1px] text-faint uppercase">Notifications</p>
-              {notifications.length === 0 ? <p className="px-2 py-2.5 text-[11px] text-muted">No notifications yet.</p> : null}
+              <p className="px-2 py-1.5 text-[9px] font-bold tracking-[1px] text-faint uppercase">{t("top.notifications")}</p>
+              {notifications.length === 0 ? <p className="px-2 py-2.5 text-[11px] text-muted">{t("top.none")}</p> : null}
               <ul className="max-h-80 overflow-y-auto">
                 {notifications.map((item) => (
                   <li key={item.id}>
@@ -178,8 +180,8 @@ export function Topbar({
                       }}
                       className="block w-full rounded-lg px-2 py-2.5 text-left text-[11px] hover:bg-soft"
                     >
-                      <span className={item.read_at ? "text-muted" : "font-semibold"}>{item.body}</span>
-                      <span className="mt-0.5 block text-[10px] text-faint">{notificationAge(item.created_at)}</span>
+                      <span className={item.read_at ? "text-muted" : "font-semibold"}>{notificationText(item, t)}</span>
+                      <span className="mt-0.5 block text-[10px] text-faint">{notificationAge(item.created_at, t)}</span>
                     </button>
                   </li>
                 ))}
@@ -208,7 +210,7 @@ export function Topbar({
               {user?.roleKey === "agency_admin" ? (
                 <>
                   <Link href={`/${tenantSlug}/settings`} onClick={() => setMenu(null)} className="block rounded-lg px-2 py-2.5 text-[11px] text-muted hover:bg-soft hover:text-foreground">
-                    Account preferences
+                    {t("top.account")}
                   </Link>
                   {showVisualPlaceholders ? (
                     <Link href={`/${tenantSlug}/team`} onClick={() => setMenu(null)} className="block rounded-lg px-2 py-2.5 text-[11px] text-muted hover:bg-soft hover:text-foreground">
@@ -218,7 +220,7 @@ export function Topbar({
                 </>
               ) : null}
               <button type="button" onClick={signOut} className="block w-full rounded-lg px-2 py-2.5 text-left text-[11px] text-muted hover:bg-soft hover:text-foreground">
-                Sign out
+                {t("top.signOut")}
               </button>
             </div>
           ) : null}

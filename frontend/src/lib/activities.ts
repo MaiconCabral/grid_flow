@@ -1,3 +1,6 @@
+import type { AgencyLocale } from "@/lib/agency-theme";
+import { translate, type MessageKey } from "@/lib/i18n/messages";
+
 export type StageId = "todo" | "production" | "pending" | "approved" | "scheduled";
 
 /** Statuses the client feed shows. To Do and In Production stay with the agency. */
@@ -140,19 +143,55 @@ const channelTone: Record<string, string> = {
   tiktok: "text-[#d6ff8a]",
 };
 
+type Copy = (key: MessageKey, vars?: Record<string, string | number>) => string;
+
+const statusKey: Record<string, MessageKey> = {
+  todo: "status.todo",
+  production: "status.production",
+  pending: "status.pending",
+  approved: "status.approved",
+  scheduled: "status.scheduled",
+};
+
+const formatKey: Record<string, MessageKey> = {
+  post: "format.post",
+  carousel: "format.carousel",
+  story: "format.story",
+  video: "format.video",
+  blog: "format.blog",
+};
+
+const formatPluralKey: Record<string, MessageKey> = {
+  post: "format.post.plural",
+  carousel: "format.carousel.plural",
+  story: "format.story.plural",
+  video: "format.video.plural",
+  blog: "format.blog.plural",
+};
+
+const english: Copy = (key, vars) => translate("en", key, vars);
+
 /** Returns the English name of a channel. */
 export function channelLabel(value: string) {
   return channels.find((item) => item.value === value)?.label ?? value;
 }
 
-/** Returns the English name of a format. */
-export function formatLabel(value: string) {
-  return formats.find((item) => item.value === value)?.label ?? value;
+/** Returns the name of a format in the active language. */
+export function formatLabel(value: string, t: Copy = english) {
+  const key = formatKey[value];
+  return key ? t(key) : value;
 }
 
-/** Returns the English name of a column. */
-export function statusLabel(value: string) {
-  return stages.find((item) => item.id === value)?.label ?? value;
+/** Returns the plural name of a format in the active language. */
+export function formatPlural(value: string, t: Copy = english) {
+  const key = formatPluralKey[value];
+  return key ? t(key) : value;
+}
+
+/** Returns the name of a column in the active language. */
+export function statusLabel(value: string, t: Copy = english) {
+  const key = statusKey[value];
+  return key ? t(key) : value;
 }
 
 /** Picks the status chip colors on a client card. */
@@ -163,8 +202,8 @@ export function statusBadgeClass(status: string) {
 }
 
 /** Builds the badge text shown on a card. */
-export function typeLabel(channel: string, format: string) {
-  return `${channelLabel(channel)} ${formatLabel(format)}`;
+export function typeLabel(channel: string, format: string, t: Copy = english) {
+  return `${channelLabel(channel)} ${formatLabel(format, t)}`;
 }
 
 /** Picks the badge color for a channel. */
@@ -187,9 +226,8 @@ export function deliveryMode(format: string): "image" | "slides" | "blog" | "lin
 }
 
 /** Explains what the assignee sends and what the client reviews. */
-export function deliveryNotice(format: string) {
-  if (format === "blog") return "The assignee adds a cover and the article file. The client reviews both.";
-  return "The assignee adds a title and caption with the creative. The client reviews both.";
+export function deliveryNotice(format: string, t: Copy = english) {
+  return format === "blog" ? t("board.noticeBlog") : t("board.noticeSocial");
 }
 
 /** Reads the extension that decides how a text file is shown. */
@@ -227,28 +265,31 @@ export function assetUrl(path: string | null) {
 }
 
 /** Formats a due date for the card. */
-export function dateLabel(iso: string | null) {
-  if (!iso) return "No date";
+export function dateLabel(iso: string | null, locale: AgencyLocale = "en", t: Copy = english) {
+  if (!iso) return t("date.none");
   const [year, month, day] = iso.split("-").map(Number);
-  return new Date(year, month - 1, day).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return new Date(year, month - 1, day).toLocaleDateString(locale === "pt" ? "pt-BR" : "en-US", { month: "short", day: "numeric" });
 }
 
 /** Formats the moment an event was recorded. */
-export function eventWhen(iso: string | null) {
+export function eventWhen(iso: string | null, locale: AgencyLocale = "en") {
   if (!iso) return "";
-  return new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  return new Date(iso).toLocaleString(locale === "pt" ? "pt-BR" : "en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 }
 
 /** Describes one history entry in a sentence. */
-export function eventSentence(event: ActivityEvent) {
-  if (event.type === "created") return "Created the task";
-  if (event.type === "approved") return "Approved the task";
-  if (event.type === "asset_added") return `Added ${event.note ?? "a file"}`;
-  if (event.type === "revision_requested") return event.note ? `Requested changes: ${event.note}` : "Requested changes";
+export function eventSentence(event: ActivityEvent, t: Copy = english) {
+  if (event.type === "created") return t("event.created");
+  if (event.type === "approved") return t("event.approved");
+  if (event.type === "asset_added") return event.note ? t("event.added", { name: event.note }) : t("event.addedFile");
+  if (event.type === "revision_requested") return event.note ? t("event.changesNote", { note: event.note }) : t("event.changes");
   if (event.type === "status_changed") {
-    return `Moved from ${statusLabel(event.from_status ?? "")} to ${statusLabel(event.to_status ?? "")}`;
+    return t("event.moved", {
+      from: statusLabel(event.from_status ?? "", t),
+      to: statusLabel(event.to_status ?? "", t),
+    });
   }
-  return "Updated the task";
+  return t("event.updated");
 }
 
 /** Builds two initials from a person's name. */

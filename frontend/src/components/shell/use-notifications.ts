@@ -4,11 +4,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { notifyError } from "@/lib/alerts";
 import { ApiError, api } from "@/lib/api-client";
+import { useI18n } from "@/lib/i18n";
 import { applyNotification, type AppNotification, type NotificationFeed } from "@/lib/notifications";
 
 /** Polls the notice list once a minute and keeps the bell in sync. */
 export function useNotifications() {
   const router = useRouter();
+  const { t } = useI18n();
   const [items, setItems] = useState<AppNotification[]>([]);
   const [unread, setUnread] = useState(0);
   const [alert, setAlert] = useState<AppNotification | null>(null);
@@ -39,11 +41,11 @@ export function useNotifications() {
       started.current = true;
     } catch (error) {
       if (!started.current) {
-        notifyError(error instanceof ApiError ? error.message : "Could not load notifications.");
+        notifyError(error instanceof ApiError ? error.message : t("notice.loadFailed"));
       }
       started.current = true;
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     let active = true;
@@ -68,7 +70,7 @@ export function useNotifications() {
         setItems(next);
         setUnread((count) => Math.max(0, count - 1));
       } catch (error) {
-        notifyError(error instanceof ApiError ? error.message : "Could not update the notification.");
+        notifyError(error instanceof ApiError ? error.message : t("notice.updateFailed"));
       }
     }
     router.push(item.href);

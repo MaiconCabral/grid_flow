@@ -5,6 +5,8 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useTheme } from "@/components/theme-provider";
 import { notifyError, notifySuccess } from "@/lib/alerts";
 import { ApiError, api } from "@/lib/api-client";
+import { useI18n } from "@/lib/i18n";
+import type { MessageKey } from "@/lib/i18n/messages";
 import type { AuthUser } from "@/lib/session";
 
 type Member = {
@@ -58,23 +60,20 @@ function blankClientRecord(tab: "brand" | "user" = "user"): Extract<Draft, { kin
   };
 }
 
-const roleLabels: Record<string, string> = {
-  agency_admin: "Agency Admin",
-  designer: "Designer",
-  copywriter: "Copywriter",
-  client: "Client",
+const roleKeys: Record<string, MessageKey> = {
+  agency_admin: "role.agency_admin",
+  designer: "role.designer",
+  copywriter: "role.copywriter",
+  client: "role.client",
 };
 
-const teamRoles = [
-  { value: "agency_admin", label: "Agency Admin" },
-  { value: "designer", label: "Designer" },
-  { value: "copywriter", label: "Copywriter" },
-];
+const teamRoles = ["agency_admin", "designer", "copywriter"] as const;
 
 const buttonStyle = { fontSize: 11, fontWeight: 700, lineHeight: "16.5px" } as const;
 
 /** Renders team and client management for the agency admin. */
 export function TeamView() {
+  const { t } = useI18n();
   const [role, setRole] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [members, setMembers] = useState<Member[]>([]);
@@ -104,10 +103,10 @@ export function TeamView() {
         return loadLists().then(() => setReady(true));
       })
       .catch((caught) => {
-        void notifyError(caught instanceof ApiError ? caught.message : "Could not load the team.");
+        void notifyError(caught instanceof ApiError ? caught.message : t("team.loadFailed"));
         setReady(true);
       });
-  }, []);
+  }, [t]);
 
   /** Opens the lightbox for a teammate, brand, or client. */
   function openDraft(next: Draft) {
@@ -148,9 +147,9 @@ export function TeamView() {
       }
       await loadLists();
       setDraft(null);
-      void notifySuccess(savedLabel(draft));
+      void notifySuccess(savedLabel(draft, t));
     } catch (caught) {
-      void notifyError(caught instanceof ApiError ? caught.message : "Could not save.");
+      void notifyError(caught instanceof ApiError ? caught.message : t("team.saveFailed"));
     } finally {
       setPending(false);
     }
@@ -160,7 +159,7 @@ export function TeamView() {
   async function remove() {
     if (!removeTarget) return;
     setPending(true);
-    const removed = removeTarget.kind === "brand" ? "Brand removed." : "User removed.";
+    const removed = removeTarget.kind === "brand" ? t("team.brandRemoved") : t("team.userRemoved");
     try {
       const path = removeTarget.kind === "brand" ? `/workspaces/${removeTarget.id}` : `/users/${removeTarget.id}`;
       await api(path, { method: "DELETE" });
@@ -169,14 +168,14 @@ export function TeamView() {
       setDraft(null);
       void notifySuccess(removed);
     } catch (caught) {
-      void notifyError(caught instanceof ApiError ? caught.message : "Could not remove.");
+      void notifyError(caught instanceof ApiError ? caught.message : t("team.removeFailed"));
     } finally {
       setPending(false);
     }
   }
 
   if (!ready) {
-    return <p className="px-[38px] pt-10 text-[13px] text-muted">Loading team...</p>;
+    return <p className="px-[38px] pt-10 text-[13px] text-muted">{t("team.loading")}</p>;
   }
 
   if (role !== "agency_admin") {
@@ -184,7 +183,7 @@ export function TeamView() {
       <div className="mx-auto max-w-[1640px] px-[38px] pt-10 pb-12">
         <Header />
         <section className="mt-8 max-w-xl rounded-[14px] bg-card p-[18px]">
-          <p className="text-[13px] text-muted">This page is not available.</p>
+          <p className="text-[13px] text-muted">{t("team.unavailable")}</p>
         </section>
       </div>
     );
@@ -208,7 +207,7 @@ export function TeamView() {
 
       <section className="mt-8">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-display text-[18px] font-extrabold tracking-[-0.4px]">Team</h2>
+          <h2 className="font-display text-[18px] font-extrabold tracking-[-0.4px]">{t("team.heading")}</h2>
           <button
             type="button"
             style={buttonStyle}
@@ -217,7 +216,7 @@ export function TeamView() {
             }
             className="rounded-[9px] bg-lime px-[14px] py-[10px] text-[#17240b]"
           >
-            Add teammate
+            {t("team.add")}
           </button>
         </div>
         <ul className="flex flex-col gap-2">
@@ -226,7 +225,7 @@ export function TeamView() {
               <div>
                 <p className="text-[13px] font-bold">{member.name}</p>
                 <p className="text-[11px] text-muted">
-                  {member.email} · {roleLabels[member.role] ?? member.role}
+                  {member.email} · {roleKeys[member.role] ? t(roleKeys[member.role]) : member.role}
                 </p>
               </div>
               <RowActions
@@ -253,14 +252,14 @@ export function TeamView() {
 
       <section className="mt-8">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-display text-[18px] font-extrabold tracking-[-0.4px]">Clients</h2>
+          <h2 className="font-display text-[18px] font-extrabold tracking-[-0.4px]">{t("team.clients")}</h2>
           <button
             type="button"
             style={buttonStyle}
             onClick={() => openDraft(blankClientRecord("brand"))}
             className="rounded-[9px] bg-lime px-[14px] py-[10px] text-[#17240b]"
           >
-            Add clients
+            {t("team.addClients")}
           </button>
         </div>
         <div className="flex flex-col gap-3">
@@ -278,7 +277,7 @@ export function TeamView() {
                 />
               </div>
               <ul className="mt-3 flex flex-col gap-2">
-                {brand.clients.length === 0 ? <li className="text-[12px] text-muted">No client login yet.</li> : null}
+                {brand.clients.length === 0 ? <li className="text-[12px] text-muted">{t("team.none")}</li> : null}
                 {brand.clients.map((client) => (
                   <li key={client.id} className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] bg-raised px-3 py-2">
                     <div>
@@ -329,6 +328,7 @@ function DraftDialog({
   onSubmit: (event: FormEvent) => void;
 }) {
   const { theme } = useTheme();
+  const { t } = useI18n();
 
   useEffect(() => {
     /** Closes the lightbox when Escape is pressed. */
@@ -355,9 +355,9 @@ function DraftDialog({
       >
         <div className="flex items-start justify-between gap-3">
           <p id="team-draft-title" className="text-[13px] font-bold">
-            {draftTitle(draft)}
+            {draftTitle(draft, t)}
           </p>
-          <button type="button" aria-label="Close" onClick={onClose} className="grid size-7 place-items-center rounded-md text-muted hover:bg-raised hover:text-foreground">
+          <button type="button" aria-label={t("common.close")} onClick={onClose} className="grid size-7 place-items-center rounded-md text-muted hover:bg-raised hover:text-foreground">
             <X className="size-4" />
           </button>
         </div>
@@ -373,32 +373,32 @@ function DraftDialog({
                 style={buttonStyle}
                 className={`flex-1 rounded-[7px] px-3 py-[8px] ${draft.tab === tab ? "bg-lime text-lime-ink" : "text-muted"}`}
               >
-                {tab === "brand" ? "Brands" : "Users"}
+                {tab === "brand" ? t("team.brands") : t("team.users")}
               </button>
             ))}
           </div>
         ) : null}
         {draft.kind === "member" ? (
           <>
-            <Field label="Name" value={draft.name} onChange={(name) => onChange({ ...draft, name })} />
-            <Field label="Email" type="email" value={draft.email} onChange={(email) => onChange({ ...draft, email })} />
+            <Field label={t("team.name")} value={draft.name} onChange={(name) => onChange({ ...draft, name })} />
+            <Field label={t("team.email")} type="email" value={draft.email} onChange={(email) => onChange({ ...draft, email })} />
             <Field
-              label={draft.id === null ? "Password" : "New password"}
+              label={draft.id === null ? t("team.password") : t("team.newPassword")}
               type="password"
               required={draft.id === null}
               value={draft.password}
               onChange={(password) => onChange({ ...draft, password })}
             />
             <label className="flex flex-col gap-1 text-[11px] font-bold text-muted">
-              Role
+              {t("team.role")}
               <select
                 value={draft.role}
                 onChange={(event) => onChange({ ...draft, role: event.target.value })}
                 className="rounded-[9px] bg-raised px-3 py-2.5 text-[13px] font-normal text-foreground outline-none"
               >
-                {teamRoles.map((item) => (
-                  <option key={item.value} value={item.value}>
-                    {item.label}
+                {teamRoles.map((value) => (
+                  <option key={value} value={value}>
+                    {t(roleKeys[value])}
                   </option>
                 ))}
               </select>
@@ -406,28 +406,28 @@ function DraftDialog({
           </>
         ) : null}
         {draft.kind === "client-record" && draft.tab === "brand" ? (
-          <Field label="Brand name" value={draft.brandName} onChange={(brandName) => onChange({ ...draft, brandName })} />
+          <Field label={t("team.brandName")} value={draft.brandName} onChange={(brandName) => onChange({ ...draft, brandName })} />
         ) : null}
         {draft.kind === "client-record" && draft.tab === "user" ? (
           <>
-            <Field label="Name" value={draft.userName} onChange={(userName) => onChange({ ...draft, userName })} />
-            <Field label="Email" type="email" value={draft.email} onChange={(email) => onChange({ ...draft, email })} />
+            <Field label={t("team.name")} value={draft.userName} onChange={(userName) => onChange({ ...draft, userName })} />
+            <Field label={t("team.email")} type="email" value={draft.email} onChange={(email) => onChange({ ...draft, email })} />
             <Field
-              label={draft.userId === null ? "Password" : "New password"}
+              label={draft.userId === null ? t("team.password") : t("team.newPassword")}
               type="password"
               required={draft.userId === null}
               value={draft.password}
               onChange={(password) => onChange({ ...draft, password })}
             />
             <label className="flex flex-col gap-1 text-[11px] font-bold text-muted">
-              Brand
+              {t("team.brand")}
               <select
                 required
                 value={draft.workspaceId}
                 onChange={(event) => onChange({ ...draft, workspaceId: event.target.value })}
                 className="rounded-[9px] bg-raised px-3 py-2.5 text-[13px] font-normal text-foreground outline-none"
               >
-                <option value="">Select a brand</option>
+                <option value="">{t("team.selectBrand")}</option>
                 {brands.map((brand) => (
                   <option key={brand.id} value={brand.id}>
                     {brand.name}
@@ -439,10 +439,10 @@ function DraftDialog({
         ) : null}
         <div className="flex gap-2">
           <button type="submit" disabled={pending} style={buttonStyle} className="rounded-[9px] bg-lime px-[14px] py-[10px] text-lime-ink disabled:opacity-60">
-            {pending ? "Saving..." : "Save"}
+            {pending ? t("common.saving") : t("common.save")}
           </button>
           <button type="button" style={buttonStyle} onClick={onClose} className="rounded-[9px] bg-raised px-[14px] py-[10px] text-foreground">
-            Cancel
+            {t("common.cancel")}
           </button>
         </div>
       </form>
@@ -452,31 +452,34 @@ function DraftDialog({
 
 /** Renders the Team & Clients title. */
 function Header() {
+  const { t } = useI18n();
   return (
     <header>
-      <p className="mb-3 text-[9px] font-bold tracking-[1.4px] text-muted uppercase">Manage</p>
-      <h1 className="font-display text-[30px] leading-[1.18] font-extrabold tracking-[-1.3px]">Team & Clients</h1>
-      <p className="mt-2 text-[13px] text-muted">People who work at the agency, and the brands they serve.</p>
+      <p className="mb-3 text-[9px] font-bold tracking-[1.4px] text-muted uppercase">{t("settings.manage")}</p>
+      <h1 className="font-display text-[30px] leading-[1.18] font-extrabold tracking-[-1.3px]">{t("nav.team")}</h1>
+      <p className="mt-2 text-[13px] text-muted">{t("team.line")}</p>
     </header>
   );
 }
 
+type Copy = (key: MessageKey, vars?: Record<string, string | number>) => string;
+
 /** Builds the success message for the saved record. */
-function savedLabel(draft: Draft) {
+function savedLabel(draft: Draft, t: Copy) {
   if (draft.kind === "client-record" && draft.tab === "brand") {
-    return draft.brandId === null ? "Brand created." : "Brand updated.";
+    return draft.brandId === null ? t("team.brandCreated") : t("team.brandUpdated");
   }
   if (draft.kind === "client-record") {
-    return draft.userId === null ? "Client created." : "Client updated.";
+    return draft.userId === null ? t("team.clientCreated") : t("team.clientUpdated");
   }
-  return draft.id === null ? "Teammate created." : "Teammate updated.";
+  return draft.id === null ? t("team.teammateCreated") : t("team.teammateUpdated");
 }
 
 /** Builds the lightbox title for the open form. */
-function draftTitle(draft: Draft) {
-  if (draft.kind === "member") return draft.id === null ? "New teammate" : "Edit teammate";
-  if (draft.tab === "brand") return draft.brandId === null ? "New brand" : "Edit brand";
-  return draft.userId === null ? "New client" : "Edit client";
+function draftTitle(draft: Draft, t: Copy) {
+  if (draft.kind === "member") return draft.id === null ? t("team.newTeammate") : t("team.editTeammate");
+  if (draft.tab === "brand") return draft.brandId === null ? t("team.newBrand") : t("team.editBrand");
+  return draft.userId === null ? t("team.newClient") : t("team.editClient");
 }
 
 /** Renders a labeled text input. */
@@ -523,15 +526,16 @@ function RowActions({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  const { t } = useI18n();
   if (confirming) return <Confirm pending={pending} onCancel={onCancel} onConfirm={onConfirm} />;
 
   return (
     <div className="flex gap-2">
       <button type="button" style={buttonStyle} onClick={onEdit} className="rounded-[9px] bg-raised px-[14px] py-[10px] text-foreground">
-        Edit
+        {t("team.edit")}
       </button>
       <button type="button" style={buttonStyle} onClick={onAsk} className="rounded-[9px] bg-raised px-[14px] py-[10px] text-foreground">
-        Remove
+        {t("team.remove")}
       </button>
     </div>
   );
@@ -539,13 +543,14 @@ function RowActions({
 
 /** Asks the admin to confirm a removal. */
 function Confirm({ pending, onCancel, onConfirm }: { pending: boolean; onCancel: () => void; onConfirm: () => void }) {
+  const { t } = useI18n();
   return (
     <div className="flex gap-2">
       <button type="button" disabled={pending} style={buttonStyle} onClick={onConfirm} className="rounded-[9px] bg-lime px-[14px] py-[10px] text-[#17240b] disabled:opacity-60">
-        Confirm
+        {t("team.confirm")}
       </button>
       <button type="button" style={buttonStyle} onClick={onCancel} className="rounded-[9px] bg-raised px-[14px] py-[10px] text-foreground">
-        Cancel
+        {t("common.cancel")}
       </button>
     </div>
   );

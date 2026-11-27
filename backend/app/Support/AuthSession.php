@@ -21,6 +21,7 @@ class AuthSession
                 'dark_background' => $user->tenant->dark_background,
                 'accent' => $user->tenant->accent,
                 'plan' => $user->tenant->plan,
+                'locale' => $user->tenant->locale ?? 'en',
             ],
             'user' => [
                 'id' => $user->id,

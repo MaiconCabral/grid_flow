@@ -20,6 +20,7 @@ class Tenant extends Model
         'dark_background',
         'accent',
         'plan',
+        'locale',
     ];
 
     public function users(): HasMany

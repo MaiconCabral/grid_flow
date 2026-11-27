@@ -17,7 +17,6 @@ import {
   deliveryNotice,
   eventWhen,
   initials,
-  roleLabels,
   statusLabel,
   typeLabel,
   youtubeEmbed,
@@ -25,11 +24,14 @@ import {
   type ActivityDetail,
   type ActivityVersion,
 } from "@/lib/activities";
+import { useI18n } from "@/lib/i18n";
+import type { MessageKey } from "@/lib/i18n/messages";
 import type { AuthUser } from "@/lib/session";
 
 /** Shows one piece with its versions, pins, comments, and the client's decision. */
 export function ApprovalView() {
   const params = useParams<{ tenantSlug: string; activityId: string }>();
+  const { locale, t } = useI18n();
   const [activity, setActivity] = useState<ActivityDetail | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [versionId, setVersionId] = useState<number | null>(null);
@@ -58,7 +60,7 @@ export function ApprovalView() {
       .then((session) => {
         if (active) setUser(session.user);
       })
-      .catch((error: unknown) => notifyError(error instanceof ApiError ? error.message : "Could not load your session."));
+      .catch((error: unknown) => notifyError(error instanceof ApiError ? error.message : t("piece.sessionFailed")));
     api<ActivityDetail>(`/activities/${params.activityId}`)
       .then((detail) => {
         if (!active) return;
@@ -71,26 +73,26 @@ export function ApprovalView() {
           setMissing(true);
           return;
         }
-        notifyError(error instanceof ApiError ? error.message : "Could not load the piece.");
+        notifyError(error instanceof ApiError ? error.message : t("piece.loadFailed"));
       });
     return () => {
       active = false;
     };
-  }, [params.activityId]);
+  }, [params.activityId, t]);
 
   if (missing) {
     return (
       <div className="mx-auto max-w-[860px] px-[38px] py-16">
-        <p className="text-sm text-muted">This piece is not available.</p>
+        <p className="text-sm text-muted">{t("piece.missing")}</p>
         <Link href={user?.role === "client" ? `/${params.tenantSlug}/dashboard` : `/${params.tenantSlug}/approval`} className="mt-4 inline-block text-sm font-semibold text-lime">
-          {user?.role === "client" ? "Your pieces" : "Back to the list"}
+          {user?.role === "client" ? t("piece.yours") : t("piece.back")}
         </Link>
       </div>
     );
   }
 
   if (!activity || !user) {
-    return <p className="px-[38px] py-16 text-sm text-muted">Loading the piece...</p>;
+    return <p className="px-[38px] py-16 text-sm text-muted">{t("piece.loading")}</p>;
   }
 
   const versions = activity.versions;
@@ -168,9 +170,9 @@ export function ApprovalView() {
       setReplyTo(null);
       setPendingPin(null);
       setInternal(false);
-      notifySuccess(pendingPin ? "Pin added." : "Comment added.");
+      notifySuccess(pendingPin ? t("piece.pinAdded") : t("piece.commentAdded"));
     } catch (error) {
-      notifyError(error instanceof ApiError ? error.message : "Could not save the comment.");
+      notifyError(error instanceof ApiError ? error.message : t("piece.commentFailed"));
     } finally {
       setBusy(false);
     }
@@ -186,7 +188,7 @@ export function ApprovalView() {
       });
       setActivity(detail);
     } catch (error) {
-      notifyError(error instanceof ApiError ? error.message : "Could not update the comment.");
+      notifyError(error instanceof ApiError ? error.message : t("piece.commentUpdateFailed"));
     }
   }
 
@@ -212,9 +214,9 @@ export function ApprovalView() {
       setFiles([]);
       setCover(null);
       setUrl("");
-      notifySuccess("Version uploaded.");
+      notifySuccess(t("piece.uploaded"));
     } catch (error) {
-      notifyError(error instanceof ApiError ? error.message : "Could not upload the version.");
+      notifyError(error instanceof ApiError ? error.message : t("piece.uploadFailed"));
     } finally {
       setBusy(false);
     }
@@ -231,9 +233,9 @@ export function ApprovalView() {
         body: JSON.stringify(mode === "blog" ? { headline } : { headline, caption }),
       });
       setActivity(detail);
-      notifySuccess("Copy saved.");
+      notifySuccess(t("task.copySaved"));
     } catch (error) {
-      notifyError(error instanceof ApiError ? error.message : "Could not save the copy.");
+      notifyError(error instanceof ApiError ? error.message : t("task.copyFailed"));
     } finally {
       setBusy(false);
     }
@@ -246,9 +248,9 @@ export function ApprovalView() {
     try {
       const detail = await api<ActivityDetail>(`/activities/${activity.id}/approve`, { method: "POST" });
       setActivity(detail);
-      notifySuccess("Piece approved.");
+      notifySuccess(t("piece.approved"));
     } catch (error) {
-      notifyError(error instanceof ApiError ? error.message : "Could not approve the piece.");
+      notifyError(error instanceof ApiError ? error.message : t("piece.approveFailed"));
     } finally {
       setBusy(false);
     }
@@ -267,9 +269,9 @@ export function ApprovalView() {
       setActivity(detail);
       setNote("");
       setAsking(false);
-      notifySuccess("Revisions requested.");
+      notifySuccess(t("piece.revisionsSent"));
     } catch (error) {
-      notifyError(error instanceof ApiError ? error.message : "Could not request revisions.");
+      notifyError(error instanceof ApiError ? error.message : t("piece.revisionsFailed"));
     } finally {
       setBusy(false);
     }
@@ -283,7 +285,7 @@ export function ApprovalView() {
   return (
     <div className="mx-auto max-w-[1640px] px-[38px] pt-10 pb-12">
       <Link href={user.role === "client" ? `/${params.tenantSlug}/dashboard` : `/${params.tenantSlug}/approval`} className="text-[11px] font-bold tracking-wide text-muted uppercase">
-        {user.role === "client" ? "Your pieces" : "All pieces"}
+        {user.role === "client" ? t("piece.yours") : t("piece.all")}
       </Link>
       <header className="mt-4 flex flex-wrap items-end justify-between gap-5">
         <div>
@@ -316,20 +318,20 @@ export function ApprovalView() {
         <section className="overflow-hidden rounded-[14px] bg-card">
           <div className="flex items-center justify-between gap-3 bg-raised px-[17px] py-[15px]">
             <div>
-              <p className="text-sm font-semibold">{selected ? selected.name : "No file yet"}</p>
-              <p className="text-xs text-muted">{selected ? `Version ${selected.number} · ${selected.author ?? "Someone"} · ${eventWhen(selected.created_at)}` : mode === "link" ? "Paste a YouTube URL to start the review." : "Upload a version to start the review."}</p>
+              <p className="text-sm font-semibold">{selected ? selected.name : t("piece.noFile")}</p>
+              <p className="text-xs text-muted">{selected ? t("piece.versionLine", { number: selected.number, author: selected.author ?? t("date.someone"), when: eventWhen(selected.created_at, locale) }) : mode === "link" ? t("piece.paste") : t("piece.uploadStart")}</p>
             </div>
-            <button type="button" aria-label="Download file" onClick={download} disabled={!preview} className="grid size-8 place-items-center rounded-lg hover:bg-soft disabled:opacity-40">
+            <button type="button" aria-label={t("piece.download")} onClick={download} disabled={!preview} className="grid size-8 place-items-center rounded-lg hover:bg-soft disabled:opacity-40">
               <Download className="size-4" />
             </button>
           </div>
           <div className="bg-raised p-5">
             <div className="mb-3 flex gap-2">
               <button type="button" onClick={() => openPreview("creative")} className={`rounded-full px-3 py-1.5 text-[11px] font-bold ${previewTab === "creative" ? "bg-lime text-lime-ink" : "text-muted"}`}>
-                Creative
+                {t("piece.creative")}
               </button>
               <button type="button" onClick={() => openPreview("copy")} className={`rounded-full px-3 py-1.5 text-[11px] font-bold ${previewTab === "copy" ? "bg-lime text-lime-ink" : "text-muted"}`}>
-                Copy
+                {t("piece.copy")}
               </button>
             </div>
             {previewTab === "copy" ? (
@@ -350,24 +352,24 @@ export function ApprovalView() {
             )}
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3 px-1">
               <div className="flex items-center gap-2">
-                <span className="text-xs text-muted">Version</span>
+                <span className="text-xs text-muted">{t("piece.version")}</span>
                 {versions.map((item) => (
                   <button key={item.id} type="button" onClick={() => { setVersionId(item.id); setSlide(0); setPendingPin(null); }} className={`rounded-[5px] px-2 py-1.5 text-[10px] ${item.id === selected?.id ? "bg-lime-dark font-semibold text-lime" : "text-muted"}`}>
                     v{item.number}
-                    {item.is_current ? <span className="ml-1 opacity-80">Current</span> : null}
+                    {item.is_current ? <span className="ml-1 opacity-80">{t("piece.current")}</span> : null}
                   </button>
                 ))}
               </div>
-              <p className="text-xs text-muted">{previewTab === "copy" ? "Comments here stay with the copy" : canPin ? "Click anywhere to add a pin" : "This file has no pins"}{selected ? ` · viewing v${selected.number}` : ""}</p>
+              <p className="text-xs text-muted">{previewTab === "copy" ? t("piece.copyComments") : canPin ? t("piece.clickPin") : t("piece.noPins")}{selected ? ` · ${t("piece.viewing", { number: selected.number })}` : ""}</p>
             </div>
             {canUpload ? (
               <form onSubmit={upload} className="mt-4 grid gap-3 border-t border-line pt-4">
-                <p className="text-xs text-muted">{deliveryNotice(activity.format)}</p>
+                <p className="text-xs text-muted">{deliveryNotice(activity.format, t)}</p>
                 {previewTab === "creative" ? (
                   <>
-                    <input required value={headline} onChange={(event) => setHeadline(event.target.value)} maxLength={160} placeholder="Title" aria-label="Title" className="rounded-[9px] bg-card px-3 py-2 text-[13px] outline-none" />
+                    <input required value={headline} onChange={(event) => setHeadline(event.target.value)} maxLength={160} placeholder={t("task.title")} aria-label={t("task.title")} className="rounded-[9px] bg-card px-3 py-2 text-[13px] outline-none" />
                     {mode === "blog" ? null : (
-                      <textarea required value={caption} onChange={(event) => setCaption(event.target.value)} maxLength={5000} rows={3} placeholder="Caption" aria-label="Caption" className="rounded-[9px] bg-card px-3 py-2 text-[13px] outline-none" />
+                      <textarea required value={caption} onChange={(event) => setCaption(event.target.value)} maxLength={5000} rows={3} placeholder={t("task.caption")} aria-label={t("task.caption")} className="rounded-[9px] bg-card px-3 py-2 text-[13px] outline-none" />
                     )}
                   </>
                 ) : null}
@@ -379,7 +381,7 @@ export function ApprovalView() {
                   )}
                   {mode === "blog" ? <CoverButton file={cover} onPick={setCover} /> : null}
                   <button type="submit" disabled={busy} className="rounded-[9px] bg-lime px-3 py-2 text-[11px] font-bold text-lime-ink disabled:opacity-60">
-                    {busy ? "Saving..." : "Upload version"}
+                    {busy ? t("common.saving") : t("piece.uploadVersion")}
                   </button>
                 </div>
               </form>
@@ -399,7 +401,7 @@ export function ApprovalView() {
           {tab === "comments" ? (
             <>
               <div className="px-4 pt-4">
-                <h2 className="font-semibold">Feedback thread</h2>
+                <h2 className="font-semibold">{t("piece.thread")}</h2>
                 <p className="text-xs text-muted">{thread.length} comments{selected ? ` · v${selected.number}` : ""}</p>
               </div>
               <ul className="flex-1 space-y-4 overflow-auto px-4 py-4">
@@ -410,18 +412,18 @@ export function ApprovalView() {
                         {initials(comment.author ?? "?")}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold">{comment.author ?? "Someone"}</p>
+                        <p className="text-sm font-semibold">{comment.author ?? t("date.someone")}</p>
                         <p className="text-xs text-muted">
-                          {roleLabels[comment.role ?? ""] ?? comment.role} · {eventWhen(comment.created_at)}
-                          {comment.is_internal ? " · Internal" : ""}
+                          {roleName(comment.role, t)} · {eventWhen(comment.created_at, locale)}
+                          {comment.is_internal ? ` · ${t("piece.internal")}` : ""}
                         </p>
                       </div>
                       {comment.pin ? <span className="grid size-5 place-items-center rounded-full bg-lime text-[11px] font-semibold text-lime-ink">{comment.pin}</span> : null}
                     </div>
                     <p className={`mt-2 text-sm ${comment.parent_id ? "pl-10" : ""}`}>{comment.body}</p>
                     <div className="mt-2 flex gap-3 text-xs text-muted">
-                      <button type="button" onClick={() => { setReplyTo(comment); setPendingPin(null); }} className="hover:text-foreground">Reply</button>
-                      <button type="button" onClick={() => toggleResolved(comment)} className="hover:text-foreground">{comment.resolved_at ? "Reopen" : "Resolve"}</button>
+                      <button type="button" onClick={() => { setReplyTo(comment); setPendingPin(null); }} className="hover:text-foreground">{t("piece.reply")}</button>
+                      <button type="button" onClick={() => toggleResolved(comment)} className="hover:text-foreground">{comment.resolved_at ? t("piece.reopen") : t("piece.resolve")}</button>
                     </div>
                   </li>
                 ))}
@@ -430,36 +432,36 @@ export function ApprovalView() {
                 {replyTo ? (
                   <p className="mb-2 flex items-center justify-between text-xs text-muted">
                     Replying to {replyTo.author}
-                    <button type="button" onClick={() => setReplyTo(null)}>Cancel</button>
+                    <button type="button" onClick={() => setReplyTo(null)}>{t("common.cancel")}</button>
                   </p>
                 ) : null}
                 {pendingPin ? (
                   <p className="mb-2 flex items-center justify-between text-xs text-muted">
                     Pin at {pendingPin.x.toFixed(0)}%, {pendingPin.y.toFixed(0)}%
-                    <button type="button" onClick={() => setPendingPin(null)}>Cancel</button>
+                    <button type="button" onClick={() => setPendingPin(null)}>{t("common.cancel")}</button>
                   </p>
                 ) : null}
                 <div className="flex items-center gap-2">
-                  <input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder={pendingPin ? "Comment on this pin..." : "Add a comment..."} className="min-w-0 flex-1 rounded-xl border border-line bg-raised px-3 py-2 text-sm outline-none" />
-                  <button type="submit" aria-label="Send comment" disabled={busy} className="grid size-9 place-items-center rounded-xl bg-lime text-lime-ink disabled:opacity-60">
+                  <input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder={pendingPin ? t("piece.pinComment") : t("piece.addComment")} className="min-w-0 flex-1 rounded-xl border border-line bg-raised px-3 py-2 text-sm outline-none" />
+                  <button type="submit" aria-label={t("piece.send")} disabled={busy} className="grid size-9 place-items-center rounded-xl bg-lime text-lime-ink disabled:opacity-60">
                     <Send className="size-4" />
                   </button>
                 </div>
                 {staff ? (
                   <label className="mt-2 flex items-center gap-2 text-xs text-muted">
                     <input type="checkbox" checked={internal} onChange={(event) => setInternal(event.target.checked)} />
-                    Internal note
+                    {t("piece.internalNote")}
                   </label>
                 ) : null}
               </form>
             </>
           ) : (
             <div className="space-y-4 p-4">
-              <Detail label="Client" value={activity.workspace.name} />
-              <Detail label="Format" value={typeLabel(activity.channel, activity.format)} />
-              <Detail label="Due date" value={dateLabel(activity.due_on)} />
-              <Detail label="Assignee" value={activity.assignee?.name ?? "Unassigned"} />
-              <Detail label="Status" value={statusLabel(activity.status)} />
+              <Detail label={t("piece.client")} value={activity.workspace.name} />
+              <Detail label={t("piece.format")} value={typeLabel(activity.channel, activity.format, t)} />
+              <Detail label={t("piece.due")} value={dateLabel(activity.due_on, locale, t)} />
+              <Detail label={t("piece.assignee")} value={activity.assignee?.name ?? t("common.unassigned")} />
+              <Detail label={t("piece.status")} value={statusLabel(activity.status, t)} />
             </div>
           )}
         </aside>
@@ -469,23 +471,23 @@ export function ApprovalView() {
         <footer className="mt-3.5 rounded-[13px] bg-card px-[17px] py-3.5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="font-semibold">Ready to make a decision?</p>
-              <p className="text-sm text-muted">Your feedback helps the team move faster.</p>
+              <p className="font-semibold">{t("piece.ready")}</p>
+              <p className="text-sm text-muted">{t("piece.readyLine")}</p>
             </div>
             <div className="flex gap-2">
               <button type="button" onClick={() => setAsking((open) => !open)} className="rounded-xl border border-line bg-card px-4 py-2 text-sm font-medium">
-                Request revisions
+                {t("piece.revisions")}
               </button>
               <button type="button" disabled={busy} onClick={approve} className="rounded-xl bg-lime px-4 py-2 text-sm font-semibold text-lime-ink disabled:opacity-60">
-                Approve piece
+                {t("piece.approve")}
               </button>
             </div>
           </div>
           {asking ? (
             <form onSubmit={requestChanges} className="mt-3 grid gap-2">
-              <textarea required value={note} onChange={(event) => setNote(event.target.value)} rows={3} placeholder="What should change?" className="rounded-[9px] bg-raised px-3 py-2 text-sm outline-none" />
+              <textarea required value={note} onChange={(event) => setNote(event.target.value)} rows={3} placeholder={t("piece.whatChange")} className="rounded-[9px] bg-raised px-3 py-2 text-sm outline-none" />
               <button type="submit" disabled={busy} className="w-fit rounded-[9px] bg-foreground px-3 py-2 text-[11px] font-bold text-background disabled:opacity-60">
-                Send note
+                {t("task.sendNote")}
               </button>
             </form>
           ) : null}
@@ -497,8 +499,9 @@ export function ApprovalView() {
 
 /** Opens the file picker as a button in a lighter accent. */
 function FileButton({ mode, files, onPick }: { mode: string; files: File[]; onPick: (files: File[]) => void }) {
-  const idle = mode === "blog" ? "Upload PDF or Word" : mode === "slides" ? "Upload images" : "Upload image";
-  const label = files.length === 0 ? idle : files.length === 1 ? files[0].name : `${files.length} files`;
+  const { t } = useI18n();
+  const idle = mode === "blog" ? t("piece.uploadPdf") : mode === "slides" ? t("piece.uploadImages") : t("piece.uploadImage");
+  const label = files.length === 0 ? idle : files.length === 1 ? files[0].name : t("piece.files", { count: files.length });
 
   return (
     <label
@@ -523,14 +526,15 @@ function FileButton({ mode, files, onPick }: { mode: string; files: File[]; onPi
 
 /** Picks the blog cover with the same lighter accent as the article upload. */
 function CoverButton({ file, onPick }: { file: File | null; onPick: (file: File | null) => void }) {
+  const { t } = useI18n();
   return (
     <label
       className="inline-flex w-fit max-w-full cursor-pointer items-center gap-2 rounded-[9px] px-3.5 py-2.5 text-[11px] font-bold text-lime-ink"
       style={{ background: "color-mix(in srgb, var(--lime) 34%, white)" }}
     >
       <Upload className="size-3.5 shrink-0" />
-      <span className="truncate">{file ? file.name : "Upload cover"}</span>
-      <input required type="file" accept="image/*" aria-label="Upload cover" onChange={(event) => onPick(event.target.files?.[0] ?? null)} className="sr-only" />
+      <span className="truncate">{file ? file.name : t("piece.uploadCover")}</span>
+      <input required type="file" accept="image/*" aria-label={t("piece.uploadCover")} onChange={(event) => onPick(event.target.files?.[0] ?? null)} className="sr-only" />
     </label>
   );
 }
@@ -559,6 +563,7 @@ function CopyPane({
   onCaption: (value: string) => void;
   onSave: (event: FormEvent) => void;
 }) {
+  const { t } = useI18n();
   return (
     <form onSubmit={onSave} className="mx-auto grid max-w-[690px] gap-3">
       {canEdit ? (
@@ -574,13 +579,13 @@ function CopyPane({
             </label>
           )}
           <button type="submit" disabled={busy} className="w-fit rounded-[9px] bg-lime px-3 py-2 text-[11px] font-bold text-lime-ink disabled:opacity-60">
-            {busy ? "Saving..." : "Save copy"}
+            {busy ? t("common.saving") : t("task.saveCopy")}
           </button>
         </>
       ) : (
         <>
-          <h2 className="text-lg font-semibold">{version?.headline || "No title yet"}</h2>
-          {format === "blog" ? null : <p className="text-sm leading-relaxed whitespace-pre-wrap">{version?.caption || "No caption yet"}</p>}
+          <h2 className="text-lg font-semibold">{version?.headline || t("piece.noTitle")}</h2>
+          {format === "blog" ? null : <p className="text-sm leading-relaxed whitespace-pre-wrap">{version?.caption || t("piece.noCaption")}</p>}
         </>
       )}
       {format === "blog" && version?.kind === "document" ? (
@@ -614,6 +619,7 @@ function Preview({
   onShift: (direction: number) => void;
   onSlide: (index: number) => void;
 }) {
+  const { t } = useI18n();
   const cover = version?.files.find((file) => file.role === "cover") ?? null;
   if (cover) {
     const src = assetUrl(cover.url);
@@ -624,7 +630,7 @@ function Preview({
           // eslint-disable-next-line @next/next/no-img-element -- file is served by the API
           <img src={src} alt="" className="h-full w-full object-cover" />
         ) : (
-          <div className="grid h-full place-items-center text-sm text-muted">Nothing attached yet.</div>
+          <div className="grid h-full place-items-center text-sm text-muted">{t("task.nothing")}</div>
         )}
         {pins.map((pin) => (
           <button key={pin.id} type="button" data-pin aria-label={`Pin ${pin.number}`} className="absolute grid size-6 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-lime text-[10px] font-extrabold text-lime-ink shadow-[0_0_0_5px_rgba(187,255,82,0.2)]" style={{ left: `${pin.x}%`, top: `${pin.y}%` }}>
@@ -661,7 +667,7 @@ function Preview({
         <img src={preview} alt="" className="h-full w-full object-cover" />
       ) : (
         <div className="grid h-full place-items-center px-6 text-center text-sm text-muted">
-          {preview ? <a href={preview} target="_blank" rel="noreferrer" className="font-semibold text-lime" onClick={(event) => event.stopPropagation()}>{version?.name}</a> : "Nothing attached yet."}
+          {preview ? <a href={preview} target="_blank" rel="noreferrer" className="font-semibold text-lime" onClick={(event) => event.stopPropagation()}>{version?.name}</a> : t("task.nothing")}
         </div>
       )}
       {pins.map((pin) => (
@@ -677,10 +683,10 @@ function Preview({
           ))}
         </span>
       ) : null}
-      <button type="button" aria-label="Previous version" onClick={(event) => { event.stopPropagation(); onShift(-1); }} className="absolute top-1/2 left-3 grid size-8 -translate-y-1/2 place-items-center rounded-full bg-black/50 text-white">
+      <button type="button" aria-label={t("piece.previous")} onClick={(event) => { event.stopPropagation(); onShift(-1); }} className="absolute top-1/2 left-3 grid size-8 -translate-y-1/2 place-items-center rounded-full bg-black/50 text-white">
         <ChevronLeft className="size-4" />
       </button>
-      <button type="button" aria-label="Next version" onClick={(event) => { event.stopPropagation(); onShift(1); }} className="absolute top-1/2 right-3 grid size-8 -translate-y-1/2 place-items-center rounded-full bg-black/50 text-white">
+      <button type="button" aria-label={t("piece.next")} onClick={(event) => { event.stopPropagation(); onShift(1); }} className="absolute top-1/2 right-3 grid size-8 -translate-y-1/2 place-items-center rounded-full bg-black/50 text-white">
         <ChevronRight className="size-4" />
       </button>
     </div>
@@ -688,6 +694,19 @@ function Preview({
 }
 
 /** Renders one labeled fact on the details tab. */
+const roleKeys: Record<string, MessageKey> = {
+  agency_admin: "role.agency_admin",
+  designer: "role.designer",
+  copywriter: "role.copywriter",
+  client: "role.client",
+};
+
+/** Returns the role name in the active language. */
+function roleName(role: string | null | undefined, t: (key: MessageKey) => string) {
+  const key = role ? roleKeys[role] : undefined;
+  return key ? t(key) : (role ?? "");
+}
+
 function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div>

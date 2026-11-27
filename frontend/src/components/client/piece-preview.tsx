@@ -7,6 +7,7 @@ import { DocumentFrame } from "@/components/document-frame";
 import { useTheme } from "@/components/theme-provider";
 import { notifyError, notifySuccess } from "@/lib/alerts";
 import { ApiError, api } from "@/lib/api-client";
+import { useI18n } from "@/lib/i18n";
 import {
   assetUrl,
   avatarColor,
@@ -38,6 +39,7 @@ export function PiecePreview({
   onApproved: (id: number) => void;
 }) {
   const { theme } = useTheme();
+  const { t } = useI18n();
   const activity = pieces[index];
   const [busy, setBusy] = useState(false);
   const [slide, setSlide] = useState(0);
@@ -69,9 +71,9 @@ export function PiecePreview({
     try {
       await api(`/activities/${activity.id}/approve`, { method: "POST" });
       onApproved(activity.id);
-      notifySuccess("Piece approved.");
+      notifySuccess(t("client.approved"));
     } catch (error) {
-      notifyError(error instanceof ApiError ? error.message : "Could not approve the piece.");
+      notifyError(error instanceof ApiError ? error.message : t("client.approveFailed"));
     } finally {
       setBusy(false);
     }
@@ -92,7 +94,7 @@ export function PiecePreview({
         >
           <button
             type="button"
-            aria-label="Close preview"
+            aria-label={t("client.close")}
             onClick={onClose}
             className="absolute -top-2 right-0 grid size-9 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
           >
@@ -103,34 +105,34 @@ export function PiecePreview({
               {index + 1} / {total}
             </p>
             <span className={`rounded-lg px-2.5 py-1 text-[10px] font-bold ${statusBadgeClass(activity.status)}`}>
-              {statusLabel(activity.status)}
+              {statusLabel(activity.status, t)}
             </span>
           </div>
           <h2 id="piece-preview-title" className="sr-only">
             {activity.title}
           </h2>
           <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
-            <Arrow label="Previous piece" disabled={index === 0} onClick={() => onIndex(index - 1)} direction="left" />
+            <Arrow label={t("client.previousPiece")} disabled={index === 0} onClick={() => onIndex(index - 1)} direction="left" />
             <div className="flex justify-center">
               <SocialFrame activity={activity} slide={slide} onSlide={setSlide} />
             </div>
-            <Arrow label="Next piece" disabled={index >= total - 1} onClick={() => onIndex(index + 1)} direction="right" />
+            <Arrow label={t("client.nextPiece")} disabled={index >= total - 1} onClick={() => onIndex(index + 1)} direction="right" />
           </div>
           <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
             <button
               type="button"
               disabled={!pending || busy}
-              title={pending ? undefined : "Only a piece pending approval can be approved."}
+              title={pending ? undefined : t("client.approveOnly")}
               onClick={() => void approve()}
               className="rounded-xl bg-lime px-5 py-2.5 text-sm font-bold text-lime-ink disabled:cursor-not-allowed disabled:opacity-45"
             >
-              {busy ? "Approving..." : "Approve"}
+              {busy ? t("client.approving") : t("client.approve")}
             </button>
             <Link
               href={`/${slug}/approval/${activity.id}`}
               className="rounded-xl bg-white/10 px-5 py-2.5 text-sm font-bold text-white hover:bg-white/20"
             >
-              Add corrections
+              {t("client.corrections")}
             </Link>
           </div>
         </div>

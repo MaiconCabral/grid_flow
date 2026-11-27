@@ -19,6 +19,7 @@ export type AuthTenant = {
   dark_background: string;
   accent: string;
   plan: string;
+  locale?: "en" | "pt";
 };
 
 export type AuthAgency = {

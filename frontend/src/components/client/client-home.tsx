@@ -10,6 +10,7 @@ import {
   clientCanSee,
   coverGradient,
   formatLabel,
+  formatPlural,
   formats,
   statusBadgeClass,
   statusLabel,
@@ -19,10 +20,14 @@ import {
   type BoardActivity,
 } from "@/lib/activities";
 import { PiecePreview } from "@/components/client/piece-preview";
+import type { AgencyLocale } from "@/lib/agency-theme";
+import { useI18n } from "@/lib/i18n";
+import type { MessageKey } from "@/lib/i18n/messages";
 
 /** Lists the brand's reviewable pieces as a monthly feed the client can open. */
 export function ClientHome() {
   const slug = usePathname().split("/")[1] ?? "";
+  const { locale, t } = useI18n();
   const [items, setItems] = useState<BoardActivity[] | null>(null);
   const [chosenFormat, setChosenFormat] = useState<string | null>(null);
   const [chosen, setChosen] = useState<string | null>(null);
@@ -36,7 +41,7 @@ export function ClientHome() {
         .then((board) => {
           if (active) setItems(board.data);
         })
-        .catch((error: unknown) => notifyError(error instanceof ApiError ? error.message : "Could not load the pieces."));
+        .catch((error: unknown) => notifyError(error instanceof ApiError ? error.message : t("client.loadFailed")));
     }
     /** Refreshes the feed when the client comes back to the tab. */
     function onVisible() {
@@ -48,7 +53,7 @@ export function ClientHome() {
       active = false;
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, []);
+  }, [t]);
 
   const sent = useMemo(() => (items ?? []).filter((item) => clientCanSee(item.status)), [items]);
   const month = chosen ?? preferredMonth(sent);
@@ -74,34 +79,34 @@ export function ClientHome() {
         <div>
           <p className="mb-3 flex items-center gap-[7px] text-[9px] font-bold tracking-[1.4px] text-muted uppercase">
             <span className="size-[7px] rounded-full bg-lime shadow-[0_0_0_4px_rgba(187,255,82,0.1)]" />
-            Feed preview
+            {t("client.feed")}
           </p>
           <div className="flex items-center gap-2">
-            <MonthButton label="Previous month" onClick={() => setChosen(shiftMonth(month, -1))}>
+            <MonthButton label={t("client.previous")} onClick={() => setChosen(shiftMonth(month, -1))}>
               <ChevronLeft className="size-5" />
             </MonthButton>
-            <h1 className="font-display text-[30px] leading-[1.18] font-extrabold tracking-[-1.3px]">{monthTitle(month)}</h1>
-            <MonthButton label="Next month" onClick={() => setChosen(shiftMonth(month, 1))}>
+            <h1 className="font-display text-[30px] leading-[1.18] font-extrabold tracking-[-1.3px]">{monthTitle(month, locale)}</h1>
+            <MonthButton label={t("client.next")} onClick={() => setChosen(shiftMonth(month, 1))}>
               <ChevronRight className="size-5" />
             </MonthButton>
           </div>
-          <p className="mt-2 text-[13px] text-muted">{deliveryLine(format)}</p>
+          <p className="mt-2 text-[13px] text-muted">{deliveryLine(format, t)}</p>
         </div>
         {available.length > 0 ? (
           <div className="inline-flex flex-wrap rounded-full bg-raised p-1">
             {available.map((item) => (
               <SurfaceButton key={item.value} active={format === item.value} onClick={() => { setChosenFormat(item.value); setOpenId(null); }}>
-                {item.label}
+                {formatLabel(item.value, t)}
               </SurfaceButton>
             ))}
           </div>
         ) : null}
       </header>
 
-      {items === null ? <p className="mt-10 text-sm text-muted">Loading pieces...</p> : null}
-      {items !== null && sent.length === 0 ? <p className="mt-10 text-sm text-muted">No pieces have been sent yet.</p> : null}
+      {items === null ? <p className="mt-10 text-sm text-muted">{t("client.loading")}</p> : null}
+      {items !== null && sent.length === 0 ? <p className="mt-10 text-sm text-muted">{t("client.none")}</p> : null}
       {items !== null && sent.length > 0 && visible.length === 0 ? (
-        <p className="mt-10 text-sm text-muted">No {format ? formatPlural(format) : "pieces"} this month.</p>
+        <p className="mt-10 text-sm text-muted">{t("client.noneMonth", { name: format ? formatPlural(format, t) : t("nav.pieces").toLowerCase() })}</p>
       ) : null}
 
       <ul className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -114,7 +119,7 @@ export function ClientHome() {
 
       {loose.length > 0 ? (
         <section className="mt-12">
-          <h2 className="font-display text-lg font-extrabold tracking-[-0.4px]">No date</h2>
+          <h2 className="font-display text-lg font-extrabold tracking-[-0.4px]">{t("client.noDate")}</h2>
           <ul className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
             {loose.map((activity) => (
               <li key={activity.id}>
@@ -141,6 +146,7 @@ export function ClientHome() {
 
 /** Opens the social preview for one sent piece. */
 function PieceCard({ activity, onOpen }: { activity: BoardActivity; onOpen: (id: number) => void }) {
+  const { t } = useI18n();
   const src = assetUrl(activity.cover_url);
   return (
     <button
@@ -151,10 +157,10 @@ function PieceCard({ activity, onOpen }: { activity: BoardActivity; onOpen: (id:
       <span className="relative block h-[150px] overflow-hidden">
         <Cover src={src} activity={activity} />
         <span className={`absolute top-2 right-2 rounded-lg px-2 py-1 text-[10px] font-bold ${statusBadgeClass(activity.status)}`}>
-          {statusLabel(activity.status)}
+          {statusLabel(activity.status, t)}
         </span>
         <span className={`absolute bottom-2 left-2 rounded-[5px] bg-black/70 px-1.5 py-1 text-[8px] font-bold backdrop-blur ${typeClass(activity.channel)}`}>
-          {typeLabel(activity.channel, activity.format)}
+          {typeLabel(activity.channel, activity.format, t)}
         </span>
       </span>
       <span className="block px-[11px] pt-[11px] pb-2.5">
@@ -197,15 +203,9 @@ function SurfaceButton({ active, onClick, children }: { active: boolean; onClick
 }
 
 /** Names the format open on the grade. */
-function deliveryLine(format: string | null) {
-  if (!format) return "Review what is going out on social.";
-  return `Reviewing ${formatPlural(format)}.`;
-}
-
-/** Turns a format into the plural used in the client copy. */
-function formatPlural(format: string) {
-  const name = formatLabel(format).toLowerCase();
-  return name === "story" ? "stories" : `${name}s`;
+function deliveryLine(format: string | null, t: (key: MessageKey, vars?: Record<string, string | number>) => string) {
+  if (!format) return t("client.reviewSocial");
+  return t("client.reviewing", { name: formatPlural(format, t) });
 }
 
 /** Opens the current month, or the latest month that has a sent piece. */
@@ -229,8 +229,8 @@ function shiftMonth(key: string, delta: number) {
   return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`;
 }
 
-/** Formats a YYYY-MM key as an English month and year. */
-function monthTitle(key: string) {
+/** Formats a YYYY-MM key as a month and year in the agency language. */
+function monthTitle(key: string, locale: AgencyLocale) {
   const [year, month] = key.split("-").map(Number);
-  return new Date(year, month - 1, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  return new Date(year, month - 1, 1).toLocaleDateString(locale === "pt" ? "pt-BR" : "en-US", { month: "long", year: "numeric" });
 }

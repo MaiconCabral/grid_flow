@@ -18,7 +18,7 @@ Os tipos gravados são `asset_added`, `queued`, `pending_review`, `approved` e `
 
 ## Contrato
 
-`GET /api/v1/notifications` devolve as 20 mais recentes e a contagem de não lidas. Cada item traz `id`, `type`, `activity_id`, `title`, `body`, `href`, `read_at` e `created_at`.
+`GET /api/v1/notifications` devolve as 20 mais recentes e a contagem de não lidas. Cada item traz `id`, `type`, `activity_id`, `title`, `body`, `actor_name`, `href`, `read_at` e `created_at`. O `body` continua em inglês, gravado na hora. A tela monta a frase pelo `type`, pelo título e por `actor_name`, no idioma da agência.
 
 O `href` já aponta para a tela daquele papel. O cliente abre `/{slug}/approval/{id}`. A equipe abre `/{slug}/workspace/{id}` na fila e na entrega, e `/{slug}/approval/{id}` quando o cliente aprova ou pede ajuste.
 

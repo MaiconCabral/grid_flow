@@ -11,6 +11,7 @@ Nome, tema, cores e plano ficam na linha da agência em `tenants`. Cada agência
 | `dark_background` | `#111313` | Fundo do tema escuro, entre as amostras permitidas |
 | `accent` | `#bbff52` | Cor de destaque, entre as amostras permitidas |
 | `plan` | `studio` | Plano atual. Esta etapa não troca o plano. A aba Plans do front está oculta por `showVisualPlaceholders` |
+| `locale` | `en` | Idioma da interface: `en` ou `pt`. Agências que já existiam ficam em inglês |
 
 `name` já existia. O slug continua fora do `PATCH`, porque entra na URL e no cookie.
 
@@ -18,11 +19,11 @@ Nome, tema, cores e plano ficam na linha da agência em `tenants`. Cada agência
 
 As duas exigem `Authorization: Bearer` e `X-Tenant-ID`.
 
-`GET /api/v1/settings` devolve nome, slug, tema, as três cores, `plan` e a lista `plans`. Só o `agency_admin` lê. Outro papel recebe `403`. O tema para o shell continua em `/auth/me`.
+`GET /api/v1/settings` devolve nome, slug, tema, as três cores, `plan`, `locale` e a lista `plans`. Só o `agency_admin` lê. Outro papel recebe `403`. O tema e o idioma para o shell continuam em `/auth/me`.
 
-`PATCH /api/v1/settings` aceita só o que vier: `name`, `theme`, `light_background`, `dark_background`, `accent`. Só o `agency_admin` grava. Outro papel recebe `403`. Cor fora da lista recebe `422`.
+`PATCH /api/v1/settings` aceita só o que vier: `name`, `theme`, `locale`, `light_background`, `dark_background`, `accent`. Só o `agency_admin` grava. Outro papel recebe `403`. Cor fora da lista, ou idioma fora de `en` e `pt`, recebe `422`.
 
-`GET /api/v1/auth/me` passa a incluir tema, cores e plano dentro de `tenant`, para o shell aplicar ao entrar.
+`GET /api/v1/auth/me` inclui tema, cores, plano e `locale` dentro de `tenant`, para o shell aplicar ao entrar. Designer, redator e cliente leem esse idioma; só o admin troca.
 
 ## Código
 

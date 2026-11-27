@@ -8,25 +8,28 @@ import { Topbar } from "@/components/shell/topbar";
 import { useNotifications } from "@/components/shell/use-notifications";
 import { publishAgency } from "@/lib/agency-theme";
 import { api } from "@/lib/api-client";
+import { useI18n } from "@/lib/i18n";
+import type { MessageKey } from "@/lib/i18n/messages";
 import type { AuthAccount } from "@/lib/session";
 
-const titles: Record<string, string> = {
-  dashboard: "Dashboard",
-  workspace: "Workspace",
-  approval: "Approval Center",
-  team: "Team & Clients",
-  settings: "Settings",
+const titles: Record<string, MessageKey> = {
+  dashboard: "nav.dashboard",
+  workspace: "nav.workspace",
+  approval: "nav.approval",
+  team: "nav.team",
+  settings: "nav.settings",
 };
 
-const roleLabels: Record<string, string> = {
-  agency_admin: "Agency Admin",
-  copywriter: "Copywriter",
-  designer: "Designer",
-  client: "Client",
+const roleKeys: Record<string, MessageKey> = {
+  agency_admin: "role.agency_admin",
+  copywriter: "role.copywriter",
+  designer: "role.designer",
+  client: "role.client",
 };
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { t } = useI18n();
   const [, tenantSlug = "", section = "dashboard"] = pathname.split("/");
   const [account, setAccount] = useState<AuthAccount | null>(null);
   const notices = useNotifications();
@@ -43,7 +46,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const user = account
     ? {
         name: account.user.name,
-        role: roleLabels[account.user.role] ?? account.user.role,
+        role: roleKeys[account.user.role] ? t(roleKeys[account.user.role]) : account.user.role,
         roleKey: account.user.role,
         initials: account.user.name
           .split(" ")
@@ -65,7 +68,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       />
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar
-          title={account?.user.role === "client" && section === "dashboard" ? "Pieces" : (titles[section] ?? "Post Grid")}
+          title={account?.user.role === "client" && section === "dashboard" ? t("nav.pieces") : titles[section] ? t(titles[section]) : "Post Grid"}
           tenantSlug={tenantSlug}
           tenantName={account?.tenant.name}
           user={user}

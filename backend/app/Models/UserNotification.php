@@ -69,6 +69,7 @@ class UserNotification extends Model
             'activity_id' => $this->activity_id,
             'title' => $this->title,
             'body' => $this->body,
+            'actor_name' => $this->actor?->name,
             'href' => $this->href($slug, $role),
             'read_at' => $this->read_at?->toISOString(),
             'created_at' => $this->created_at?->toISOString(),

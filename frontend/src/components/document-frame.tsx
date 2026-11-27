@@ -3,6 +3,7 @@
 import mammoth from "mammoth";
 import { useEffect, useState } from "react";
 import { apiBuffer } from "@/lib/api-client";
+import { useI18n } from "@/lib/i18n";
 import { assetUrl, documentKind } from "@/lib/activities";
 
 /** Shows a text delivery as a page, a rendered Word file, or an open link. */
@@ -82,7 +83,7 @@ function DocxBody({
 
   if (failed) return <OpenFile href={href} name={name} />;
   if (html === null) {
-    return <p className="grid h-40 place-items-center text-sm text-[#737373]">Reading the document...</p>;
+    return <Reading />;
   }
 
   return (
@@ -93,13 +94,25 @@ function DocxBody({
   );
 }
 
+/** Shows the wait line while a Word file is converted. */
+function Reading() {
+  const { t } = useI18n();
+  return <p className="grid h-40 place-items-center text-sm text-[#737373]">{t("doc.reading")}</p>;
+}
+
+/** Labels the link that opens the original file. */
+function OpenLabel() {
+  const { t } = useI18n();
+  return t("doc.open");
+}
+
 /** Offers the file when the browser cannot draw it. */
 function OpenFile({ href, name }: { href: string; name: string | null }) {
   return (
     <div className="grid min-h-40 place-items-center gap-2 px-6 py-8 text-center">
       <p className="text-sm font-semibold text-[#141414]">{name}</p>
       <a href={href} target="_blank" rel="noreferrer" className="text-sm font-semibold text-[#141414] underline">
-        Open
+        <OpenLabel />
       </a>
     </div>
   );

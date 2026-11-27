@@ -18,12 +18,13 @@ class UpdateSettingsRequest extends FormRequest
         return $tenant !== null && ($this->user()?->can('update', $tenant) ?? false);
     }
 
-    /** Validates the agency name, theme, and allowed colors. */
+    /** Validates the agency name, theme, language, and allowed colors. */
     public function rules(): array
     {
         return [
             'name' => ['sometimes', 'required', 'string', 'max:120'],
             'theme' => ['sometimes', 'required', Rule::in(['dark', 'light'])],
+            'locale' => ['sometimes', 'required', Rule::in(['en', 'pt'])],
             'light_background' => ['sometimes', 'required', Rule::in(AgencyPalette::LIGHT)],
             'dark_background' => ['sometimes', 'required', Rule::in(AgencyPalette::DARK)],
             'accent' => ['sometimes', 'required', Rule::in(AgencyPalette::ACCENT)],

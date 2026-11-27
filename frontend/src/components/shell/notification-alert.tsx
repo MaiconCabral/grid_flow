@@ -1,7 +1,8 @@
 "use client";
 
 import { X } from "lucide-react";
-import type { AppNotification } from "@/lib/notifications";
+import { useI18n } from "@/lib/i18n";
+import { notificationText, type AppNotification } from "@/lib/notifications";
 
 /** Announces one new notice and offers a direct jump to the task. */
 export function NotificationAlert({
@@ -13,6 +14,7 @@ export function NotificationAlert({
   onOpen: (item: AppNotification) => void;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 px-4" onMouseDown={onClose}>
       <div
@@ -26,17 +28,17 @@ export function NotificationAlert({
           <p id="notification-alert-title" className="text-[13px] font-bold">
             {item.title}
           </p>
-          <button type="button" aria-label="Close" onClick={onClose} className="grid size-7 place-items-center rounded-md text-muted hover:bg-raised hover:text-foreground">
+          <button type="button" aria-label={t("notice.close")} onClick={onClose} className="grid size-7 place-items-center rounded-md text-muted hover:bg-raised hover:text-foreground">
             <X className="size-4" />
           </button>
         </div>
-        <p className="text-[13px] leading-relaxed text-muted">{item.body}</p>
+        <p className="text-[13px] leading-relaxed text-muted">{notificationText(item, t)}</p>
         <div className="flex justify-end gap-2">
           <button type="button" onClick={onClose} className="rounded-[9px] bg-raised px-3 py-2 text-[11px] font-bold text-foreground">
-            Close
+            {t("notice.close")}
           </button>
           <button type="button" onClick={() => onOpen(item)} className="rounded-[9px] bg-lime px-3 py-2 text-[11px] font-bold text-lime-ink">
-            Open task
+            {t("notice.open")}
           </button>
         </div>
       </div>

@@ -20,6 +20,7 @@ import { useAgency } from "@/lib/agency-theme";
 import { notifyError } from "@/lib/alerts";
 import { ApiError, api } from "@/lib/api-client";
 import type { Dashboard } from "@/lib/dashboard";
+import { useI18n } from "@/lib/i18n";
 import { writeTenant, type AuthAgency, type AuthTenant } from "@/lib/session";
 
 function isActive(pathname: string, href: string) {
@@ -39,6 +40,7 @@ export function Sidebar({
   user?: { name: string; role: string; roleKey?: string; initials: string } | null;
   agencies?: AuthAgency[];
 }) {
+  const { t } = useI18n();
   const base = `/${tenantSlug}`;
   const [counts, setCounts] = useState<{ total: number; pending: number } | null>(null);
   useEffect(() => {
@@ -57,17 +59,17 @@ export function Sidebar({
   const known = Boolean(user?.roleKey);
   const client = user?.roleKey === "client";
   const workspaceNav = client
-    ? [{ href: `${base}/dashboard`, label: "Pieces", icon: LayoutGrid }]
+    ? [{ href: `${base}/dashboard`, label: t("nav.pieces"), icon: LayoutGrid }]
     : [
-        { href: `${base}/dashboard`, label: "Dashboard", icon: LayoutDashboard },
-        { href: `${base}/workspace`, label: "Workspace", icon: SquareKanban, badge: counts ? String(counts.total) : undefined },
-        { href: `${base}/approval`, label: "Approval Center", icon: CalendarCheck, badge: counts ? String(counts.pending) : undefined },
+        { href: `${base}/dashboard`, label: t("nav.dashboard"), icon: LayoutDashboard },
+        { href: `${base}/workspace`, label: t("nav.workspace"), icon: SquareKanban, badge: counts ? String(counts.total) : undefined },
+        { href: `${base}/approval`, label: t("nav.approval"), icon: CalendarCheck, badge: counts ? String(counts.pending) : undefined },
       ];
   const admin = user?.roleKey === "agency_admin";
   const manageNav = admin
     ? [
-        { href: `${base}/team`, label: "Team & Clients", icon: Users },
-        { href: `${base}/settings`, label: "Settings", icon: Settings },
+        { href: `${base}/team`, label: t("nav.team"), icon: Users },
+        { href: `${base}/settings`, label: t("nav.settings"), icon: Settings },
       ]
     : [];
   const profile = user ?? { name: currentUser.name, role: currentUser.role, initials: currentUser.initials };
@@ -94,7 +96,7 @@ export function Sidebar({
       writeTenant(session.tenant);
       window.location.assign(`/${session.tenant.slug}/dashboard`);
     } catch (caught) {
-      void notifyError(caught instanceof ApiError ? caught.message : "Could not switch agency.");
+      void notifyError(caught instanceof ApiError ? caught.message : t("top.switchFailed"));
       setSwitching(false);
     }
   }
@@ -118,7 +120,7 @@ export function Sidebar({
             <AgencyMark initial={agencyInitial} />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-[12px] font-bold">{agencyLabel}</span>
-              <span className="block text-[10px] text-muted">{agencies.length} agencies</span>
+              <span className="block text-[10px] text-muted">{t("nav.agencies", { count: agencies.length })}</span>
             </span>
             <ChevronDown className={`size-4 text-muted ${agencyOpen ? "rotate-180" : ""}`} />
           </button>
@@ -154,8 +156,8 @@ export function Sidebar({
       </div>
 
       <nav className="space-y-7">
-        {known ? <NavGroup label={client ? "Review" : "Workspace"} items={workspaceNav} pathname={pathname} /> : null}
-        {manageNav.length > 0 ? <NavGroup label="Manage" items={manageNav} pathname={pathname} /> : null}
+        {known ? <NavGroup label={client ? t("nav.review") : t("nav.workspace")} items={workspaceNav} pathname={pathname} /> : null}
+        {manageNav.length > 0 ? <NavGroup label={t("nav.manage")} items={manageNav} pathname={pathname} /> : null}
       </nav>
 
       <div className="mt-auto px-[11px] pt-3.5 pb-3.5">

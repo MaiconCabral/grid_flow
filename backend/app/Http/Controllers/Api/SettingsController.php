@@ -47,6 +47,7 @@ class SettingsController extends Controller
             'dark_background' => $tenant->dark_background,
             'accent' => $tenant->accent,
             'plan' => $tenant->plan,
+            'locale' => $tenant->locale ?? 'en',
             'plans' => AgencyPlans::all(),
         ];
     }

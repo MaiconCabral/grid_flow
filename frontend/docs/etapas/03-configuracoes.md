@@ -1,6 +1,6 @@
 # Etapa 3 — Settings
 
-A tela `/{slug}/settings` tem três abas. A interface continua em inglês.
+A tela `/{slug}/settings` tem três abas. O idioma da interface é o da agência. Login e cadastro ficam em inglês, porque ainda não há agência.
 
 ## Agency
 
@@ -8,7 +8,7 @@ Mostra o nome e o slug. O admin edita o nome e salva. O slug fica só leitura. O
 
 ## Appearance
 
-Dark e Light, o fundo claro, o fundo escuro e o destaque são da agência. As cores são amostras, não um seletor livre:
+Dark e Light, English e Português, o fundo claro, o fundo escuro e o destaque são da agência. O idioma vale para quem está na agência: menu, quadro, ficha, aprovação, grade do cliente, equipe, sino e esta tela. As cores são amostras, não um seletor livre:
 
 - fundo claro: Mist, White, Sand
 - fundo escuro: Ink, Graphite, Ash
@@ -29,6 +29,7 @@ No menu, o nome da agência substitui “morrow BETA”. O ícone de estrela vir
 ## Arquivos
 
 - `src/components/settings/settings-view.tsx` — abas
-- `src/lib/agency-theme.ts` — aplica e guarda a cópia visual
+- `src/lib/agency-theme.ts` — aplica e guarda a cópia visual, inclusive o idioma
+- `src/lib/i18n/` — dicionários `en` e `pt` e o hook `useI18n`
 - `src/components/shell/sidebar.tsx` — nome e ícone
 - `src/components/auth/auth-frame.tsx` — marca Post Grid

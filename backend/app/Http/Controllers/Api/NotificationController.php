@@ -16,6 +16,7 @@ class NotificationController extends Controller
         $user = $request->user();
         $items = UserNotification::query()
             ->where('user_id', $user->id)
+            ->with('actor')
             ->latest('id')
             ->limit(20)
             ->get();
@@ -32,6 +33,8 @@ class NotificationController extends Controller
         if ($notification->read_at === null) {
             $notification->forceFill(['read_at' => now()])->save();
         }
+
+        $notification->loadMissing('actor');
 
         $user = $request->user();
 

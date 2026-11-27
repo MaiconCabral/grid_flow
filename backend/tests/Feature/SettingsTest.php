@@ -83,6 +83,29 @@ class SettingsTest extends TestCase
             ->assertJsonPath('theme', 'dark');
     }
 
+    /** Saves Portuguese for the agency and rejects any other language. */
+    public function test_admin_sets_the_agency_language(): void
+    {
+        $admin = $this->member(UserRole::AgencyAdmin);
+        $designer = $this->member(UserRole::Designer, $admin->tenant);
+
+        $this->as($admin)->getJson('/api/v1/settings')->assertOk()->assertJsonPath('locale', 'en');
+
+        $this->as($admin)->patchJson('/api/v1/settings', ['locale' => 'pt'])
+            ->assertOk()
+            ->assertJsonPath('locale', 'pt');
+
+        $this->assertDatabaseHas('tenants', ['id' => $admin->tenant_id, 'locale' => 'pt']);
+
+        $this->as($admin)->getJson('/api/v1/auth/me')->assertOk()->assertJsonPath('tenant.locale', 'pt');
+
+        $this->as($admin)->patchJson('/api/v1/settings', ['locale' => 'es'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('locale');
+
+        $this->as($designer)->patchJson('/api/v1/settings', ['locale' => 'pt'])->assertForbidden();
+    }
+
     /** Creates a user in an agency. */
     private function member(UserRole $role, ?Tenant $tenant = null): User
     {

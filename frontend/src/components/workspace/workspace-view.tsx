@@ -15,17 +15,22 @@ import {
   coverGradient,
   dateLabel,
   deliveryNotice,
+  formatLabel,
   formats,
   initials,
   isoDate,
   stages,
   startOfWeek,
+  statusLabel,
   typeClass,
   typeLabel,
   type ActivityBoard,
   type BoardActivity,
   type StageId,
 } from "@/lib/activities";
+import type { AgencyLocale } from "@/lib/agency-theme";
+import { useI18n } from "@/lib/i18n";
+import type { MessageKey } from "@/lib/i18n/messages";
 import type { AuthUser } from "@/lib/session";
 import { useTheme } from "@/components/theme-provider";
 
@@ -74,6 +79,7 @@ const emptyDraft: Draft = {
 /** Renders the live board, list, and calendar for the agency. */
 export function WorkspaceView() {
   const [view, setView] = useState<View>("board");
+  const { t } = useI18n();
   const [query, setQuery] = useState("");
   const [brand, setBrand] = useState("all");
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -82,7 +88,7 @@ export function WorkspaceView() {
   const [brands, setBrands] = useState<ActivityBoard["brands"]>([]);
   const [metrics, setMetrics] = useState<ActivityBoard["metrics"]>({ production: 0, pending: 0, approved: 0, scheduled: 0 });
   const [role, setRole] = useState<string | null>(null);
-  const [hello, setHello] = useState("Good afternoon");
+  const [hello, setHello] = useState("");
   const [staff, setStaff] = useState<StaffUser[]>([]);
   const [draftOpen, setDraftOpen] = useState(false);
   const [briefingFile, setBriefingFile] = useState<File | null>(null);
@@ -109,40 +115,40 @@ export function WorkspaceView() {
       .then((session) => {
         if (!active) return;
         setRole(session.user.role);
-        setHello(greeting(session.user.name.split(" ")[0] ?? ""));
+        setHello(greeting(session.user.name.split(" ")[0] ?? "", t));
         if (session.user.role === "agency_admin") {
           return api<{ data: StaffUser[] }>("/users").then((users) => {
             if (active) setStaff(users.data.filter((user) => user.role !== "client"));
           });
         }
       })
-      .catch((error: unknown) => notifyError(error instanceof ApiError ? error.message : "Could not load your session."));
+      .catch((error: unknown) => notifyError(error instanceof ApiError ? error.message : t("task.sessionFailed")));
     api<ActivityBoard>("/activities")
       .then((board) => {
         if (active) applyBoard(board);
       })
-      .catch((error: unknown) => notifyError(error instanceof ApiError ? error.message : "Could not load the board."));
+      .catch((error: unknown) => notifyError(error instanceof ApiError ? error.message : t("board.loadFailed")));
     return () => {
       active = false;
     };
-  }, [applyBoard]);
+  }, [applyBoard, t]);
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return items.filter((activity) => {
       const matchesBrand = brand === "all" || String(activity.workspace.id) === brand;
-      const haystack = `${activity.title} ${activity.workspace.name} ${typeLabel(activity.channel, activity.format)}`.toLowerCase();
+      const haystack = `${activity.title} ${activity.workspace.name} ${typeLabel(activity.channel, activity.format, t)}`.toLowerCase();
       return matchesBrand && haystack.includes(needle);
     });
-  }, [brand, items, query]);
+  }, [brand, items, query, t]);
 
   const filtering = query.trim() !== "" || brand !== "all";
   const canCreate = role === "agency_admin";
   const metricCards = [
-    { label: "In production", value: metrics.production },
-    { label: "Pending approval", value: metrics.pending },
-    { label: "Approved", value: metrics.approved },
-    { label: "Scheduled", value: metrics.scheduled },
+    { label: t("board.production"), value: metrics.production },
+    { label: t("board.pending"), value: metrics.pending },
+    { label: t("board.approved"), value: metrics.approved },
+    { label: t("board.scheduled"), value: metrics.scheduled },
   ];
 
   /** Removes a task from the board. */
@@ -152,10 +158,10 @@ export function WorkspaceView() {
     try {
       await api(`/activities/${id}`, { method: "DELETE" });
       await reload();
-      notifySuccess("Activity deleted.");
+      notifySuccess(t("board.deleted"));
     } catch (error) {
       setItems(previous);
-      notifyError(error instanceof ApiError ? error.message : "Could not delete the task.");
+      notifyError(error instanceof ApiError ? error.message : t("board.deleteFailed"));
     }
   }
 
@@ -170,7 +176,7 @@ export function WorkspaceView() {
       await reload();
     } catch (error) {
       setItems(previous);
-      notifyError(error instanceof ApiError ? error.message : "Could not move the task.");
+      notifyError(error instanceof ApiError ? error.message : t("board.moveFailed"));
     }
   }
 
@@ -193,9 +199,9 @@ export function WorkspaceView() {
       setDraft(emptyDraft);
       setBriefingFile(null);
       await reload();
-      notifySuccess("Activity created.");
+      notifySuccess(t("board.created"));
     } catch (error) {
-      notifyError(error instanceof ApiError ? error.message : "Could not create the activity.");
+      notifyError(error instanceof ApiError ? error.message : t("board.createFailed"));
     } finally {
       setSaving(false);
     }
@@ -213,12 +219,12 @@ export function WorkspaceView() {
         <div>
           <p className="mb-3 flex items-center gap-1.5 text-[9px] font-bold tracking-[1.4px] text-muted uppercase">
             <span className="size-1.5 rounded-full bg-lime shadow-[0_0_0_4px_rgba(187,255,82,0.1)]" />
-            Live workspace
+            {t("nav.live")}
           </p>
           <h1 className="mb-2 font-display text-[30px] leading-[1.18] font-extrabold tracking-[-1.3px]">
             {hello} <span className="ml-1 text-[22px] text-lime">✦</span>
           </h1>
-          <p className="text-[13px] text-muted">Keep your team moving and your clients in the loop.</p>
+          <p className="text-[13px] text-muted">{t("board.tagline")}</p>
         </div>
         <div className="flex gap-2">
           {showVisualPlaceholders ? (
@@ -230,7 +236,7 @@ export function WorkspaceView() {
           {canCreate ? (
             <button type="button" onClick={openDraft} style={headingButton} className="inline-flex items-center gap-2 rounded-[9px] bg-lime px-[14px] py-[10px] text-[#17240b] shadow-[0_8px_25px_rgba(187,255,82,0.12)] hover:-translate-y-px hover:shadow-[0_10px_30px_rgba(187,255,82,0.23)]">
               <Plus size={17} />
-              New activity
+              {t("board.new")}
             </button>
           ) : null}
         </div>
@@ -256,9 +262,9 @@ export function WorkspaceView() {
 
       <div className="mt-4 mb-[17px] flex flex-wrap items-center justify-between gap-3">
         <div className="inline-flex gap-1 rounded-[9px] bg-card p-[3px]">
-          <ViewButton current={view} value="board" label="Board" icon={<LayoutGrid className="size-4" />} onClick={setView} />
-          <ViewButton current={view} value="list" label="List" icon={<List className="size-4" />} onClick={setView} />
-          <ViewButton current={view} value="calendar" label="Calendar" icon={<CalendarDays className="size-4" />} onClick={setView} />
+          <ViewButton current={view} value="board" label={t("board.board")} icon={<LayoutGrid className="size-4" />} onClick={setView} />
+          <ViewButton current={view} value="list" label={t("board.list")} icon={<List className="size-4" />} onClick={setView} />
+          <ViewButton current={view} value="calendar" label={t("board.calendar")} icon={<CalendarDays className="size-4" />} onClick={setView} />
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <label className="flex h-[34px] w-[195px] items-center gap-2 rounded-lg bg-card px-2.5 text-faint">
@@ -267,17 +273,17 @@ export function WorkspaceView() {
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               autoComplete="off"
-              placeholder="Search activities..."
+              placeholder={t("board.search")}
               className="w-full bg-transparent text-[11px] text-foreground outline-none placeholder:text-faint"
             />
           </label>
           <select
-            aria-label="Filter by client"
+            aria-label={t("board.filter")}
             value={brand}
             onChange={(event) => setBrand(event.target.value)}
             className="h-[34px] rounded-lg bg-card px-2.5 text-[11px]"
           >
-            <option value="all">All clients</option>
+            <option value="all">{t("board.allClients")}</option>
             {brands.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.name}
@@ -402,6 +408,7 @@ function Board({
   onDelete: (id: number) => void;
   onCreate: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <div className="grid grid-cols-5 gap-3 overflow-x-auto pb-2">
       {stages.map((stage) => {
@@ -424,10 +431,10 @@ function Board({
             <header className="mb-3 flex items-center justify-between px-1">
               <h2 className="flex items-center gap-2 text-[11px] font-semibold">
                 <span className={`size-1.5 rounded-full ${columnDot[stage.id]}`} />
-                {stage.label}
+                {statusLabel(stage.id, t)}
                 <small className="rounded-[10px] bg-soft px-1.5 py-0.5 text-[10px] text-faint">{count}</small>
               </h2>
-              <button type="button" aria-label={`${stage.label} options`} className="text-muted">
+              <button type="button" aria-label={t("board.options", { name: statusLabel(stage.id, t) })} className="text-muted">
                 <MoreHorizontal className="size-3.5" />
               </button>
             </header>
@@ -451,7 +458,7 @@ function Board({
               ) : null}
               {canCreate ? (
                 <button type="button" onClick={onCreate} className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-lg py-2.5 text-[10px] text-muted hover:bg-soft hover:text-foreground">
-                  <Plus className="size-3" /> Add activity
+                  <Plus className="size-3" /> {t("board.add")}
                 </button>
               ) : null}
             </div>
@@ -464,6 +471,7 @@ function Board({
 
 /** Lists tasks grouped by column. */
 function ActivityList({ activities: items, slug, filtering }: { activities: BoardActivity[]; slug: string; filtering: boolean }) {
+  const { locale, t } = useI18n();
   return (
     <div className="space-y-4">
       {stages.map((stage) => {
@@ -472,10 +480,10 @@ function ActivityList({ activities: items, slug, filtering }: { activities: Boar
         return (
           <section key={stage.id} className="overflow-hidden rounded-[13px] bg-card">
             <h2 className="bg-raised px-4 py-3 text-[11px] font-semibold">
-              {stage.label} <span className="text-muted">{count}</span>
+              {statusLabel(stage.id, t)} <span className="text-muted">{count}</span>
             </h2>
             {rows.length === 0 ? (
-              <p className="px-4 py-6 text-sm text-muted">No activities in this stage.</p>
+              <p className="px-4 py-6 text-sm text-muted">{t("board.empty")}</p>
             ) : (
               <ul>
                 {rows.map((activity) => (
@@ -483,13 +491,13 @@ function ActivityList({ activities: items, slug, filtering }: { activities: Boar
                     <Link href={activityHref(slug, activity.id)} className="flex items-center gap-4 px-4 py-3 hover:bg-raised/60">
                       <Cover activity={activity} className="h-11 w-16 rounded-lg" />
                       <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${typeClass(activity.channel)}`}>
-                        {typeLabel(activity.channel, activity.format)}
+                        {typeLabel(activity.channel, activity.format, t)}
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block text-xs text-muted">{activity.workspace.name}</span>
                         <span className="block truncate text-sm font-semibold">{activity.title}</span>
                       </span>
-                      <span className="text-xs text-muted">{dateLabel(activity.due_on)}</span>
+                      <span className="text-xs text-muted">{dateLabel(activity.due_on, locale, t)}</span>
                       <Assignee activity={activity} />
                       <Meta activity={activity} />
                     </Link>
@@ -518,8 +526,9 @@ function WeekCalendar({
   onPrev: () => void;
   onNext: () => void;
 }) {
+  const { locale } = useI18n();
   const days = Array.from({ length: 7 }, (_, index) => addDays(weekStart, index));
-  const label = `${formatDay(days[0])} — ${formatDay(days[6])}`;
+  const label = `${formatDay(days[0], locale)} — ${formatDay(days[6], locale)}`;
 
   return (
     <section className="rounded-[14px] bg-card p-[18px]">
@@ -540,7 +549,7 @@ function WeekCalendar({
           const cards = items.filter((activity) => activity.due_on === key);
           return (
             <div key={key} className="min-h-40 rounded-xl bg-raised p-2">
-              <p className="text-[11px] text-muted">{day.toLocaleDateString("en-US", { weekday: "short" })}</p>
+              <p className="text-[11px] text-muted">{day.toLocaleDateString(locale === "pt" ? "pt-BR" : "en-US", { weekday: "short" })}</p>
               <p className="text-sm font-semibold">{day.getDate()}</p>
               <div className="mt-2 space-y-1">
                 {cards.map((activity) => (
@@ -576,6 +585,7 @@ function ActivityCard({
   onDragEnd: () => void;
   onDelete: (id: number) => void;
 }) {
+  const { locale, t } = useI18n();
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const menu = useRef<HTMLDivElement>(null);
@@ -608,14 +618,14 @@ function ActivityCard({
         <div className="relative h-[150px] overflow-hidden">
           <Cover activity={activity} className="h-full w-full" />
           <span className={`absolute bottom-2 left-2 rounded-[5px] bg-black/70 px-1.5 py-1 text-[8px] font-bold backdrop-blur ${typeClass(activity.channel)}`}>
-            {typeLabel(activity.channel, activity.format)}
+            {typeLabel(activity.channel, activity.format, t)}
           </span>
         </div>
         <div className="px-[11px] pt-[11px] pb-2.5">
           <p className="text-[9px] font-bold tracking-[0.3px] text-lime">{activity.workspace.name}</p>
           <p className="mt-1 font-display text-xs leading-snug font-semibold">{activity.title}</p>
           <div className="mt-3.5 flex items-center justify-between">
-            <span className="text-[9px] text-muted">{dateLabel(activity.due_on)}</span>
+            <span className="text-[9px] text-muted">{dateLabel(activity.due_on, locale, t)}</span>
             <Assignee activity={activity} />
           </div>
         </div>
@@ -642,22 +652,22 @@ function ActivityCard({
           <div className="absolute top-7 right-0 w-36 overflow-hidden rounded-lg border border-line bg-card py-1 text-[12px] shadow-lg">
             {confirming ? (
               <div className="px-3 py-2">
-                <p className="text-[11px] leading-snug text-muted">Delete this task?</p>
+                <p className="text-[11px] leading-snug text-muted">{t("board.deleteAsk")}</p>
                 <button type="button" onClick={() => onDelete(activity.id)} className="mt-2 block text-left font-semibold text-[#e07a7a]">
-                  Delete
+                  {t("board.delete")}
                 </button>
                 <button type="button" onClick={() => setConfirming(false)} className="mt-1 block text-left font-semibold">
-                  Cancel
+                  {t("common.cancel")}
                 </button>
               </div>
             ) : (
               <>
                 <Link href={activityHref(slug, activity.id)} className="block px-3 py-1.5 font-semibold hover:bg-raised" onClick={() => setOpen(false)}>
-                  View
+                  {t("board.view")}
                 </Link>
                 {canDelete ? (
                   <button type="button" onClick={() => setConfirming(true)} className="block w-full px-3 py-1.5 text-left font-semibold text-[#e07a7a] hover:bg-raised">
-                    Delete
+                    {t("board.delete")}
                   </button>
                 ) : null}
               </>
@@ -741,6 +751,7 @@ function ActivityDialog({
   onSubmit: (event: FormEvent) => void;
 }) {
   const { theme } = useTheme();
+  const { t } = useI18n();
 
   useEffect(() => {
     /** Closes the lightbox when Escape is pressed. */
@@ -764,22 +775,22 @@ function ActivityDialog({
       >
         <div className="flex items-start justify-between gap-3">
           <p id="activity-draft-title" className="text-[13px] font-bold">
-            New activity
+            {t("board.new")}
           </p>
-          <button type="button" aria-label="Close" onClick={onClose} className="grid size-7 place-items-center rounded-md text-muted hover:bg-raised hover:text-foreground">
+          <button type="button" aria-label={t("common.close")} onClick={onClose} className="grid size-7 place-items-center rounded-md text-muted hover:bg-raised hover:text-foreground">
             <X className="size-4" />
           </button>
         </div>
-        <Select label="Brand" value={draft.workspaceId} onChange={(workspaceId) => onChange({ ...draft, workspaceId })}>
+        <Select label={t("board.brand")} value={draft.workspaceId} onChange={(workspaceId) => onChange({ ...draft, workspaceId })}>
           {brands.map((item) => (
             <option key={item.id} value={item.id}>
               {item.name}
             </option>
           ))}
         </Select>
-        <Field label="Title" value={draft.title} onChange={(title) => onChange({ ...draft, title })} />
+        <Field label={t("board.title")} value={draft.title} onChange={(title) => onChange({ ...draft, title })} />
         <label className="flex flex-col gap-1 text-[11px] font-bold text-muted">
-          Briefing
+          {t("board.briefing")}
           <textarea
             required
             value={draft.briefing}
@@ -789,53 +800,53 @@ function ActivityDialog({
           />
         </label>
         <div className="flex flex-col items-start gap-1.5 text-[11px] font-bold text-muted">
-          Briefing file
+          {t("board.briefingFile")}
           <label
             className="inline-flex w-fit max-w-full cursor-pointer items-center gap-2 rounded-[9px] px-3.5 py-2.5 text-[11px] font-bold text-lime-ink"
             style={{ background: "color-mix(in srgb, var(--lime) 34%, white)" }}
           >
             <Upload className="size-3.5 shrink-0" />
-            <span className="truncate">{briefingFile ? briefingFile.name : "Upload briefing"}</span>
+            <span className="truncate">{briefingFile ? briefingFile.name : t("board.uploadBriefing")}</span>
             <input
               type="file"
               accept=".pdf,.doc,.docx,application/pdf"
-              aria-label="Upload briefing"
+              aria-label={t("board.uploadBriefing")}
               onChange={(event) => onBriefingFile(event.target.files?.[0] ?? null)}
               className="sr-only"
             />
           </label>
-          <span className="font-normal text-faint">Optional PDF or Word document.</span>
+          <span className="font-normal text-faint">{t("board.briefingHint")}</span>
         </div>
-        <Select label="Channel" value={draft.channel} onChange={(channel) => onChange({ ...draft, channel })}>
+        <Select label={t("board.channel")} value={draft.channel} onChange={(channel) => onChange({ ...draft, channel })}>
           {channels.map((item) => (
             <option key={item.value} value={item.value}>
               {item.label}
             </option>
           ))}
         </Select>
-        <Select label="Format" value={draft.format} onChange={(format) => onChange({ ...draft, format })}>
+        <Select label={t("board.format")} value={draft.format} onChange={(format) => onChange({ ...draft, format })}>
           {formats.map((item) => (
             <option key={item.value} value={item.value}>
-              {item.label}
+              {formatLabel(item.value, t)}
             </option>
           ))}
         </Select>
-        <p className="text-[12px] leading-relaxed font-normal text-muted">{deliveryNotice(draft.format)}</p>
-        <Select label="Assignee" value={draft.assigneeId} onChange={(assigneeId) => onChange({ ...draft, assigneeId })} required={false}>
-          <option value="">Unassigned</option>
+        <p className="text-[12px] leading-relaxed font-normal text-muted">{deliveryNotice(draft.format, t)}</p>
+        <Select label={t("board.assignee")} value={draft.assigneeId} onChange={(assigneeId) => onChange({ ...draft, assigneeId })} required={false}>
+          <option value="">{t("common.unassigned")}</option>
           {staff.map((person) => (
             <option key={person.id} value={person.id}>
               {person.name}
             </option>
           ))}
         </Select>
-        <Field label="Due date" type="date" required={false} value={draft.dueOn} onChange={(dueOn) => onChange({ ...draft, dueOn })} />
+        <Field label={t("board.due")} type="date" required={false} value={draft.dueOn} onChange={(dueOn) => onChange({ ...draft, dueOn })} />
         <div className="mt-1 flex justify-end gap-2">
           <button type="button" onClick={onClose} style={headingButton} className="rounded-[9px] bg-raised px-3 py-2 text-foreground">
-            Cancel
+            {t("common.cancel")}
           </button>
           <button type="submit" disabled={saving || brands.length === 0} style={headingButton} className="rounded-[9px] bg-lime px-3 py-2 text-lime-ink disabled:opacity-60">
-            {saving ? "Saving..." : "Create"}
+            {saving ? t("common.saving") : t("board.create")}
           </button>
         </div>
       </form>
@@ -906,13 +917,13 @@ function activityHref(slug: string, id: number) {
 }
 
 /** Picks a greeting from the time of day. */
-function greeting(name: string) {
+function greeting(name: string, t: (key: MessageKey) => string) {
   const hour = new Date().getHours();
-  const part = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const part = hour < 12 ? t("hello.morning") : hour < 18 ? t("hello.afternoon") : t("hello.evening");
   return name ? `${part}, ${name}` : part;
 }
 
 /** Formats a day for the calendar heading. */
-function formatDay(date: Date) {
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+function formatDay(date: Date, locale: AgencyLocale) {
+  return date.toLocaleDateString(locale === "pt" ? "pt-BR" : "en-US", { month: "short", day: "numeric" });
 }
