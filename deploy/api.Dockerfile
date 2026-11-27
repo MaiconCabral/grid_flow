@@ -3,8 +3,7 @@
 FROM serversideup/php:8.3-fpm-nginx-alpine-v5.0.2
 
 USER root
-RUN install-php-extensions intl bcmath exif \
-    && printf 'client_max_body_size 110m;\n' > /etc/nginx/conf.d/upload-size.conf
+RUN install-php-extensions intl bcmath exif
 USER www-data
 
 WORKDIR /var/www/html
