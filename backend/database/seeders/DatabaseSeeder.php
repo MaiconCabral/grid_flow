@@ -128,6 +128,18 @@ class DatabaseSeeder extends Seeder
             'role' => UserRole::AgencyAdmin,
         ]);
         User::query()->create([
+            'name' => 'Ellen',
+            'email' => 'ellen.medeiros@newton.ag',
+            'password' => 'password',
+            'role' => UserRole::AgencyAdmin,
+        ]);
+        User::query()->create([
+            'name' => 'Sarah',
+            'email' => 'sarah.poleto@eobox.com.br',
+            'password' => 'password',
+            'role' => UserRole::AgencyAdmin,
+        ]);
+        User::query()->create([
             'name' => 'Caique',
             'email' => 'caique.lemos@newton.ag',
             'password' => 'password',

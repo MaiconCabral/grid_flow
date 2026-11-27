@@ -102,6 +102,8 @@ Agência **Newton**, slug `newton`:
 | Nome | E-mail | Papel | Workspace |
 | --- | --- | --- | --- |
 | Thais | thais@newton.ag | agency_admin | — |
+| Ellen | ellen.medeiros@newton.ag | agency_admin | — |
+| Sarah | sarah.poleto@eobox.com.br | agency_admin | — |
 | Caique | caique.lemos@newton.ag | designer | — |
 | Juliana | juliana.brito@newton.ag | copywriter | — |
 | Paulo | paulo@hernandez.com | client | Hernandez |
