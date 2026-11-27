@@ -27,7 +27,7 @@ Não há fila nem agendador. O aviso in-app continua na busca de um minuto. Capa
 | `nginx/router.conf` | Divide `/api`, `/storage` e `/up` para o Laravel e o resto para o Next |
 | `.env.example` | Variáveis da VPS |
 
-A rede `grid_proxy` é só deste projeto. O odontoApp continua na `odonto_proxy`. O NPM entra nas duas. A pasta na VPS é `/opt/grid`.
+A rede `grid_proxy` é só deste projeto. O odontoApp continua na `odonto_proxy`. O NPM entra nas duas. A pasta na VPS é `/opt/gridflow`.
 
 ## Preparação da VPS (uma vez)
 
@@ -44,7 +44,7 @@ Em **SSL Certificates → Add → Let's Encrypt**, peça o certificado de `grid.
 ### 3. Docker e pasta da stack
 
 ```bash
-sudo mkdir -p /opt/grid && sudo chown $USER /opt/grid
+sudo mkdir -p /opt/gridflow && sudo chown $USER /opt/gridflow
 ```
 
 #### Rede dedicada entre o NPM e o GridFlow
@@ -63,12 +63,12 @@ docker inspect "$NPM" --format '{{index .Config.Labels "com.docker.compose.proje
 
 Nesse arquivo, acrescente `grid_proxy` às redes do serviço do NPM, sem remover as que ele já usa, e declare-a como `external: true`.
 
-Copie para `/opt/grid` os arquivos `docker-compose.yml` e `nginx/`. Depois do primeiro deploy, o GitHub Actions passa a copiá-los sozinho.
+Copie para `/opt/gridflow` os arquivos `docker-compose.yml` e `nginx/`. Depois do primeiro deploy, o GitHub Actions passa a copiá-los sozinho.
 
 ### 4. `.env`
 
 ```bash
-cp .env.example /opt/grid/.env   # e preencha
+cp .env.example /opt/gridflow/.env   # e preencha
 ```
 
 - Troque `grid.example.com` pelo domínio real em `APP_URL`, `MAIL_FROM_ADDRESS` e `NEXT_PUBLIC_API_URL`.
@@ -93,7 +93,7 @@ cp .env.example /opt/grid/.env   # e preencha
 ### 6. Primeira subida
 
 ```bash
-cd /opt/grid
+cd /opt/gridflow
 echo <token> | docker login ghcr.io -u <usuario> --password-stdin   # só se os pacotes forem privados
 docker compose pull
 docker compose up -d --wait
@@ -131,7 +131,7 @@ O primeiro deploy só acontece quando este código está na `main`.
 ## Operação
 
 ```bash
-cd /opt/grid
+cd /opt/gridflow
 docker compose ps
 docker compose logs -f api web     # logs (LOG_CHANNEL=stderr na API)
 ```

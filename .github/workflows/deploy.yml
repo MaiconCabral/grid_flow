@@ -93,7 +93,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT || 22 }}
           source: deploy/docker-compose.yml,deploy/nginx/router.conf
-          target: /opt/grid
+          target: /opt/gridflow
           strip_components: 1
 
       - name: Pull, restart and migrate
@@ -111,7 +111,7 @@ jobs:
           command_timeout: 15m
           script: |
             set -e
-            cd /opt/grid
+            cd /opt/gridflow
 
             # The tag deployed stays in .env, so a restart or a rollback knows what runs.
             sed -i "s/^IMAGE_TAG=.*/IMAGE_TAG=${IMAGE_TAG}/" .env
